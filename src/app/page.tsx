@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, Palette } from 'lucide-react'
+import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, Palette, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 const AgentHierarchy = dynamic(
@@ -1268,10 +1268,308 @@ function QuickActionsPanel() {
   )
 }
 
+// ─── Color Preview Modal ──────────────────────────────────────────────────────
+
+const COLOR_PREVIEW_SCHEMES = [
+  {
+    id: 'current-blue',
+    name: 'A: Current Blue',
+    accent: '#4A90E2',
+    light: '#6BB6FF',
+    dim: '#3A7BD5',
+    muted: '#2A5B9E',
+    groups: ['#6BB6FF', '#4A90E2', '#3A7BD5', '#2A5B9E', '#1E3A5F', '#B0B0B0', '#888888', '#666666'],
+    statuses: [
+      { label: 'Active', color: '#4A90E2' },
+      { label: 'Idle', color: '#B0B0B0' },
+      { label: 'Error', color: '#FFC107' },
+      { label: 'Paused', color: '#888888' },
+      { label: 'Standby', color: '#777777' },
+      { label: 'Offline', color: '#555555' },
+    ],
+    edges: [
+      { label: 'Command', color: '#4A90E2' },
+      { label: 'Sync', color: '#777777' },
+      { label: 'Twin', color: '#888888' },
+      { label: 'Delegate', color: '#999999' },
+    ],
+    recommended: false,
+  },
+  {
+    id: 'dark-blue',
+    name: 'B: Dark Blue',
+    accent: '#2563EB',
+    light: '#3B82F6',
+    dim: '#1D4ED8',
+    muted: '#1E40AF',
+    groups: ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF', '#172554', '#B0B0B0', '#888888', '#666666'],
+    statuses: [
+      { label: 'Active', color: '#2563EB' },
+      { label: 'Idle', color: '#B0B0B0' },
+      { label: 'Error', color: '#FFC107' },
+      { label: 'Paused', color: '#888888' },
+      { label: 'Standby', color: '#777777' },
+      { label: 'Offline', color: '#555555' },
+    ],
+    edges: [
+      { label: 'Command', color: '#2563EB' },
+      { label: 'Sync', color: '#777777' },
+      { label: 'Twin', color: '#888888' },
+      { label: 'Delegate', color: '#999999' },
+    ],
+    recommended: false,
+  },
+  {
+    id: 'cyan',
+    name: 'C: Cyan',
+    accent: '#06B6D4',
+    light: '#22D3EE',
+    dim: '#0891B2',
+    muted: '#0E7490',
+    groups: ['#22D3EE', '#06B6D4', '#0891B2', '#0E7490', '#164E63', '#B0B0B0', '#888888', '#666666'],
+    statuses: [
+      { label: 'Active', color: '#06B6D4' },
+      { label: 'Idle', color: '#B0B0B0' },
+      { label: 'Error', color: '#FFC107' },
+      { label: 'Paused', color: '#888888' },
+      { label: 'Standby', color: '#777777' },
+      { label: 'Offline', color: '#555555' },
+    ],
+    edges: [
+      { label: 'Command', color: '#06B6D4' },
+      { label: 'Sync', color: '#777777' },
+      { label: 'Twin', color: '#888888' },
+      { label: 'Delegate', color: '#999999' },
+    ],
+    recommended: true,
+  },
+]
+
+const PREVIEW_GROUP_NAMES = ['Стратегия', 'Тактика', 'Контроль', 'Исполнение', 'Память', 'Мониторинг', 'Коммуникация', 'Обучение']
+const PREVIEW_FORMULA_NAMES = ['CoT', 'ToT', 'ReAct', 'MoA', 'DSPy', 'Reflexion']
+const PREVIEW_FORMULA_COLORS = ['#999999', '#888888', '#999999', '#777777', '#888888', '#999999']
+
+function ColorPreviewModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto"
+      style={{ background: 'rgba(0,0,0,0.92)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 min-h-screen"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Palette className="w-5 h-5" style={{ color: '#B0B0B0' }} />
+            <h2 className="text-white text-lg font-bold tracking-wide">Color Scheme Comparison</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(176,176,176,0.1)', color: '#B0B0B0', border: '1px solid rgba(176,176,176,0.2)' }}>Monochrome Redesign</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg transition-colors hover:bg-white/10"
+            style={{ color: '#B0B0B0' }}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 3 Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {COLOR_PREVIEW_SCHEMES.map((scheme) => (
+            <div
+              key={scheme.id}
+              className="rounded-xl p-4 relative"
+              style={{
+                background: 'rgba(26,26,26,0.92)',
+                border: scheme.recommended
+                  ? `1.5px solid ${scheme.accent}66`
+                  : '1px solid rgba(51,51,51,0.5)',
+                boxShadow: scheme.recommended
+                  ? `0 0 30px ${scheme.accent}15, inset 0 0 30px ${scheme.accent}08`
+                  : 'none',
+              }}
+            >
+              {/* Recommended badge */}
+              {scheme.recommended && (
+                <div
+                  className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase"
+                  style={{
+                    background: scheme.accent,
+                    color: '#000000',
+                    boxShadow: `0 0 12px ${scheme.accent}44`,
+                  }}
+                >
+                  Recommended
+                </div>
+              )}
+
+              {/* Scheme Name */}
+              <div className="text-center mb-4 mt-1">
+                <span className="text-sm font-bold" style={{ color: scheme.accent }}>{scheme.name}</span>
+              </div>
+
+              {/* a) Header Bar */}
+              <div
+                className="rounded-lg p-3 mb-3 flex items-center gap-2"
+                style={{ background: 'rgba(13,13,13,0.8)', borderLeft: `2px solid ${scheme.accent}` }}
+              >
+                <Brain className="w-4 h-4" style={{ color: scheme.accent }} />
+                <span className="text-white font-bold text-sm">P-MAS</span>
+                <span className="text-[9px]" style={{ color: scheme.accent }}>Multi-Agent System</span>
+              </div>
+
+              {/* b) Stat Cards Row */}
+              <div className="grid grid-cols-4 gap-1.5 mb-3">
+                {[
+                  { label: 'Agents', value: '26' },
+                  { label: 'Groups', value: '8' },
+                  { label: 'Formulas', value: '20' },
+                  { label: 'Active', value: '16' },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-md p-1.5 text-center"
+                    style={{ background: 'rgba(13,13,13,0.8)', borderLeft: `2px solid ${scheme.accent}` }}
+                  >
+                    <div className="text-[10px] font-bold" style={{ color: scheme.accent }}>{stat.value}</div>
+                    <div className="text-[7px] text-[#B0B0B0]">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* c) Group Labels Row */}
+              <div className="mb-3">
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Groups</div>
+                <div className="flex flex-wrap gap-1">
+                  {PREVIEW_GROUP_NAMES.map((name, i) => (
+                    <div
+                      key={name}
+                      className="flex items-center gap-1 rounded px-1.5 py-0.5"
+                      style={{ background: `${scheme.groups[i]}15`, border: `1px solid ${scheme.groups[i]}33` }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: scheme.groups[i] }} />
+                      <span className="text-[7px] font-medium" style={{ color: scheme.groups[i] }}>{name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* d) Formula Badges Row */}
+              <div className="mb-3">
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Formulas</div>
+                <div className="flex flex-wrap gap-1">
+                  {PREVIEW_FORMULA_NAMES.map((name, i) => (
+                    <span
+                      key={name}
+                      className="rounded px-1.5 py-0.5 text-[7px] font-medium"
+                      style={{
+                        background: `${PREVIEW_FORMULA_COLORS[i]}15`,
+                        border: `1px solid ${PREVIEW_FORMULA_COLORS[i]}33`,
+                        color: PREVIEW_FORMULA_COLORS[i],
+                      }}
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* e) Status Indicators */}
+              <div className="mb-3">
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Statuses</div>
+                <div className="flex flex-wrap gap-2">
+                  {scheme.statuses.map((status) => (
+                    <div key={status.label} className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full" style={{ background: status.color }} />
+                      <span className="text-[8px]" style={{ color: status.color }}>{status.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* f) Edge Samples */}
+              <div className="mb-3">
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Edges</div>
+                <div className="flex flex-wrap gap-2">
+                  {scheme.edges.map((edge) => (
+                    <div key={edge.label} className="flex items-center gap-1.5">
+                      <svg width="24" height="4">
+                        <line x1="0" y1="2" x2="24" y2="2" stroke={edge.color} strokeWidth="1.5" />
+                      </svg>
+                      <span className="text-[8px]" style={{ color: edge.color }}>{edge.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* g) Progress Bar */}
+              <div className="mb-3">
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Performance</div>
+                <div className="space-y-1">
+                  {[
+                    { label: 'Arkhitektor', pct: 96 },
+                    { label: 'Koordinator', pct: 94 },
+                    { label: 'Revizor', pct: 91 },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-2">
+                      <span className="text-[7px] w-16 text-right" style={{ color: scheme.accent }}>{item.label}</span>
+                      <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${item.pct}%`,
+                            background: `linear-gradient(90deg, ${scheme.accent}44, ${scheme.accent}aa)`,
+                          }}
+                        />
+                      </div>
+                      <span className="text-[7px] w-5 text-right" style={{ color: scheme.accent }}>{item.pct}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* h) Accent Swatch Bar */}
+              <div>
+                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Accent Shades</div>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { label: 'Light', color: scheme.light },
+                    { label: 'Accent', color: scheme.accent },
+                    { label: 'Dim', color: scheme.dim },
+                    { label: 'Muted', color: scheme.muted },
+                  ].map((swatch) => (
+                    <div key={swatch.label} className="text-center">
+                      <div
+                        className="h-8 rounded-md mb-0.5"
+                        style={{ background: swatch.color, boxShadow: `0 0 8px ${swatch.color}33` }}
+                      />
+                      <div className="text-[7px] font-mono" style={{ color: swatch.color }}>{swatch.color}</div>
+                      <div className="text-[6px] text-[#666666]">{swatch.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer note */}
+        <div className="mt-6 text-center">
+          <p className="text-[10px] text-[#666666]">Compare monochrome schemes side by side. Only the accent color and its shades change; formulas stay gray, statuses use accent for active + warning yellow for errors.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Dashboard Panel ──────────────────────────────────────────────────────────
 
 function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [showColorPreview, setShowColorPreview] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1318,26 +1616,40 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
               <p className="text-slate-500 text-xs">Prompt-based Multi-Agent System</p>
             </div>
           </div>
-          <button
-            onClick={onOpenHierarchy}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
-            style={{
-              background: 'rgba(74, 144, 226, 0.15)',
-              border: '1px solid rgba(74, 144, 226, 0.4)',
-              color: '#4A90E2',
-              boxShadow: '0 0 20px rgba(74, 144, 226, 0.1)',
-            }}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <circle cx="12" cy="12" r="4"/>
-              <line x1="12" y1="2" x2="12" y2="6"/>
-              <line x1="12" y1="18" x2="12" y2="22"/>
-              <line x1="2" y1="12" x2="6" y2="12"/>
-              <line x1="18" y1="12" x2="22" y2="12"/>
-            </svg>
-            <span>Open Hierarchy</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowColorPreview(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
+              style={{
+                background: 'rgba(155, 155, 155, 0.1)',
+                border: '1px solid rgba(155, 155, 155, 0.25)',
+                color: '#B0B0B0',
+              }}
+            >
+              <Palette className="w-4 h-4" />
+              <span className="hidden sm:inline">Preview Colors</span>
+            </button>
+            <button
+              onClick={onOpenHierarchy}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
+              style={{
+                background: 'rgba(74, 144, 226, 0.15)',
+                border: '1px solid rgba(74, 144, 226, 0.4)',
+                color: '#4A90E2',
+                boxShadow: '0 0 20px rgba(74, 144, 226, 0.1)',
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4"/>
+                <line x1="12" y1="2" x2="12" y2="6"/>
+                <line x1="12" y1="18" x2="12" y2="22"/>
+                <line x1="2" y1="12" x2="6" y2="12"/>
+                <line x1="18" y1="12" x2="22" y2="12"/>
+              </svg>
+              <span>Open Hierarchy</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1696,6 +2008,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <ArrowUp className="w-4 h-4" />
         </button>
       )}
+      {showColorPreview && <ColorPreviewModal onClose={() => setShowColorPreview(false)} />}
     </div>
   )
 }

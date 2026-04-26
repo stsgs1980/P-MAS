@@ -884,3 +884,37 @@ Stage Summary:
 - Quick Actions: 4 functional buttons (Reseed Data, Export Config, Reset View, Toggle Theme) with sonner toasts
 - Footer: 3-column responsive layout with gradient top border, key stats, tech stack info
 - All terrain design system colors preserved (road primary blue, terrain highlight/shadow)
+
+---
+Task ID: 9
+Agent: Main Agent
+Task: Create Color Preview Modal for monochrome scheme comparison (current blue vs dark blue vs cyan)
+
+Work Log:
+- Added ColorPreviewModal component to page.tsx (~300 lines)
+- Added "Preview Colors" button in dashboard header next to "Open Hierarchy" button
+- Added `showColorPreview` state to DashboardPanel
+- Added `X` to lucide-react imports for modal close button
+- Created COLOR_PREVIEW_SCHEMES data with 3 schemes:
+  - A: Current Blue (#4A90E2, light=#6BB6FF, dim=#3A7BD5, muted=#2A5B9E)
+  - B: Dark Blue (#2563EB, light=#3B82F6, dim=#1D4ED8, muted=#1E40AF)
+  - C: Cyan (#06B6D4, light=#22D3EE, dim=#0891B2, muted=#0E7490) — marked as recommended
+- Each scheme shows monochrome group colors (5 accent shades + 3 grays), gray-only formulas, accent-based statuses, gray/accent edges
+- Modal displays side-by-side columns (responsive: stack on mobile) with:
+  - Header bar sample with accent-colored icon
+  - 4 stat cards with accent left bars
+  - 8 group labels with monochrome dots
+  - 6 formula badges in grays (#777-#999)
+  - 6 status indicators (active=accent, idle=gray, error=yellow, rest=grays)
+  - 4 edge samples (command=accent, rest=grays)
+  - 3 progress bars with accent gradient
+  - 4 accent swatches with hex labels
+- Cyan column highlighted with glow border and "Recommended" badge
+- Close on X button or clicking outside
+- Lint passes cleanly (0 errors)
+
+Stage Summary:
+- Color Preview Modal created for user to compare 3 monochrome schemes
+- User can now see how each scheme looks on dark background before committing
+- No existing components modified — purely additive change
+- Awaiting user's choice before applying monochrome scheme to full project
