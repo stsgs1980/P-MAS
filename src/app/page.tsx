@@ -23,14 +23,14 @@ export default function Home() {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const ROLE_GROUPS = [
-  { name: 'Стратегия', label: 'Strategy', color: '#67E8F9', colorRgb: '103,232,249', icon: Brain, agents: 3, activeAgents: 3, formulas: 'ToT, CoVe, GoT', desc: 'Strategic planning, analysis, vision', statusSummary: [{ color: '#06B6D4', label: '3 active' }] },
-  { name: 'Тактика', label: 'Tactics', color: '#22D3EE', colorRgb: '34,211,238', icon: Target, agents: 3, activeAgents: 2, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
-  { name: 'Контроль', label: 'Control', color: '#06B6D4', colorRgb: '6,182,212', icon: Shield, agents: 3, activeAgents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety', statusSummary: [{ color: '#06B6D4', label: '3 active' }] },
-  { name: 'Исполнение', label: 'Execution', color: '#06B6D4', colorRgb: '6,182,212', icon: Zap, agents: 5, activeAgents: 4, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing', statusSummary: [{ color: '#06B6D4', label: '4 active' }, { color: '#6B7280', label: '1 idle' }] },
-  { name: 'Память', label: 'Memory / Knowledge', color: '#0891B2', colorRgb: '8,145,178', icon: Database, agents: 3, activeAgents: 2, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#8B5CF6', label: '1 standby' }] },
-  { name: 'Мониторинг', label: 'Monitoring', color: '#0E7490', colorRgb: '14,116,144', icon: Activity, agents: 3, activeAgents: 2, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#F59E0B', label: '1 paused' }] },
-  { name: 'Коммуникация', label: 'Communication', color: '#155E75', colorRgb: '21,94,117', icon: Network, agents: 3, activeAgents: 2, formulas: 'PromptChaining, StepBack, PlanAndSolve', desc: 'Inter-agent messaging, routing, protocol translation', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
-  { name: 'Обучение', label: 'Learning / Training', color: '#164E63', colorRgb: '22,78,99', icon: Sparkles, agents: 3, activeAgents: 2, formulas: 'DSPy, MetaCoT, LeastToMost', desc: 'Fine-tuning, feedback loops, skill acquisition', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
+  { name: 'Стратегия', label: 'Strategy', color: '#67E8F9', colorRgb: '103,232,249', icon: Brain, agents: 3, activeAgents: 3, formulas: 'ToT, CoVe, GoT', desc: 'Strategic planning, analysis, vision', statusSummary: [{ color: '#22D3EE', label: '3 active' }] },
+  { name: 'Тактика', label: 'Tactics', color: '#22D3EE', colorRgb: '34,211,238', icon: Target, agents: 3, activeAgents: 2, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#64748B', label: '1 idle' }] },
+  { name: 'Контроль', label: 'Control', color: '#06B6D4', colorRgb: '6,182,212', icon: Shield, agents: 3, activeAgents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety', statusSummary: [{ color: '#22D3EE', label: '3 active' }] },
+  { name: 'Исполнение', label: 'Execution', color: '#06B6D4', colorRgb: '6,182,212', icon: Zap, agents: 5, activeAgents: 4, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing', statusSummary: [{ color: '#22D3EE', label: '4 active' }, { color: '#64748B', label: '1 idle' }] },
+  { name: 'Память', label: 'Memory / Knowledge', color: '#0891B2', colorRgb: '8,145,178', icon: Database, agents: 3, activeAgents: 2, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#818CF8', label: '1 standby' }] },
+  { name: 'Мониторинг', label: 'Monitoring', color: '#0E7490', colorRgb: '14,116,144', icon: Activity, agents: 3, activeAgents: 2, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#EAB308', label: '1 paused' }] },
+  { name: 'Коммуникация', label: 'Communication', color: '#155E75', colorRgb: '21,94,117', icon: Network, agents: 3, activeAgents: 2, formulas: 'PromptChaining, StepBack, PlanAndSolve', desc: 'Inter-agent messaging, routing, protocol translation', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#64748B', label: '1 idle' }] },
+  { name: 'Обучение', label: 'Learning / Training', color: '#164E63', colorRgb: '22,78,99', icon: Sparkles, agents: 3, activeAgents: 2, formulas: 'DSPy, MetaCoT, LeastToMost', desc: 'Fine-tuning, feedback loops, skill acquisition', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#64748B', label: '1 idle' }] },
 ]
 
 const FORMULA_TAXONOMY = [
@@ -184,12 +184,12 @@ const PERFORMANCE_METRICS = [
 ]
 
 const STATUS_DISTRIBUTION = [
-  { label: 'Active', count: 16, color: '#22D3EE' },
-  { label: 'Idle', count: 4, color: '#6B7280' },
-  { label: 'Paused', count: 1, color: '#F59E0B' },
-  { label: 'Standby', count: 1, color: '#8B5CF6' },
-  { label: 'Error', count: 0, color: '#EF4444' },
-  { label: 'Offline', count: 4, color: '#4B5563' },
+  { label: 'Active', count: 16, color: '#22D3EE' },    // Bright Cyan - running, fully operational
+  { label: 'Idle', count: 4, color: '#64748B' },        // Slate - waiting, available but not active
+  { label: 'Paused', count: 1, color: '#EAB308' },      // Yellow/Amber - temporarily suspended
+  { label: 'Standby', count: 1, color: '#818CF8' },     // Indigo/Lavender - ready to activate on demand
+  { label: 'Error', count: 0, color: '#F43F5E' },       // Rose/Red - malfunction, needs attention
+  { label: 'Offline', count: 4, color: '#3F3F46' },     // Zinc-700 - disconnected, not available
 ]
 
 // ─── Network Activity Data ──────────────────────────────────────────────────
@@ -441,10 +441,11 @@ function SystemHealthMonitor() {
 function RecentActivityTimeline() {
   return (
     <div
-      className="rounded-xl p-4 sm:p-6 flex flex-col flex-1"
+      className="rounded-xl p-4 sm:p-6 flex flex-col"
       style={{
         background: 'rgba(45, 45, 45, 0.3)',
         border: '1px solid rgba(51, 51, 51, 0.5)',
+        minHeight: '380px',
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
@@ -452,35 +453,35 @@ function RecentActivityTimeline() {
         Recent Activity
       </h3>
       <div
-        className="flex-1 overflow-y-auto space-y-0"
+        className="flex-1 overflow-y-auto space-y-0 activity-scroll"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+          maxHeight: '400px',
         }}
       >
-        <div className="activity-scroll overflow-y-auto space-y-0">
-          {ACTIVITY_EVENTS.map((event, i) => {
-            const groupConfig = ROLE_GROUPS.find(g => g.name === event.group)
-            const dotColor = groupConfig?.color || '#94a3b8'
-            return (
-              <div key={i} className="flex items-start gap-3 py-2 border-b border-white/[0.03] last:border-b-0 rounded-lg px-2 transition-colors duration-150 hover:bg-white/[0.02]">
-                <div className="flex flex-col items-center mt-1">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor }} />
-                  {i < ACTIVITY_EVENTS.length - 1 && (
-                    <span className="w-px flex-1 mt-1" style={{ background: `linear-gradient(to bottom, ${dotColor}, transparent)`, minHeight: '16px', opacity: 0.4 }} />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-600 flex-shrink-0">{event.time}</span>
-                    <span className="text-[10px] font-bold" style={{ color: dotColor }}>{event.agent}</span>
-                  </div>
-                  <p className="text-slate-400 text-[10px] leading-relaxed mt-0.5">{event.desc}</p>
-                </div>
+        {ACTIVITY_EVENTS.map((event, i) => {
+          const groupConfig = ROLE_GROUPS.find(g => g.name === event.group)
+          const dotColor = groupConfig?.color || '#94a3b8'
+          return (
+            <div key={i} className="flex items-start gap-3 py-2.5 border-b border-white/[0.03] last:border-b-0 rounded-lg px-2 transition-colors duration-150 hover:bg-white/[0.02]">
+              <div className="flex flex-col items-center mt-1">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor, boxShadow: `0 0 6px ${dotColor}44` }} />
+                {i < ACTIVITY_EVENTS.length - 1 && (
+                  <span className="w-px flex-1 mt-1" style={{ background: `linear-gradient(to bottom, ${dotColor}, transparent)`, minHeight: '20px', opacity: 0.4 }} />
+                )}
               </div>
-            )
-          })}
-        </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-slate-600 flex-shrink-0">{event.time}</span>
+                  <span className="text-[10px] font-bold" style={{ color: dotColor }}>{event.agent}</span>
+                  <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: `${dotColor}15`, color: dotColor }}>{event.group}</span>
+                </div>
+                <p className="text-slate-400 text-[10px] leading-relaxed mt-0.5">{event.desc}</p>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1396,14 +1397,14 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const [showNotifications, setShowNotifications] = useState(false)
 
   // Live clock - only on client to avoid hydration mismatch
-  const formatTime = (date: Date) => {
+  const formatTime = useCallback((date: Date) => {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
+  }, [])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLastUpdated(formatTime(new Date()))
-    }, 1000)
+    const updateTime = () => setLastUpdated(formatTime(new Date()))
+    updateTime()
+    const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [formatTime])
 
@@ -1425,7 +1426,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       setRefreshing(false)
       toast.success('Dashboard data refreshed')
     }, 1200)
-  }, [])
+  }, [formatTime])
 
   // Filter function for search
   const matchesSearch = (text: string): boolean => {
@@ -1497,7 +1498,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
       {/* Header */}
       <header
-        className="px-4 sm:px-6 py-4 border-b border-white/5 relative overflow-hidden"
+        className="px-4 sm:px-6 py-4 border-b border-white/5 relative"
         style={{
           background: 'linear-gradient(135deg, rgba(103,232,249,0.05), rgba(6,182,212,0.04), rgba(14,116,144,0.03))',
           backgroundSize: '200% 200%',
@@ -1633,7 +1634,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <div className="flex items-center justify-between mt-2 relative z-10">
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" style={{ color: '#6B7280' }} />
-              <span className="text-[10px] text-slate-500">Last Updated: {lastUpdated || '--:--:--'}</span>
+              <span className="text-[10px] text-slate-500" suppressHydrationWarning>Last Updated: {lastUpdated || '--:--:--'}</span>
             </div>
             {/* Mobile search */}
             <div className="relative sm:hidden">
@@ -1945,11 +1946,49 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           title="Activity & Mapping"
           icon={<Clock className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
           accentColor="#06B6D4"
-          defaultOpen={false}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '420px' }}>
             <RecentActivityTimeline />
             <FormulaAgentMappingGrid />
+          </div>
+        </CollapsibleSection>
+
+        {/* Active Alerts Panel */}
+        <CollapsibleSection
+          title="Active Alerts"
+          icon={<Bell className="w-3.5 h-3.5" style={{ color: '#EAB308' }} />}
+          count={3}
+          accentColor="#EAB308"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { severity: 'warning', title: 'Memory Threshold Warning', desc: 'Nablyudatel detected memory usage approaching 85% threshold in Memory / Knowledge group', time: '25s ago', color: '#EAB308', agent: 'Nablyudatel' },
+              { severity: 'info', title: 'Escalation Protocol Triggered', desc: 'Alert-Operator initiated escalation workflow for unhandled task queue buildup', time: '1m ago', color: '#06B6D4', agent: 'Alert-Operator' },
+              { severity: 'info', title: 'Agent Latency Spike', desc: 'Diagnost traced latency root cause to network I/O bottleneck in Communication group', time: '2m ago', color: '#0891B2', agent: 'Diagnost' },
+            ].map((alert, i) => (
+              <div
+                key={i}
+                className="rounded-xl p-4 transition-all duration-200 hover:scale-[1.01] cursor-pointer"
+                style={{
+                  background: `rgba(${hexToRgb(alert.color)}, 0.05)`,
+                  border: `1px solid rgba(${hexToRgb(alert.color)}, 0.2)`,
+                  borderLeft: `3px solid ${alert.color}`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ background: alert.color, boxShadow: `0 0 6px ${alert.color}66` }} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: alert.color }}>{alert.severity}</span>
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-600">{alert.time}</span>
+                </div>
+                <p className="text-white text-xs font-semibold mb-1">{alert.title}</p>
+                <p className="text-slate-400 text-[10px] leading-relaxed mb-2">{alert.desc}</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: `${alert.color}15`, color: alert.color }}>{alert.agent}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </CollapsibleSection>
 
@@ -2009,7 +2048,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
                 <span style={{ color: '#333333' }}>|</span>
                 <span className="text-[10px]" style={{ color: '#B0B0B0' }}>6 Edges</span>
               </div>
-              <span className="text-[9px] text-slate-600">Last refreshed: {lastUpdated || '--:--:--'}</span>
+              <span className="text-[9px] text-slate-600" suppressHydrationWarning>Last refreshed: {lastUpdated || '--:--:--'}</span>
             </div>
 
             {/* Right: Tech stack */}
