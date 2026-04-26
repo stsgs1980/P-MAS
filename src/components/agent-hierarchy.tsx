@@ -72,6 +72,14 @@ import {
   RefreshCcw,
   Binary,
   Keyboard,
+  Maximize2,
+  Filter,
+  Home,
+  Crosshair,
+  Link2,
+  Unlink,
+  XCircle,
+  Focus,
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -106,6 +114,13 @@ interface Connection {
 
 type ViewMode = 'radial' | 'grid'
 
+interface ContextMenuState {
+  visible: boolean
+  x: number
+  y: number
+  agentId: string | null
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: LucideIcon; label: string }> = {
@@ -131,69 +146,30 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const FORMULA_COLORS: Record<string, string> = {
-  // Foundational (#999999)
-  CoT: '#999999',
-  ToT: '#999999',
-  GoT: '#999999',
-  AoT: '#999999',
-  SoT: '#999999',
-  // Verification (#888888)
-  CoVe: '#888888',
-  Reflexion: '#888888',
-  SelfConsistency: '#888888',
-  SelfRefine: '#888888',
-  // Planning (#777777)
-  ReWOO: '#777777',
-  ReAct: '#777777',
-  PromptChaining: '#777777',
-  PlanAndSolve: '#777777',
-  StepBack: '#777777',
-  LeastToMost: '#777777',
-  // Advanced (#666666)
-  MoA: '#666666',
-  LATS: '#666666',
-  PoT: '#666666',
-  DSPy: '#666666',
-  MetaCoT: '#666666',
+  CoT: '#999999', ToT: '#999999', GoT: '#999999', AoT: '#999999', SoT: '#999999',
+  CoVe: '#888888', Reflexion: '#888888', SelfConsistency: '#888888', SelfRefine: '#888888',
+  ReWOO: '#777777', ReAct: '#777777', PromptChaining: '#777777', PlanAndSolve: '#777777', StepBack: '#777777', LeastToMost: '#777777',
+  MoA: '#666666', LATS: '#666666', PoT: '#666666', DSPy: '#666666', MetaCoT: '#666666',
 }
 
-const EDGE_CONFIG: Record<EdgeType, { strokeDasharray: string | undefined; label: string; icon: LucideIcon }> = {
-  command: { strokeDasharray: undefined, label: 'Command', icon: ArrowRight },
-  sync: { strokeDasharray: '3 5', label: 'Sync', icon: ArrowLeftRight },
-  twin: { strokeDasharray: '8 4', label: 'Twin', icon: Diamond },
-  delegate: { strokeDasharray: '6 3', label: 'Delegate', icon: Workflow },
-  supervise: { strokeDasharray: '2 4', label: 'Supervise', icon: Eye },
-  broadcast: { strokeDasharray: '12 4 2 4', label: 'Broadcast', icon: Megaphone },
+const EDGE_CONFIG: Record<EdgeType, { strokeDasharray: string | undefined; label: string; icon: LucideIcon; color: string }> = {
+  command: { strokeDasharray: undefined, label: 'Command', icon: ArrowRight, color: '#67E8F9' },
+  sync: { strokeDasharray: '3 5', label: 'Sync', icon: ArrowLeftRight, color: '#64748B' },
+  twin: { strokeDasharray: '8 4', label: 'Twin', icon: Diamond, color: '#22D3EE' },
+  delegate: { strokeDasharray: '6 3', label: 'Delegate', icon: Workflow, color: '#0891B2' },
+  supervise: { strokeDasharray: '2 4', label: 'Supervise', icon: Eye, color: '#475569' },
+  broadcast: { strokeDasharray: '12 4 2 4', label: 'Broadcast', icon: Megaphone, color: '#0E7490' },
 }
 
 const AVATAR_ICON_MAP: Record<string, LucideIcon> = {
-  'building-2': Building2,
-  'bar-chart-3': BarChart3,
-  'sparkles': Sparkles,
-  'target': Target,
-  'clipboard-list': ClipboardList,
-  'radio': Radio,
-  'search': Search,
-  'trending-up': TrendingUp,
-  'shield-check': ShieldCheck,
-  'zap': Zap,
-  'flame': Flame,
-  'bug': Bug,
-  'check-circle': CheckCircle,
-  'brain': Brain,
-  'shield': Shield,
-  'activity': Activity,
-  'book-open': BookOpen,
-  'hard-drive': HardDrive,
-  'file-search': FileSearch,
-  'monitor': Monitor,
-  'bell': Bell,
-  'gauge': Gauge,
-  'network': Network,
-  'megaphone': Megaphone,
-  'workflow': Workflow,
-  'git-branch': GitBranch,
-  'refresh-ccw': RefreshCcw,
+  'building-2': Building2, 'bar-chart-3': BarChart3, 'sparkles': Sparkles,
+  'target': Target, 'clipboard-list': ClipboardList, 'radio': Radio,
+  'search': Search, 'trending-up': TrendingUp, 'shield-check': ShieldCheck,
+  'zap': Zap, 'flame': Flame, 'bug': Bug, 'check-circle': CheckCircle,
+  'brain': Brain, 'shield': Shield, 'activity': Activity, 'book-open': BookOpen,
+  'hard-drive': HardDrive, 'file-search': FileSearch, 'monitor': Monitor,
+  'bell': Bell, 'gauge': Gauge, 'network': Network, 'megaphone': Megaphone,
+  'workflow': Workflow, 'git-branch': GitBranch, 'refresh-ccw': RefreshCcw,
   'binary': Binary,
 }
 
@@ -220,7 +196,6 @@ function BackgroundParticles() {
     const resize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
-      // Regenerate contours on resize
       contoursRef.current = []
       markersRef.current = []
     }
@@ -228,9 +203,8 @@ function BackgroundParticles() {
     window.addEventListener('resize', resize)
 
     if (contoursRef.current.length === 0) {
-      // Generate 5 contour line groups at random positions
       for (let i = 0; i < 5; i++) {
-        const ringCount = 4 + Math.floor(Math.random() * 3) // 4-6 concentric rings
+        const ringCount = 4 + Math.floor(Math.random() * 3)
         const baseSize = 40 + Math.random() * 60
         const rings: number[] = []
         for (let r = 0; r < ringCount; r++) {
@@ -245,7 +219,6 @@ function BackgroundParticles() {
           pulseDir: Math.random() > 0.5 ? 1 : -1,
         })
       }
-      // Generate cross/plus map grid markers
       for (let i = 0; i < 25; i++) {
         markersRef.current.push({
           x: Math.random() * canvas.width,
@@ -256,8 +229,6 @@ function BackgroundParticles() {
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw cross/plus map grid markers
       for (const m of markersRef.current) {
         ctx.strokeStyle = 'rgba(51, 51, 51, 0.3)'
         ctx.lineWidth = 0.8
@@ -268,29 +239,23 @@ function BackgroundParticles() {
         ctx.lineTo(m.x, m.y + 3)
         ctx.stroke()
       }
-
-      // Draw contour lines
       for (const c of contoursRef.current) {
         c.pulse += 0.003 * c.pulseDir
         if (c.pulse > 1 || c.pulse < -1) c.pulseDir *= -1
-
         const currentOpacity = c.opacity + c.pulse * 0.06
-
         for (let ri = 0; ri < c.rings.length; ri++) {
           const baseR = c.rings[ri]
-          // Draw irregular ellipse by varying radius with angle
           ctx.beginPath()
           const segments = 48
           for (let s = 0; s <= segments; s++) {
             const angle = (2 * Math.PI * s) / segments
-            // Create irregular shape with multiple sine waves
             const irregularity =
               Math.sin(angle * 3 + ri * 0.5) * baseR * 0.08 +
               Math.sin(angle * 5 + ri * 1.2) * baseR * 0.04 +
               Math.cos(angle * 2 + ri * 0.8) * baseR * 0.06
             const r = baseR + irregularity
             const px = c.cx + Math.cos(angle) * r
-            const py = c.cy + Math.sin(angle) * r * 0.85 // slight vertical compression
+            const py = c.cy + Math.sin(angle) * r * 0.85
             if (s === 0) ctx.moveTo(px, py)
             else ctx.lineTo(px, py)
           }
@@ -319,12 +284,14 @@ function BackgroundParticles() {
   )
 }
 
-// ─── Background Grid ─────────────────────────────────────────────────────────
+// ─── Background Grid (zoom-aware) ────────────────────────────────────────────
 
-function BackgroundGrid({ width, height }: { width: number; height: number }) {
-  const spacing = 60
+function BackgroundGrid({ width, height, zoom: zoomLevel }: { width: number; height: number; zoom: number }) {
+  const baseSpacing = 60
+  // Scale grid spacing with zoom to keep visual density consistent
+  const spacing = baseSpacing * Math.max(0.5, Math.min(2, 1 / zoomLevel))
   return (
-    <g opacity={0.08}>
+    <g opacity={0.06}>
       {Array.from({ length: Math.ceil(width / spacing) + 1 }, (_, i) => (
         <line
           key={`vg-${i}`}
@@ -333,7 +300,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={i * spacing}
           y2={height}
           stroke="#333333"
-          strokeWidth={0.15}
+          strokeWidth={0.15 * Math.max(0.5, zoomLevel)}
         />
       ))}
       {Array.from({ length: Math.ceil(height / spacing) + 1 }, (_, i) => (
@@ -344,7 +311,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={width}
           y2={i * spacing}
           stroke="#333333"
-          strokeWidth={0.15}
+          strokeWidth={0.15 * Math.max(0.5, zoomLevel)}
         />
       ))}
     </g>
@@ -385,7 +352,6 @@ function ConnectionLine({
   const edgeId = `edge-${x1}-${y1}-${x2}-${y2}`
   const isHovered = hoveredEdge === edgeId
 
-  // Calculate arrow position and rotation
   const arrowLen = 8
   const endAngle = Math.atan2(y2 - cy1, x2 - cx1)
   const arrowX1 = x2 - arrowLen * Math.cos(endAngle - Math.PI / 6)
@@ -393,7 +359,6 @@ function ConnectionLine({
   const arrowX2 = x2 - arrowLen * Math.cos(endAngle + Math.PI / 6)
   const arrowY2 = y2 - arrowLen * Math.sin(endAngle + Math.PI / 6)
 
-  // For sync edges, also draw arrow at the start
   const startAngle = Math.atan2(y1 - cy1, x1 - cx1)
   const sArrowX1 = x1 - arrowLen * Math.cos(startAngle - Math.PI / 6)
   const sArrowY1 = y1 - arrowLen * Math.sin(startAngle - Math.PI / 6)
@@ -468,22 +433,19 @@ function ConnectionLine({
     )
   }
 
-  const strokeWidth = type === 'command' ? 0.2 + strength * 0.1
+  // ─── Enhanced Connection Strength Visualization ───
+  // Stronger connections = thicker + brighter lines
+  const strengthFactor = 0.5 + strength * 0.5 // maps [0,1] → [0.5, 1.0]
+  const baseStrokeWidth = type === 'command' ? 0.2
     : type === 'twin' ? 0.2
     : type === 'delegate' ? 0.18
     : type === 'supervise' ? 0.12
     : type === 'broadcast' ? 0.15
     : 0.15
-  const syncColor = '#64748B'
-  const delegateColor = '#0891B2'
-  const superviseColor = '#475569'
-  const broadcastColor = '#0E7490'
+  const strokeWidth = baseStrokeWidth * strengthFactor
 
-  const strokeColor = type === 'sync' ? syncColor
-    : type === 'delegate' ? delegateColor
-    : type === 'supervise' ? superviseColor
-    : type === 'broadcast' ? broadcastColor
-    : color
+  const strokeColor = EDGE_CONFIG[type].color
+  const strokeOpacity = isPulsing ? 0.4 * strengthFactor : isHovered ? 0.4 * strengthFactor : 0.18 * strengthFactor
 
   return (
     <g
@@ -504,16 +466,16 @@ function ConnectionLine({
         fill="none"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
-        strokeOpacity={isPulsing ? 0.4 : isHovered ? 0.4 : 0.18}
+        strokeOpacity={strokeOpacity}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
-      {/* Glow path */}
+      {/* Glow path - stronger for stronger connections */}
       <path
         d={pathD}
         fill="none"
         stroke={strokeColor}
         strokeWidth={strokeWidth * 0.5}
-        strokeOpacity={isPulsing ? 0.5 : isHovered ? 0.5 : 0.25}
+        strokeOpacity={isPulsing ? 0.5 * strengthFactor : isHovered ? 0.5 * strengthFactor : 0.25 * strengthFactor}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
 
@@ -547,27 +509,25 @@ function ConnectionLine({
       {type === 'sync' && (
         <polygon
           points={`${x1},${y1} ${sArrowX1},${sArrowY1} ${sArrowX2},${sArrowY2}`}
-          fill={syncColor}
+          fill={EDGE_CONFIG.sync.color}
           opacity={isHovered ? 0.8 : 0.5}
         />
       )}
 
       {/* Diamond markers for twin */}
       {type === 'twin' && (
-        <>
-          <polygon
-            points={`${midX},${midY - 5} ${midX + 5},${midY} ${midX},${midY + 5} ${midX - 5},${midY}`}
-            fill={color}
-            opacity={0.6}
-          />
-        </>
+        <polygon
+          points={`${midX},${midY - 5} ${midX + 5},${midY} ${midX},${midY + 5} ${midX - 5},${midY}`}
+          fill={color}
+          opacity={0.6}
+        />
       )}
 
       {/* Diamond icon at midpoint for delegate edges */}
       {type === 'delegate' && (
         <polygon
           points={`${midX},${midY - 4} ${midX + 4},${midY} ${midX},${midY + 4} ${midX - 4},${midY}`}
-          fill={delegateColor}
+          fill={EDGE_CONFIG.delegate.color}
           opacity={0.7}
         />
       )}
@@ -575,11 +535,11 @@ function ConnectionLine({
       {/* Megaphone icon at midpoint for broadcast edges */}
       {type === 'broadcast' && (
         <g transform={`translate(${midX}, ${midY})`} opacity={0.7}>
-          <polygon points="-3,-3 2,-1 2,1 -3,3" fill={broadcastColor} />
-          <rect x={2} y={-2} width={2} height={4} rx={0.5} fill={broadcastColor} />
-          <line x1={5} y1={-3} x2={6} y2={-4} stroke={broadcastColor} strokeWidth={0.5} />
-          <line x1={5} y1={0} x2={7} y2={0} stroke={broadcastColor} strokeWidth={0.5} />
-          <line x1={5} y1={3} x2={6} y2={4} stroke={broadcastColor} strokeWidth={0.5} />
+          <polygon points="-3,-3 2,-1 2,1 -3,3" fill={EDGE_CONFIG.broadcast.color} />
+          <rect x={2} y={-2} width={2} height={4} rx={0.5} fill={EDGE_CONFIG.broadcast.color} />
+          <line x1={5} y1={-3} x2={6} y2={-4} stroke={EDGE_CONFIG.broadcast.color} strokeWidth={0.5} />
+          <line x1={5} y1={0} x2={7} y2={0} stroke={EDGE_CONFIG.broadcast.color} strokeWidth={0.5} />
+          <line x1={5} y1={3} x2={6} y2={4} stroke={EDGE_CONFIG.broadcast.color} strokeWidth={0.5} />
         </g>
       )}
 
@@ -647,7 +607,7 @@ function ConnectionLine({
   )
 }
 
-// ─── Agent Node (Enhanced) ───────────────────────────────────────────────────
+// ─── Agent Node (Enhanced with search glow) ──────────────────────────────────
 
 function AgentNode({
   agent,
@@ -663,6 +623,7 @@ function AgentNode({
   onClick,
   onToggleCollapse,
   onHover,
+  onContextMenu,
 }: {
   agent: Agent
   x: number
@@ -677,6 +638,7 @@ function AgentNode({
   onClick: () => void
   onToggleCollapse: () => void
   onHover: (id: string | null) => void
+  onContextMenu: (e: React.MouseEvent, agentId: string) => void
 }) {
   const config = ROLE_CONFIG[agent.roleGroup] || ROLE_CONFIG['\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
   const statusColor = STATUS_COLORS[agent.status] || STATUS_COLORS.offline
@@ -689,24 +651,48 @@ function AgentNode({
       transform={`translate(${x}, ${y})`}
       className="cursor-pointer"
       onClick={onClick}
+      onContextMenu={(e) => onContextMenu(e, agent.id)}
       onMouseEnter={() => onHover(agent.id)}
       onMouseLeave={() => onHover(null)}
       style={{ opacity: isDimmed ? 0.2 : isCollapsed ? 0.4 : 1, transition: 'opacity 0.4s ease' }}
     >
-      {/* Highlighted (search match) pulsing outer glow */}
+      {/* Search match glow effect - enhanced with filter */}
       {isHighlighted && (
-        <motion.circle
-          r={44}
-          fill="none"
-          stroke={config.color}
-          strokeWidth={0.3}
-          strokeOpacity={0.15}
-          animate={{
-            r: [44, 48, 44],
-            strokeOpacity: [0.15, 0.06, 0.15],
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        <>
+          <motion.circle
+            r={50}
+            fill="none"
+            stroke={config.color}
+            strokeWidth={0.2}
+            strokeOpacity={0.06}
+            filter="url(#searchGlow)"
+            animate={{
+              r: [50, 54, 50],
+              strokeOpacity: [0.06, 0.02, 0.06],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.circle
+            r={44}
+            fill="none"
+            stroke={config.color}
+            strokeWidth={0.3}
+            strokeOpacity={0.2}
+            animate={{
+              r: [44, 48, 44],
+              strokeOpacity: [0.2, 0.08, 0.2],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.circle
+            r={38}
+            fill={`rgba(${config.colorRgb}, 0.04)`}
+            animate={{
+              r: [38, 40, 38],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </>
       )}
 
       {/* Selection ping animation (expanding ring that fades) */}
@@ -956,7 +942,6 @@ function AgentTooltip({
         strokeWidth={0.15}
         strokeOpacity={0.15}
       />
-      {/* Agent name */}
       <text
         x={12}
         y={16}
@@ -967,7 +952,6 @@ function AgentTooltip({
       >
         {agent.name}
       </text>
-      {/* Role */}
       <text
         x={12}
         y={28}
@@ -977,7 +961,6 @@ function AgentTooltip({
       >
         {agent.role}
       </text>
-      {/* Status dot + label */}
       <circle cx={120} cy={12} r={4} fill={statusColor} />
       <text
         x={128}
@@ -988,7 +971,6 @@ function AgentTooltip({
       >
         {agent.status}
       </text>
-      {/* Skills count */}
       <text
         x={12}
         y={42}
@@ -1009,7 +991,7 @@ function AgentAvatarIcon({ avatar, size = 20, color }: { avatar: string; size?: 
   return React.createElement(IconComponent, { size, color, strokeWidth: 2 })
 }
 
-// ─── Agent Detail Panel ──────────────────────────────────────────────────────
+// ─── Agent Detail Panel (Improved) ───────────────────────────────────────────
 
 function AgentDetailPanel({
   agent,
@@ -1045,18 +1027,27 @@ function AgentDetailPanel({
       }}
     >
       <ScrollArea className="h-full">
-        {/* Top colored stripe */}
-        <div
+        {/* Top colored stripe with animation */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
           style={{
             height: 3,
             background: `linear-gradient(90deg, transparent, ${config.color}, transparent)`,
             opacity: 0.7,
+            transformOrigin: 'center',
           }}
         />
         <div className="p-5">
-          {/* Header */}
+          {/* Header with close button */}
           <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+              className="flex items-center gap-3"
+            >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center"
                 style={{
@@ -1070,23 +1061,28 @@ function AgentDetailPanel({
                 <h3 className="text-white font-bold text-base">{agent.name}</h3>
                 <p className="text-xs" style={{ color: config.color }}>{agent.role}</p>
               </div>
-            </div>
+            </motion.div>
             <button
               onClick={onClose}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+              className="flex items-center justify-center w-7 h-7 rounded-lg transition-all hover:scale-110"
               style={{
-                background: `rgba(${config.colorRgb}, 0.15)`,
-                border: `1px solid rgba(${config.colorRgb}, 0.3)`,
-                color: config.color,
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(51,51,51,0.5)',
+                color: '#B0B0B0',
               }}
+              title="Close panel"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>Back</span>
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {/* Status & Formula row */}
-          <div className="flex items-center gap-2 mb-4">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
+            className="flex items-center gap-2 mb-4"
+          >
             <Badge
               className="text-[10px] font-semibold"
               style={{
@@ -1121,16 +1117,26 @@ function AgentDetailPanel({
             >
               {agent.roleGroup}
             </Badge>
-          </div>
+          </motion.div>
 
           {/* Description */}
-          <div className="mb-5">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+            className="mb-5"
+          >
             <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Description</h4>
             <p className="text-[#B0B0B0] text-xs leading-relaxed">{agent.description}</p>
-          </div>
+          </motion.div>
 
           {/* Cognitive Formula */}
-          <div className="mb-5">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
+            className="mb-5"
+          >
             <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Cognitive Formula</h4>
             <div
               className="rounded-lg p-3"
@@ -1163,10 +1169,15 @@ function AgentDetailPanel({
                 {agent.formula === 'MetaCoT' && 'Meta-Co-T -- Meta-reasoning over Chain of Thought decomposition'}
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Skills */}
-          <div className="mb-5">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.3 }}
+            className="mb-5"
+          >
             <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Skills</h4>
             <div className="flex flex-wrap gap-1.5">
               {skills.map((skill, i) => (
@@ -1184,10 +1195,15 @@ function AgentDetailPanel({
                 </Badge>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Connections */}
-          <div className="mb-5">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.35, duration: 0.3 }}
+            className="mb-5"
+          >
             <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Connections</h4>
             <div className="space-y-1.5">
               {parent && (
@@ -1231,10 +1247,14 @@ function AgentDetailPanel({
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Task Count */}
-          <div>
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+          >
             <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Tasks</h4>
             <div
               className="rounded-lg px-3 py-2 inline-flex items-center gap-2"
@@ -1247,19 +1267,20 @@ function AgentDetailPanel({
               <span className="text-white font-bold text-sm">{agent.tasks?.length ?? 0}</span>
               <span className="text-[#B0B0B0] text-[10px]">assigned</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </ScrollArea>
     </motion.div>
   )
 }
 
-// ─── Legend Panel ─────────────────────────────────────────────────────────────
+// ─── Legend Panel (Compact with icons) ────────────────────────────────────────
 
 function LegendPanel() {
+  const [collapsed, setCollapsed] = useState(false)
   return (
     <div
-      className="rounded-xl p-3 relative"
+      className="rounded-xl relative overflow-hidden"
       style={{
         background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
@@ -1271,65 +1292,52 @@ function LegendPanel() {
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.08), transparent, rgba(6,182,212,0.08))',
-          border: '1px solid transparent',
           backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(6,182,212,0.25), transparent, rgba(6,182,212,0.25))',
           backgroundOrigin: 'border-box',
           backgroundClip: 'padding-box, border-box',
+          border: '1px solid transparent',
           borderRadius: '12px',
         }}
       />
-      <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Legend</h4>
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="w-full flex items-center justify-between p-2.5 pb-0"
+      >
+        <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold">Legend</h4>
+        {collapsed ? (
+          <ChevronRight className="w-3 h-3 text-[#555]" />
+        ) : (
+          <ChevronDown className="w-3 h-3 text-[#555]" />
+        )}
+      </button>
 
-      {/* Edge types */}
-      <div className="space-y-1.5 mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px solid #67E8F9' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Command (solid)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #64748B' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Sync (dotted)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #06B6D4' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Twin (dashed)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #0891B2' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Delegate (dash-dot)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #475569' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Supervise (fine dot)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #0E7490' }} />
-          <span className="text-[9px] text-[#B0B0B0]">Broadcast (long dash)</span>
-        </div>
-      </div>
-
-      {/* Status colors */}
-      <div className="space-y-1">
-        {Object.entries(STATUS_COLORS).map(([status, color]) => (
-          <div key={status} className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-            <span className="text-[9px] text-[#B0B0B0] capitalize">{status}</span>
+      {!collapsed && (
+        <div className="px-2.5 pb-2.5">
+          {/* Edge types with icons */}
+          <div className="space-y-1 mb-2 mt-1.5">
+            {(Object.entries(EDGE_CONFIG) as [EdgeType, typeof EDGE_CONFIG[EdgeType]][]).map(([type, cfg]) => (
+              <div key={type} className="flex items-center gap-1.5">
+                {React.createElement(cfg.icon, { size: 9, color: cfg.color })}
+                <div className="w-5 h-0 flex-shrink-0" style={{ borderTop: `1.5px ${type === 'command' ? 'solid' : type === 'sync' ? 'dotted' : 'dashed'} ${cfg.color}`, opacity: 0.7 }} />
+                <span className="text-[8px] text-[#B0B0B0]">{cfg.label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Node symbols */}
-      <div className="mt-3 space-y-1">
-        <div className="flex items-center gap-2">
-          {React.createElement(Hash, { size: 9, color: '#B0B0B0' })}
-          <span className="text-[9px] text-[#B0B0B0]">Connection count</span>
+          {/* Divider */}
+          <div className="h-px w-full my-1.5" style={{ background: 'rgba(51,51,51,0.5)' }} />
+
+          {/* Status colors */}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+            {Object.entries(STATUS_COLORS).map(([status, color]) => (
+              <div key={status} className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                <span className="text-[8px] text-[#B0B0B0] capitalize">{status}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {React.createElement(ListChecks, { size: 9, color: '#B0B0B0' })}
-          <span className="text-[9px] text-[#B0B0B0]">Task count / Skill count</span>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -1347,7 +1355,6 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
         width: 180,
       }}
     >
-      {/* Animated gradient background */}
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
@@ -1356,7 +1363,6 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
           animation: 'gradientShift 8s ease infinite',
         }}
       />
-      {/* Gradient border overlay */}
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
@@ -1390,7 +1396,7 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
   )
 }
 
-// ─── Mini-Map ────────────────────────────────────────────────────────────────
+// ─── Mini-Map (Improved) ─────────────────────────────────────────────────────
 
 function MiniMap({
   agents,
@@ -1400,6 +1406,7 @@ function MiniMap({
   pan,
   zoom,
   onClickMap,
+  selectedAgentId,
 }: {
   agents: Agent[]
   positions: Record<string, { x: number; y: number }>
@@ -1408,12 +1415,12 @@ function MiniMap({
   pan: { x: number; y: number }
   zoom: number
   onClickMap: (ratioX: number, ratioY: number) => void
+  selectedAgentId: string | null
 }) {
   const scale = 160 / Math.max(dimensions.width, dimensions.height)
   const mapW = dimensions.width * scale
   const mapH = dimensions.height * scale
 
-  // Viewport indicator
   const vpW = (dimensions.width / zoom) * scale
   const vpH = (dimensions.height / zoom) * scale
   const vpX = (-pan.x / zoom) * scale
@@ -1430,10 +1437,15 @@ function MiniMap({
         padding: 10,
       }}
     >
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[8px] text-[#555] uppercase tracking-wider font-semibold">Overview</span>
+        <span className="text-[8px] text-[#555]">{Math.round(zoom * 100)}%</span>
+      </div>
       <svg
         width={mapW}
         height={mapH}
-        className="cursor-pointer"
+        className="cursor-pointer rounded"
+        style={{ background: 'rgba(0,0,0,0.3)' }}
         onClick={(e) => {
           const rect = e.currentTarget.getBoundingClientRect()
           const rx = (e.clientX - rect.left) / mapW
@@ -1445,8 +1457,8 @@ function MiniMap({
         {ROLE_ORDER.map((group, gi) => {
           const cfg = ROLE_CONFIG[group]
           const minDim = Math.min(dimensions.width, dimensions.height)
-          const baseRadius = minDim * 0.12
-          const ringSpacing = minDim * 0.12
+          const baseRadius = minDim * 0.14
+          const ringSpacing = minDim * 0.14
           const radius = (baseRadius + ringSpacing * gi) * scale
           const cx = dimensions.width * scale / 2
           const cy = dimensions.height * scale / 2
@@ -1477,7 +1489,7 @@ function MiniMap({
               y1={from.y * scale}
               x2={to.x * scale}
               y2={to.y * scale}
-              stroke={conn.type === 'sync' ? '#64748B' : conn.type === 'twin' ? '#06B6D4' : conn.type === 'delegate' ? '#0891B2' : conn.type === 'supervise' ? '#475569' : conn.type === 'broadcast' ? '#0E7490' : '#67E8F9'}
+              stroke={EDGE_CONFIG[conn.type].color}
               strokeWidth={0.15}
               strokeOpacity={0.15}
               strokeDasharray={conn.type === 'sync' ? '1 2' : conn.type === 'twin' ? '2 1' : undefined}
@@ -1490,14 +1502,15 @@ function MiniMap({
           const pos = positions[agent.id]
           if (!pos) return null
           const cfg = ROLE_CONFIG[agent.roleGroup]
+          const isSelected = agent.id === selectedAgentId
           return (
             <circle
               key={agent.id}
               cx={pos.x * scale}
               cy={pos.y * scale}
-              r={2}
-              fill={cfg.color}
-              opacity={0.8}
+              r={isSelected ? 3 : 1.5}
+              fill={isSelected ? '#FFFFFF' : cfg.color}
+              opacity={isSelected ? 1 : 0.8}
             />
           )
         })}
@@ -1521,10 +1534,10 @@ function MiniMap({
           y={vpY}
           width={vpW}
           height={vpH}
-          fill="none"
+          fill="rgba(6,182,212,0.04)"
           stroke="#06B6D4"
           strokeWidth={0.3}
-          strokeOpacity={0.35}
+          strokeOpacity={0.4}
           rx={1}
         />
       </svg>
@@ -1688,7 +1701,8 @@ const SHORTCUTS = [
   { keys: ['+', '='], description: 'Zoom in' },
   { keys: ['-'], description: 'Zoom out' },
   { keys: ['0'], description: 'Reset zoom' },
-  { keys: ['1-8'], description: 'Filter by role group (1=Стратегия, 2=Тактика, ...)' },
+  { keys: ['F'], description: 'Fit to screen' },
+  { keys: ['1-8'], description: 'Filter by role group (1=Strategy, 2=Tactics, ...)' },
   { keys: ['9'], description: 'Clear role group filter (show all)' },
   { keys: ['G'], description: 'Toggle grid / radial view' },
   { keys: ['?'], description: 'Show keyboard shortcuts' },
@@ -1771,6 +1785,225 @@ function KeyboardShortcutsDialog({
   )
 }
 
+// ─── Right-Click Context Menu ────────────────────────────────────────────────
+
+function NodeContextMenu({
+  contextMenu,
+  agent,
+  onClose,
+  onViewDetails,
+  onHighlightConnections,
+  onToggleCollapse,
+  onFocusNode,
+}: {
+  contextMenu: ContextMenuState
+  agent: Agent | null
+  onClose: () => void
+  onViewDetails: () => void
+  onHighlightConnections: () => void
+  onToggleCollapse: () => void
+  onFocusNode: () => void
+}) {
+  if (!contextMenu.visible || !agent) return null
+  const config = ROLE_CONFIG[agent.roleGroup] || ROLE_CONFIG['\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
+  const hasChildren = (agent.children && agent.children.length > 0) || false
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.12 }}
+      className="fixed z-[60] rounded-xl overflow-hidden"
+      style={{
+        left: contextMenu.x,
+        top: contextMenu.y,
+        background: 'rgba(26, 26, 26, 0.95)',
+        backdropFilter: 'blur(16px)',
+        border: `1px solid rgba(${config.colorRgb}, 0.3)`,
+        boxShadow: `0 0 20px rgba(${config.colorRgb}, 0.1), 0 8px 24px rgba(0,0,0,0.5)`,
+        minWidth: 180,
+      }}
+    >
+      {/* Header */}
+      <div className="px-3 py-2 flex items-center gap-2" style={{ borderBottom: `1px solid rgba(51,51,51,0.5)` }}>
+        <AgentAvatarIcon avatar={agent.avatar} size={14} color={config.color} />
+        <span className="text-white text-xs font-semibold truncate">{agent.name}</span>
+      </div>
+      <div className="py-1">
+        <button
+          onClick={() => { onViewDetails(); onClose() }}
+          className="w-full text-left px-3 py-1.5 text-xs text-[#B0B0B0] hover:text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+        >
+          <Eye className="w-3 h-3" style={{ color: config.color }} />
+          View Details
+        </button>
+        <button
+          onClick={() => { onHighlightConnections(); onClose() }}
+          className="w-full text-left px-3 py-1.5 text-xs text-[#B0B0B0] hover:text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+        >
+          <Link2 className="w-3 h-3" style={{ color: config.color }} />
+          Highlight Connections
+        </button>
+        {hasChildren && (
+          <button
+            onClick={() => { onToggleCollapse(); onClose() }}
+            className="w-full text-left px-3 py-1.5 text-xs text-[#B0B0B0] hover:text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+          >
+            <Layers className="w-3 h-3" style={{ color: config.color }} />
+            Collapse/Expand
+          </button>
+        )}
+        <button
+          onClick={() => { onFocusNode(); onClose() }}
+          className="w-full text-left px-3 py-1.5 text-xs text-[#B0B0B0] hover:text-white hover:bg-white/5 flex items-center gap-2 transition-colors"
+        >
+          <Focus className="w-3 h-3" style={{ color: config.color }} />
+          Focus
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+// ─── Connection Filter Panel ─────────────────────────────────────────────────
+
+function ConnectionFilterPanel({
+  hiddenEdgeTypes,
+  onToggleEdgeType,
+}: {
+  hiddenEdgeTypes: Set<EdgeType>
+  onToggleEdgeType: (type: EdgeType) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const visibleCount = (Object.keys(EDGE_CONFIG) as EdgeType[]).length - hiddenEdgeTypes.size
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-all hover:scale-105"
+        style={{
+          background: visibleCount < 6 ? 'rgba(6, 182, 212, 0.15)' : 'rgba(45, 45, 45, 0.5)',
+          color: visibleCount < 6 ? '#06B6D4' : '#B0B0B0',
+          border: `1px solid ${visibleCount < 6 ? 'rgba(6,182,212,0.3)' : 'rgba(51,51,51,0.5)'}`,
+        }}
+      >
+        <Filter className="w-3 h-3" />
+        <span className="hidden md:inline">Edges</span>
+        <span className="text-[9px] opacity-60">{visibleCount}/{(Object.keys(EDGE_CONFIG) as EdgeType[]).length}</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full mb-2 left-0 rounded-xl overflow-hidden"
+            style={{
+              background: 'rgba(26, 26, 26, 0.95)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(51,51,51,0.5)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+              width: 170,
+            }}
+          >
+            <div className="px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(51,51,51,0.5)' }}>
+              <span className="text-[9px] text-[#555] uppercase tracking-wider font-semibold">Connection Types</span>
+            </div>
+            <div className="py-1">
+              {(Object.entries(EDGE_CONFIG) as [EdgeType, typeof EDGE_CONFIG[EdgeType]][]).map(([type, cfg]) => {
+                const isHidden = hiddenEdgeTypes.has(type)
+                return (
+                  <button
+                    key={type}
+                    onClick={() => onToggleEdgeType(type)}
+                    className="w-full text-left px-2.5 py-1.5 flex items-center gap-2 text-xs transition-colors hover:bg-white/5"
+                    style={{ color: isHidden ? '#555' : cfg.color }}
+                  >
+                    {isHidden ? (
+                      <EyeOff className="w-3 h-3" style={{ color: '#555' }} />
+                    ) : (
+                      <Eye className="w-3 h-3" style={{ color: cfg.color }} />
+                    )}
+                    {React.createElement(cfg.icon, { size: 10, color: isHidden ? '#555' : cfg.color })}
+                    <span className={isHidden ? 'line-through' : ''}>{cfg.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── Breadcrumb Trail ────────────────────────────────────────────────────────
+
+function BreadcrumbTrail({
+  activeFilter,
+  onClearFilter,
+  zoom,
+  onResetView,
+}: {
+  activeFilter: string | null
+  onClearFilter: () => void
+  zoom: number
+  onResetView: () => void
+}) {
+  if (!activeFilter && zoom >= 0.95 && zoom <= 1.05) return null
+  const cfg = activeFilter ? ROLE_CONFIG[activeFilter] : null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+      style={{
+        background: 'rgba(26, 26, 26, 0.92)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <button
+        onClick={onResetView}
+        className="flex items-center gap-1 text-[10px] text-[#B0B0B0] hover:text-white transition-colors"
+      >
+        <Home className="w-3 h-3" />
+        <span>All</span>
+      </button>
+      {(activeFilter || zoom < 0.95 || zoom > 1.05) && (
+        <ChevronRight className="w-3 h-3 text-[#555]" />
+      )}
+      {zoom < 0.95 || zoom > 1.05 ? (
+        <span className="text-[10px] text-[#06B6D4] font-medium">
+          {Math.round(zoom * 100)}%
+        </span>
+      ) : null}
+      {activeFilter && cfg && (
+        <>
+          {(zoom < 0.95 || zoom > 1.05) && (
+            <ChevronRight className="w-3 h-3 text-[#555]" />
+          )}
+          <span className="text-[10px] font-medium flex items-center gap-1" style={{ color: cfg.color }}>
+            {React.createElement(cfg.icon, { size: 10, color: cfg.color })}
+            {cfg.label}
+          </span>
+          <button
+            onClick={onClearFilter}
+            className="ml-1 text-[#555] hover:text-white transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </>
+      )}
+    </motion.div>
+  )
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
@@ -1791,6 +2024,9 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [statusTransitions, setStatusTransitions] = useState<Record<string, { status: string; timestamp: number }>>({})
   const [pulsingConnections, setPulsingConnections] = useState<Set<string>>(new Set())
+  const [hiddenEdgeTypes, setHiddenEdgeTypes] = useState<Set<EdgeType>>(new Set())
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, agentId: null })
+  const [highlightedConnections, setHighlightedConnections] = useState<Set<string>>(new Set())
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -1832,13 +2068,32 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  // Keyboard shortcuts
+  // ─── Fit to Screen ────────────────────────────────────────────────────
+  const fitToScreen = useCallback(() => {
+    // Calculate bounding box of all agent positions
+    // We'll use the current positions after computing them
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }, [])
+
+  // ─── Focus on a specific node ─────────────────────────────────────────
+  const focusOnNode = useCallback((agentId: string, positions: Record<string, { x: number; y: number }>) => {
+    const pos = positions[agentId]
+    if (!pos) return
+    const cx = dimensions.width / 2
+    const cy = dimensions.height / 2
+    setZoom(1.8)
+    setPan({
+      x: cx - pos.x * 1.8,
+      y: cy - pos.y * 1.8,
+    })
+  }, [dimensions])
+
+  // ─── Keyboard shortcuts ──────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip if user is typing in an input/textarea/select
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
-        // Only allow Escape from input fields
         if (e.key === 'Escape') {
           ;(target as HTMLInputElement).blur()
           if (selectedAgent) setSelectedAgent(null)
@@ -1847,43 +2102,41 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         return
       }
 
-      // Escape: close detail panel or shortcuts
       if (e.key === 'Escape') {
-        if (shortcutsOpen) {
-          setShortcutsOpen(false)
-        } else if (selectedAgent) {
-          setSelectedAgent(null)
-        }
+        if (contextMenu.visible) { setContextMenu({ visible: false, x: 0, y: 0, agentId: null }); return }
+        if (shortcutsOpen) { setShortcutsOpen(false); return }
+        if (selectedAgent) { setSelectedAgent(null); return }
         return
       }
 
-      // / or Ctrl+K: focus search
       if (e.key === '/' || (e.key === 'k' && (e.ctrlKey || e.metaKey))) {
         e.preventDefault()
         searchInputRef.current?.focus()
         return
       }
 
-      // + or =: zoom in
       if (e.key === '+' || e.key === '=') {
         setZoom(z => Math.min(3, z * 1.15))
         return
       }
 
-      // -: zoom out
       if (e.key === '-') {
         setZoom(z => Math.max(0.3, z * 0.85))
         return
       }
 
-      // 0: reset zoom
       if (e.key === '0') {
         setZoom(1)
         setPan({ x: 0, y: 0 })
         return
       }
 
-      // 1-8: filter by role group
+      // F: fit to screen
+      if (e.key === 'f' || e.key === 'F') {
+        fitToScreen()
+        return
+      }
+
       if (e.key >= '1' && e.key <= '8') {
         const index = parseInt(e.key) - 1
         if (index < ROLE_ORDER.length) {
@@ -1893,19 +2146,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         return
       }
 
-      // 9: clear filter (show all)
       if (e.key === '9') {
         setActiveFilter(null)
         return
       }
 
-      // G: toggle grid/radial view
       if (e.key === 'g' || e.key === 'G') {
         setViewMode(prev => prev === 'radial' ? 'grid' : 'radial')
         return
       }
 
-      // ?: show keyboard shortcuts
       if (e.key === '?') {
         setShortcutsOpen(prev => !prev)
         return
@@ -1914,7 +2164,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedAgent, shortcutsOpen])
+  }, [selectedAgent, shortcutsOpen, contextMenu.visible, fitToScreen])
+
+  // Close context menu on click outside
+  useEffect(() => {
+    const handler = () => {
+      if (contextMenu.visible) setContextMenu({ visible: false, x: 0, y: 0, agentId: null })
+    }
+    window.addEventListener('click', handler)
+    return () => window.removeEventListener('click', handler)
+  }, [contextMenu.visible])
 
   // Search matching
   const searchMatches = useMemo(() => {
@@ -1954,12 +2213,12 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     prevSearchQuery.current = searchQuery
   }, [searchQuery, searchMatches, agents.length])
 
-  // ─── Simulated Status Transitions (every 15s) ─────────────────────────────────
+  // ─── Simulated Status Transitions (every 15s) ────────────────────────────
   useEffect(() => {
     if (agents.length === 0) return
     const statusCycle = ['active', 'idle', 'paused', 'standby'] as const
     const interval = setInterval(() => {
-      const count = 1 + Math.floor(Math.random() * 2) // 1-2 agents
+      const count = 1 + Math.floor(Math.random() * 2)
       const newTransitions: Record<string, { status: string; timestamp: number }> = {}
       for (let i = 0; i < count; i++) {
         const idx = Math.floor(Math.random() * agents.length)
@@ -1969,14 +2228,12 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         const newStatus = statusCycle[nextIdx]
         newTransitions[agent.id] = { status: newStatus, timestamp: Date.now() }
       }
-      // Update agent statuses
       setAgents(prev => prev.map(a => {
         const transition = newTransitions[a.id]
         if (transition) return { ...a, status: transition.status }
         return a
       }))
       setStatusTransitions(prev => ({ ...prev, ...newTransitions }))
-      // Clear transitions after 2 seconds (floating label fades out)
       setTimeout(() => {
         setStatusTransitions(prev => {
           const next = { ...prev }
@@ -1994,8 +2251,9 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     const cx = dimensions.width / 2
     const cy = dimensions.height / 2
     const minDim = Math.min(dimensions.width, dimensions.height)
-    const baseRadius = minDim * 0.12
-    const ringSpacing = minDim * 0.12
+    // ─── Improved spacing: wider rings for less overlap ───
+    const baseRadius = minDim * 0.14
+    const ringSpacing = minDim * 0.14
 
     const groupRadii: Record<string, number> = {
       '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f': baseRadius,
@@ -2022,8 +2280,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
         groupAgents.forEach((agent, i) => {
           const angle = (2 * Math.PI * i) / count - Math.PI / 2
-          const ax = cx + Math.cos(angle) * radius
-          const ay = cy + Math.sin(angle) * radius
+          // Add slight jitter to reduce overlap between groups with same angle
+          const jitter = count > 1 ? (i % 2 === 0 ? 8 : -8) : 0
+          const ax = cx + Math.cos(angle) * (radius + jitter)
+          const ay = cy + Math.sin(angle) * (radius + jitter)
           pos[agent.id] = { x: ax, y: ay }
           sumX += ax
           sumY += ay
@@ -2035,7 +2295,6 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         }
       }
     } else {
-      // Grid layout
       const cols = 4
       const cellW = minDim * 0.2
       const cellH = minDim * 0.18
@@ -2051,7 +2310,6 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         }
       })
 
-      // Compute centroids per group
       for (const group of ROLE_ORDER) {
         const groupAgents = agents.filter(a => a.roleGroup === group)
         let sumX = 0
@@ -2066,8 +2324,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       }
     }
 
-    // Build connections from hierarchy API data (now includes typed connections)
-    // For now compute locally:
+    // Build connections from hierarchy API data
     const conns: Connection[] = []
 
     // Command edges: parent -> child
@@ -2083,16 +2340,14 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       }
     }
 
-    // Sync edges: between same-group siblings (agents in same roleGroup with same parent)
+    // Sync edges
     const syncSeen = new Set<string>()
     for (const group of ROLE_ORDER) {
       const groupAgents = agents.filter(a => a.roleGroup === group)
-      // Create sync edges between pairs in same group
       for (let i = 0; i < groupAgents.length; i++) {
         for (let j = i + 1; j < groupAgents.length; j++) {
           const a1 = groupAgents[i]
           const a2 = groupAgents[j]
-          // Only sync between siblings (same parent) or root agents in same group
           if (a1.parentId === a2.parentId && pos[a1.id] && pos[a2.id]) {
             const key = [a1.id, a2.id].sort().join('-')
             if (!syncSeen.has(key)) {
@@ -2128,9 +2383,9 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       }
     }
 
-    // Delegate edges: tactical coordinator delegates to execution agents
-    const taktikaAgents = agents.filter(a => a.roleGroup === 'Тактика')
-    const ispolnenieAgents = agents.filter(a => a.roleGroup === 'Исполнение')
+    // Delegate edges
+    const taktikaAgents = agents.filter(a => a.roleGroup === '\u0422\u0430\u043a\u0442\u0438\u043a\u0430')
+    const ispolnenieAgents = agents.filter(a => a.roleGroup === '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435')
     for (const t of taktikaAgents) {
       if (t.role.includes('Coordinator') && pos[t.id]) {
         for (const e of ispolnenieAgents) {
@@ -2147,11 +2402,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       }
     }
 
-    // Supervise edges: control agents supervise execution agents
-    const kontrolAgents = agents.filter(a => a.roleGroup === 'Контроль')
+    // Supervise edges
+    const kontrolAgents = agents.filter(a => a.roleGroup === '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c')
     for (const c of kontrolAgents) {
       if (pos[c.id]) {
-        // Each control agent supervises 1-2 execution agents
         for (const e of ispolnenieAgents) {
           if (pos[e.id] && conns.filter(cn => cn.type === 'supervise' && cn.to === e.id).length === 0) {
             conns.push({
@@ -2161,18 +2415,17 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               type: 'supervise',
               strength: 0.4,
             })
-            break // one supervise per control agent per execution agent
+            break
           }
         }
       }
     }
 
-    // Broadcast edges: strategy agents broadcast to all group leads
-    const strategyAgents = agents.filter(a => a.roleGroup === 'Стратегия' && !a.parentId)
+    // Broadcast edges
+    const strategyAgents = agents.filter(a => a.roleGroup === '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f' && !a.parentId)
     for (const s of strategyAgents) {
       if (pos[s.id]) {
-        // Broadcast to group leads (agents without parents in each group)
-        const groupLeads = agents.filter(a => !a.parentId && a.roleGroup !== 'Стратегия' && pos[a.id])
+        const groupLeads = agents.filter(a => !a.parentId && a.roleGroup !== '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f' && pos[a.id])
         for (const lead of groupLeads) {
           conns.push({
             id: `broadcast-${s.id}-${lead.id}`,
@@ -2188,18 +2441,17 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     return { positions: pos, connections: conns, groupCentroids: centroids }
   }, [agents, dimensions, viewMode])
 
-  // ─── Simulated Connection Pulse (every 8s) ────────────────────────────────────
+  // ─── Simulated Connection Pulse (every 8s) ────────────────────────────────
   useEffect(() => {
     if (connections.length === 0) return
     const interval = setInterval(() => {
-      const count = 1 + Math.floor(Math.random() * 2) // 1-2 connections
+      const count = 1 + Math.floor(Math.random() * 2)
       const selected = new Set<string>()
       for (let i = 0; i < count; i++) {
         const idx = Math.floor(Math.random() * connections.length)
         selected.add(connections[idx].id)
       }
       setPulsingConnections(selected)
-      // Clear after 3 seconds
       setTimeout(() => {
         setPulsingConnections(new Set())
       }, 3000)
@@ -2236,13 +2488,25 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const resetView = useCallback(() => {
     setZoom(1)
     setPan({ x: 0, y: 0 })
+    setActiveFilter(null)
   }, [])
 
   const isAgentDimmed = useCallback((agent: Agent) => {
     if (searchQuery.trim() && !searchMatches.has(agent.id)) return true
     if (activeFilter && agent.roleGroup !== activeFilter) return true
+    // Dim agents not connected to highlighted connections
+    if (highlightedConnections.size > 0) {
+      const connectedAgentIds = new Set<string>()
+      for (const conn of connections) {
+        if (highlightedConnections.has(conn.id)) {
+          connectedAgentIds.add(conn.from)
+          connectedAgentIds.add(conn.to)
+        }
+      }
+      if (!connectedAgentIds.has(agent.id)) return true
+    }
     return false
-  }, [activeFilter, searchQuery, searchMatches])
+  }, [activeFilter, searchQuery, searchMatches, highlightedConnections, connections])
 
   const toggleCollapseNode = useCallback((agentId: string) => {
     setCollapsedNodes(prev => {
@@ -2268,6 +2532,26 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       y: -(ratioY * dimensions.height - dimensions.height / 2) * zoom,
     })
   }, [dimensions, zoom])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, agentId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      agentId,
+    })
+  }, [])
+
+  const handleToggleEdgeType = useCallback((type: EdgeType) => {
+    setHiddenEdgeTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(type)) next.delete(type)
+      else next.add(type)
+      return next
+    })
+  }, [])
 
   // Compute per-agent metrics
   const agentMetrics = useMemo(() => {
@@ -2324,11 +2608,21 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     return agents.filter(a => !collapsedChildren.has(a.id))
   }, [agents, collapsedNodes, collapsedGroups])
 
-  // Visible connections
+  // Visible connections (filtered by hidden edge types)
   const visibleConnections = useMemo(() => {
     const visibleIds = new Set(visibleAgents.map(a => a.id))
-    return connections.filter(c => visibleIds.has(c.from) && visibleIds.has(c.to))
-  }, [connections, visibleAgents])
+    return connections.filter(c =>
+      visibleIds.has(c.from) &&
+      visibleIds.has(c.to) &&
+      !hiddenEdgeTypes.has(c.type)
+    )
+  }, [connections, visibleAgents, hiddenEdgeTypes])
+
+  // Context menu agent
+  const contextMenuAgent = useMemo(() => {
+    if (!contextMenu.agentId) return null
+    return agents.find(a => a.id === contextMenu.agentId) || null
+  }, [contextMenu.agentId, agents])
 
   // Empty state
   if (!loading && agents.length === 0) {
@@ -2397,6 +2691,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          {/* Search glow filter for highlighted nodes */}
+          <filter id="searchGlow">
+            <feGaussianBlur stdDeviation="12" result="blur" />
+            <feFlood floodColor="#06B6D4" floodOpacity="0.3" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           {/* Arrow markers */}
           <marker id="arrowCommand" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
             <polygon points="0 0, 8 3, 0 6" fill="#67E8F9" opacity="0.6" />
@@ -2410,7 +2714,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </defs>
       </svg>
 
-      {/* Navigation bar */}
+      {/* ─── Improved Navigation bar ─── */}
       <div className="fixed top-0 left-0 right-0 z-40 px-4 py-3">
         <div
           className="flex items-center justify-between rounded-xl px-4 py-2.5 relative"
@@ -2421,11 +2725,11 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             boxShadow: '0 4px 24px rgba(6, 182, 212, 0.06)',
           }}
         >
-          {/* Bottom border gradient (road primary blue->transparent) */}
+          {/* Enhanced bottom gradient border */}
           <div
-            className="absolute bottom-0 left-2 right-2 h-px rounded-full"
+            className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.25), rgba(6, 182, 212, 0.4), rgba(6, 182, 212, 0.25), transparent)',
             }}
           />
           {/* Logo + Back Button */}
@@ -2433,7 +2737,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 active:scale-95"
                 style={{
                   background: 'rgba(6, 182, 212, 0.15)',
                   border: '1px solid rgba(6, 182, 212, 0.4)',
@@ -2462,8 +2766,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search agents..."
-              className="w-48 pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder:text-[#B0B0B0] outline-none"
+              placeholder="Search agents... (/)"
+              className="w-52 pl-8 pr-8 py-1.5 rounded-lg text-xs text-white placeholder:text-[#555] outline-none transition-all focus:ring-1 focus:ring-[#06B6D4]/40"
               style={{
                 background: 'rgba(45, 45, 45, 0.5)',
                 border: '1px solid rgba(51,51,51,0.5)',
@@ -2472,10 +2776,15 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 text-[#B0B0B0] hover:text-white"
+                className="absolute right-2 text-[#B0B0B0] hover:text-white transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
+            )}
+            {searchQuery && searchMatches.size > 0 && (
+              <span className="absolute right-8 text-[9px] text-[#06B6D4] font-medium">
+                {searchMatches.size}
+              </span>
             )}
           </div>
 
@@ -2492,19 +2801,20 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   onClick={() => setActiveFilter(isActive ? null : group)}
                   onMouseEnter={() => setHoveredGroup(group)}
                   onMouseLeave={() => setHoveredGroup(null)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 active:scale-95"
                   style={{
                     background: isActive
                       ? `rgba(${cfg.colorRgb}, 0.2)`
                       : 'rgba(45, 45, 45, 0.5)',
                     color: isActive ? cfg.color : '#B0B0B0',
                     border: `1px solid ${isActive ? `rgba(${cfg.colorRgb}, 0.4)` : 'rgba(51,51,51,0.5)'}`,
+                    boxShadow: isActive ? `0 0 12px rgba(${cfg.colorRgb}, 0.1)` : 'none',
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span className="hidden lg:inline">{group}</span>
                   <span
-                    className="text-[10px] px-1.5 py-0.5 rounded-md"
+                    className="text-[10px] px-1 py-0.5 rounded-md"
                     style={{
                       background: `rgba(${cfg.colorRgb}, 0.15)`,
                       color: cfg.color,
@@ -2518,13 +2828,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </div>
 
           {/* Stats & Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* View mode toggle */}
             <div className="hidden md:flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-7 w-7 ${viewMode === 'radial' ? 'text-white' : 'text-[#B0B0B0]'}`}
+                className={`h-7 w-7 transition-all hover:scale-110 ${viewMode === 'radial' ? 'text-white' : 'text-[#B0B0B0]'}`}
                 onClick={() => setViewMode('radial')}
               >
                 <Circle className="h-3.5 w-3.5" />
@@ -2532,7 +2842,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-7 w-7 ${viewMode === 'grid' ? 'text-white' : 'text-[#B0B0B0]'}`}
+                className={`h-7 w-7 transition-all hover:scale-110 ${viewMode === 'grid' ? 'text-white' : 'text-[#B0B0B0]'}`}
                 onClick={() => setViewMode('grid')}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
@@ -2554,38 +2864,64 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <span className="text-[#B0B0B0] font-semibold">{stats.total} agents</span>
             </div>
 
-            {/* Zoom controls */}
+            {/* Separator */}
+            <div className="hidden md:block w-px h-5" style={{ background: 'rgba(51,51,51,0.5)' }} />
+
+            {/* Zoom controls with improved styling */}
             <div className="flex items-center gap-1">
               <AgentCreationDialog onCreated={fetchAgents} />
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
                 onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
-              <span className="text-[10px] text-[#B0B0B0] w-10 text-center">{Math.round(zoom * 100)}%</span>
+              {/* Zoom level indicator badge */}
+              <span
+                className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded"
+                style={{
+                  background: 'rgba(6, 182, 212, 0.1)',
+                  border: '1px solid rgba(6, 182, 212, 0.2)',
+                  color: '#06B6D4',
+                  minWidth: '36px',
+                  textAlign: 'center',
+                }}
+              >
+                {Math.round(zoom * 100)}%
+              </span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
                 onClick={() => setZoom(z => Math.min(3, z * 1.15))}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
               </Button>
+              {/* Fit to Screen button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
+                onClick={fitToScreen}
+                title="Fit to screen (F)"
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
                 onClick={resetView}
+                title="Reset view (0)"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
                 onClick={() => setShortcutsOpen(true)}
                 title="Keyboard shortcuts (?)"
               >
@@ -2595,6 +2931,14 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
       </div>
+
+      {/* Breadcrumb trail */}
+      <BreadcrumbTrail
+        activeFilter={activeFilter}
+        onClearFilter={() => setActiveFilter(null)}
+        zoom={zoom}
+        onResetView={resetView}
+      />
 
       {/* Mobile filter dropdown */}
       <div className="sm:hidden fixed top-16 left-4 z-40">
@@ -2640,7 +2984,6 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         className="absolute inset-0 w-full h-full z-10"
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         onMouseMove={(e) => {
-          // Edge hover detection
           const target = e.target as SVGElement
           const edgeGroup = target.closest('[data-edge-id]')
           if (edgeGroup) {
@@ -2654,18 +2997,22 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         <g
           transform={`translate(${dimensions.width / 2 + pan.x}, ${dimensions.height / 2 + pan.y}) scale(${zoom}) translate(${-dimensions.width / 2}, ${-dimensions.height / 2})`}
         >
-          {/* Background grid */}
-          <BackgroundGrid width={dimensions.width} height={dimensions.height} />
+          {/* Background grid - zoom-aware */}
+          <BackgroundGrid width={dimensions.width} height={dimensions.height} zoom={zoom} />
 
-          {/* Cluster backgrounds (subtle filled area) */}
+          {/* ─── Cluster backgrounds with group boundary contours ─── */}
           {ROLE_ORDER.map((group, gi) => {
             const cfg = ROLE_CONFIG[group]
             const minDim = Math.min(dimensions.width, dimensions.height)
-            const baseRadius = minDim * 0.12
-            const ringSpacing = minDim * 0.12
+            const baseRadius = minDim * 0.14
+            const ringSpacing = minDim * 0.14
             const radius = baseRadius + ringSpacing * gi
             const isHighlighted = hoveredGroup === group || activeFilter === group
             const isCollapsedGroup = collapsedGroups.has(group)
+
+            // Compute group contour from actual node positions
+            const groupAgents = visibleAgents.filter(a => a.roleGroup === group)
+            const groupPositions = groupAgents.map(a => positions[a.id]).filter(Boolean)
 
             return (
               <g key={`cluster-${group}`}>
@@ -2680,6 +3027,22 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   strokeOpacity={isHighlighted ? 0.25 : 0.04}
                   strokeDasharray="4 8"
                 />
+
+                {/* ─── Group boundary contour line ─── */}
+                {/* Draw a subtle dashed contour around the actual group nodes */}
+                {groupPositions.length >= 2 && viewMode === 'radial' && !isCollapsedGroup && (
+                  <ellipse
+                    cx={groupCentroids[group]?.x || dimensions.width / 2}
+                    cy={groupCentroids[group]?.y || dimensions.height / 2}
+                    rx={radius * 0.35}
+                    ry={radius * 0.3}
+                    fill="none"
+                    stroke={cfg.color}
+                    strokeWidth={0.15}
+                    strokeOpacity={isHighlighted ? 0.2 : 0.06}
+                    strokeDasharray="6 6"
+                  />
+                )}
 
                 {/* Active filter group: glow + pulse */}
                 {activeFilter === group && (
@@ -2828,6 +3191,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             const fromAgent = agents.find(a => a.id === conn.from)
             const toAgent = agents.find(a => a.id === conn.to)
             const cfg = ROLE_CONFIG[fromAgent?.roleGroup || '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
+            const isHighlightedConn = highlightedConnections.has(conn.id)
             return (
               <ConnectionLine
                 key={conn.id}
@@ -2842,7 +3206,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 hoveredEdge={hoveredEdge}
                 fromName={fromAgent?.name || ''}
                 toName={toAgent?.name || ''}
-                isPulsing={pulsingConnections.has(conn.id)}
+                isPulsing={pulsingConnections.has(conn.id) || isHighlightedConn}
               />
             )
           })}
@@ -2870,6 +3234,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   onClick={() => setSelectedAgent(selectedAgent?.id === agent.id ? null : agent)}
                   onToggleCollapse={() => toggleCollapseNode(agent.id)}
                   onHover={setHoveredAgent}
+                  onContextMenu={handleContextMenu}
                 />
                 {/* Hover tooltip */}
                 {hoveredAgent === agent.id && (
@@ -2881,10 +3246,14 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </g>
       </svg>
 
-      {/* Bottom-left panels: Stats + Legend */}
+      {/* Bottom-left panels: Stats + Legend + Connection Filter */}
       <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-2">
         <StatsDashboard stats={stats} />
         <LegendPanel />
+        <ConnectionFilterPanel
+          hiddenEdgeTypes={hiddenEdgeTypes}
+          onToggleEdgeType={handleToggleEdgeType}
+        />
       </div>
 
       {/* Bottom-right: Mini-map */}
@@ -2897,6 +3266,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           pan={pan}
           zoom={zoom}
           onClickMap={handleMiniMapClick}
+          selectedAgentId={selectedAgent?.id || null}
         />
       </div>
 
@@ -2907,6 +3277,38 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             agent={selectedAgent}
             allAgents={agents}
             onClose={() => setSelectedAgent(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Right-click context menu */}
+      <AnimatePresence>
+        {contextMenu.visible && (
+          <NodeContextMenu
+            contextMenu={contextMenu}
+            agent={contextMenuAgent}
+            onClose={() => setContextMenu({ visible: false, x: 0, y: 0, agentId: null })}
+            onViewDetails={() => {
+              if (contextMenuAgent) setSelectedAgent(contextMenuAgent)
+            }}
+            onHighlightConnections={() => {
+              if (contextMenuAgent) {
+                const connIds = new Set(
+                  connections
+                    .filter(c => c.from === contextMenuAgent.id || c.to === contextMenuAgent.id)
+                    .map(c => c.id)
+                )
+                setHighlightedConnections(connIds)
+                // Auto-clear after 5 seconds
+                setTimeout(() => setHighlightedConnections(new Set()), 5000)
+              }
+            }}
+            onToggleCollapse={() => {
+              if (contextMenuAgent) toggleCollapseNode(contextMenuAgent.id)
+            }}
+            onFocusNode={() => {
+              if (contextMenuAgent) focusOnNode(contextMenuAgent.id, positions)
+            }}
           />
         )}
       </AnimatePresence>
