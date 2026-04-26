@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  roleGroup   String   // Стратегия, Тактика, Контроль, Исполнение
+  status      String   @default("active") // active, idle, error, offline
+  formula     String   // ToT, CoVe, ReWOO, Reflexion, ReAct, MoA
+  parentId    String?
+  twinId      String?   @unique
+  skills      String   @default("")  // comma-separated skill names
+  description String   @default("")
+  avatar      String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  parent      Agent?   @relation("AgentHierarchy", fields: [parentId], references: [id])
+  children    Agent[]  @relation("AgentHierarchy")
+  twin        Agent?   @relation("AgentTwin", fields: [twinId], references: [id])
+  twinOf      Agent?   @relation("AgentTwin")
+  tasks       Task[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  status      String   @default("pending") // pending, running, completed, failed
+  priority    String   @default("medium") // low, medium, high, critical
+  agentId     String?
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
