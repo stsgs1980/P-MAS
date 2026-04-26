@@ -126,6 +126,57 @@ Complete rewrite of agent-hierarchy.tsx with all enhancement categories:
 ## Unresolved Issues
 - None currently -- all features working as expected
 
+### Task fix-3: UI Refinements — Thinner Lines, Visible Back Button, Simplified Nodes
+
+**Fix 1: Thinner Lines (strokeWidth reduction across entire file)**
+- Background grid: strokeWidth 0.5 -> 0.3
+- Connection lines: command 0.8+strength*0.4 -> 0.4+strength*0.2, twin 0.8 -> 0.4, sync 0.6 -> 0.3
+- Hover detection path: strokeWidth 8 -> 6
+- Glow path multiplier: 0.7 -> 0.5
+- Twin pulsing glow: strokeWidth 2 -> 1, strokeOpacity reduced
+- Edge hover labels: strokeWidth 0.5 -> 0.3
+- All strokeOpacity values reduced by ~20-30% for subtlety
+- Agent node: activity ring 0.4 -> 0.2, outer glow 0.5 -> 0.25, selection ring 1 -> 0.5
+- Main orb stroke: highlighted 1.5 -> 0.6, normal 0.8 -> 0.4
+- Avatar icon strokeWidth: 2 -> 1.5
+- Formula badge: 0.3 -> 0.2
+- Status indicator: 0.4 -> 0.2
+- Expand/collapse button: 0.8 -> 0.4
+- Tooltip border: 0.5 -> 0.3
+- Mini-map: cluster rings 0.5 -> 0.3, connections 0.5 -> 0.3, viewport 0.8 -> 0.4
+- Cluster rings: highlighted 1.5 -> 0.75, normal 0.5 -> 0.25
+- Cluster header badge: 0.5 -> 0.3
+- Inter-cluster connections: 0.5 -> 0.3
+
+**Fix 2: Visible "Back" Button in Detail Panel**
+- Replaced small ghost X close button with prominent "Back" button using ChevronLeft icon
+- Back button styled with role color background (rgba 0.15), colored border (rgba 0.3), colored text
+- Added colored stripe at top of detail panel (3px gradient bar using role color)
+- ChevronLeft already imported in the file
+
+**Fix 3: Simplified Nodes — Removed Visual Clutter**
+- REMOVED: Mini progress bar (bottom of node)
+- REMOVED: Skills as small floating tags (floating around the node)
+- REMOVED: "+N more" text for skills
+- REMOVED: Connection count badge (bottom-right circle)
+- REMOVED: Task counter badge (bottom-left circle)
+- REMOVED: Role label (was not present in current code, noted)
+- ADDED: Simple "{skillCount} skills" text below agent name (fontSize 7, opacity 0.6)
+- KEPT: Avatar icon, name, formula badge, status dot, expand/collapse button
+- Shrunk node orbs: main r=28 (was 32), inner r=20 (was 24), outer r=35 (was 40), selection r=40 (was 46)
+- Activity indicator ring: r=38 (was 44)
+- Expand/collapse button: r=5 (was 7), repositioned to y=-36 (was -42)
+- Formula badge: smaller (28x12 was 32x14), repositioned
+- Status dot: r=4 (was 5), repositioned
+- Avatar icon: size=16 (was 18), foreignObject 20x20 (was 24x24)
+- Name text: fontSize 10 (was 11), y=42 (was 48)
+- Cleaned up unused props: taskCount, connectionCount, taskProgress removed from AgentNode interface
+- Simplified agentMetrics to only compute skillCount
+
+**Verification:**
+- `bun run lint` passes cleanly (0 errors, 0 warnings)
+- Dev server compiles successfully
+
 ## Next Phase Priorities
 - Add real-time agent status updates (WebSocket)
 - Add task creation and assignment UI within agent detail panel

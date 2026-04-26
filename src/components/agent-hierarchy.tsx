@@ -235,7 +235,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={i * spacing}
           y2={height}
           stroke="#94a3b8"
-          strokeWidth={0.5}
+          strokeWidth={0.3}
         />
       ))}
       {Array.from({ length: Math.ceil(height / spacing) + 1 }, (_, i) => (
@@ -246,7 +246,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={width}
           y2={i * spacing}
           stroke="#94a3b8"
-          strokeWidth={0.5}
+          strokeWidth={0.3}
         />
       ))}
     </g>
@@ -369,7 +369,7 @@ function ConnectionLine({
     )
   }
 
-  const strokeWidth = type === 'command' ? 1.5 + strength * 0.8 : type === 'twin' ? 1.5 : 1
+  const strokeWidth = type === 'command' ? 0.4 + strength * 0.2 : type === 'twin' ? 0.4 : 0.3
   const syncColor = '#64748b'
 
   const strokeColor = type === 'sync' ? syncColor : color
@@ -384,7 +384,7 @@ function ConnectionLine({
         d={pathD}
         fill="none"
         stroke="transparent"
-        strokeWidth={12}
+        strokeWidth={6}
       />
       {/* Main path */}
       <path
@@ -393,7 +393,7 @@ function ConnectionLine({
         fill="none"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
-        strokeOpacity={isHovered ? 0.5 : 0.25}
+        strokeOpacity={isHovered ? 0.4 : 0.18}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
       {/* Glow path */}
@@ -401,8 +401,8 @@ function ConnectionLine({
         d={pathD}
         fill="none"
         stroke={strokeColor}
-        strokeWidth={strokeWidth * 0.7}
-        strokeOpacity={isHovered ? 0.7 : 0.4}
+        strokeWidth={strokeWidth * 0.5}
+        strokeOpacity={isHovered ? 0.5 : 0.25}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
 
@@ -412,13 +412,13 @@ function ConnectionLine({
           d={pathD}
           fill="none"
           stroke={color}
-          strokeWidth={4}
-          strokeOpacity={0.15}
+          strokeWidth={1}
+          strokeOpacity={0.1}
           strokeDasharray="8 4"
         >
           <animate
             attributeName="strokeOpacity"
-            values="0.05;0.2;0.05"
+            values="0.04;0.15;0.04"
             dur="2s"
             repeatCount="indefinite"
           />
@@ -465,8 +465,8 @@ function ConnectionLine({
             rx={4}
             fill="rgba(10, 14, 26, 0.9)"
             stroke={strokeColor}
-            strokeWidth={0.5}
-            strokeOpacity={0.4}
+            strokeWidth={0.3}
+            strokeOpacity={0.3}
           />
           <text
             x={midX}
@@ -488,7 +488,7 @@ function ConnectionLine({
             rx={6}
             fill="rgba(10, 14, 26, 0.95)"
             stroke="rgba(255,255,255,0.1)"
-            strokeWidth={0.5}
+            strokeWidth={0.3}
           />
           <text
             x={midX}
@@ -526,10 +526,7 @@ function AgentNode({
   isHighlighted,
   isDimmed,
   isCollapsed,
-  taskCount,
   skillCount,
-  connectionCount,
-  taskProgress,
   onClick,
   onToggleCollapse,
   onHover,
@@ -541,10 +538,7 @@ function AgentNode({
   isHighlighted: boolean
   isDimmed: boolean
   isCollapsed: boolean
-  taskCount: number
   skillCount: number
-  connectionCount: number
-  taskProgress: number
   onClick: () => void
   onToggleCollapse: () => void
   onHover: (id: string | null) => void
@@ -552,7 +546,6 @@ function AgentNode({
   const config = ROLE_CONFIG[agent.roleGroup] || ROLE_CONFIG['\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
   const statusColor = STATUS_COLORS[agent.status] || STATUS_COLORS.offline
   const formulaColor = FORMULA_COLORS[agent.formula] || '#888'
-  const skills = agent.skills ? agent.skills.split(',').filter(Boolean) : []
   const AvatarIcon = getAvatarIcon(agent.avatar)
   const hasChildren = (agent.children && agent.children.length > 0) || false
 
@@ -568,12 +561,12 @@ function AgentNode({
       {/* Activity indicator ring - spins when active */}
       {agent.status === 'active' && (
         <motion.circle
-          r={44}
+          r={38}
           fill="none"
           stroke={config.color}
-          strokeWidth={0.8}
-          strokeOpacity={0.3}
-          strokeDasharray="4 12"
+          strokeWidth={0.2}
+          strokeOpacity={0.15}
+          strokeDasharray="3 10"
           animate={{ rotate: 360 }}
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
           style={{ transformOrigin: '0 0' }}
@@ -582,14 +575,14 @@ function AgentNode({
 
       {/* Outer glow ring */}
       <motion.circle
-        r={40}
+        r={35}
         fill="none"
         stroke={config.color}
-        strokeWidth={1}
-        strokeOpacity={0.15}
+        strokeWidth={0.25}
+        strokeOpacity={0.08}
         animate={{
-          r: [40, 44, 40],
-          strokeOpacity: [0.15, 0.25, 0.15],
+          r: [35, 38, 35],
+          strokeOpacity: [0.1, 0.18, 0.1],
         }}
         transition={{
           duration: 3,
@@ -601,14 +594,14 @@ function AgentNode({
       {/* Selection ring */}
       {isSelected && (
         <motion.circle
-          r={46}
+          r={40}
           fill="none"
           stroke={config.color}
-          strokeWidth={2}
-          strokeOpacity={0.6}
+          strokeWidth={0.5}
+          strokeOpacity={0.4}
           animate={{
-            r: [46, 50, 46],
-            strokeOpacity: [0.6, 0.3, 0.6],
+            r: [40, 43, 40],
+            strokeOpacity: [0.4, 0.2, 0.4],
           }}
           transition={{
             duration: 2,
@@ -620,13 +613,13 @@ function AgentNode({
 
       {/* Main orb - background */}
       <motion.circle
-        r={32}
+        r={28}
         fill={`rgba(${config.colorRgb}, 0.12)`}
         stroke={config.color}
-        strokeWidth={isHighlighted ? 2.5 : 1.5}
-        strokeOpacity={isHighlighted ? 0.8 : 0.5}
+        strokeWidth={isHighlighted ? 0.6 : 0.4}
+        strokeOpacity={isHighlighted ? 0.6 : 0.3}
         animate={{
-          r: [32, 33.5, 32],
+          r: [28, 29, 28],
         }}
         transition={{
           duration: 3 + Math.random() * 2,
@@ -637,60 +630,60 @@ function AgentNode({
 
       {/* Inner glow */}
       <circle
-        r={24}
+        r={20}
         fill={`rgba(${config.colorRgb}, 0.06)`}
         filter="url(#orbGlow)"
       />
 
       {/* Avatar SVG icon via foreignObject */}
-      <foreignObject x={-12} y={-12} width={24} height={24} style={{ pointerEvents: 'none' }}>
+      <foreignObject x={-10} y={-10} width={20} height={20} style={{ pointerEvents: 'none' }}>
         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <AvatarIcon size={18} color={config.color} strokeWidth={2} />
+          <AvatarIcon size={16} color={config.color} strokeWidth={1.5} />
         </div>
       </foreignObject>
 
       {/* Agent name */}
       <text
-        y={48}
+        y={42}
         textAnchor="middle"
         fill="#e2e8f0"
-        fontSize="11"
+        fontSize="10"
         fontWeight="600"
         style={{ pointerEvents: 'none' }}
       >
         {agent.name}
       </text>
 
-      {/* Role label */}
+      {/* Skill count text below name */}
       <text
-        y={60}
+        y={52}
         textAnchor="middle"
         fill={config.color}
-        fontSize="8"
-        opacity={0.7}
+        fontSize="7"
+        opacity={0.6}
         style={{ pointerEvents: 'none' }}
       >
-        {agent.role}
+        {skillCount} skills
       </text>
 
       {/* Formula badge */}
-      <g transform="translate(-26, -26)">
+      <g transform="translate(-22, -22)">
         <rect
-          width={32}
-          height={14}
-          rx={4}
+          width={28}
+          height={12}
+          rx={3}
           fill={formulaColor}
           fillOpacity={0.2}
           stroke={formulaColor}
-          strokeWidth={0.5}
-          strokeOpacity={0.5}
+          strokeWidth={0.2}
+          strokeOpacity={0.4}
         />
         <text
-          x={16}
-          y={10}
+          x={14}
+          y={9}
           textAnchor="middle"
           fill={formulaColor}
-          fontSize="8"
+          fontSize="7"
           fontWeight="700"
           style={{ pointerEvents: 'none' }}
         >
@@ -699,9 +692,9 @@ function AgentNode({
       </g>
 
       {/* Status indicator */}
-      <g transform="translate(22, -28)">
+      <g transform="translate(20, -24)">
         <motion.circle
-          r={5}
+          r={4}
           fill={statusColor}
           animate={{
             opacity: agent.status === 'active'
@@ -717,139 +710,36 @@ function AgentNode({
           }}
         />
         <circle
-          r={5}
+          r={4}
           fill="none"
           stroke={statusColor}
-          strokeWidth={1}
-          strokeOpacity={0.4}
+          strokeWidth={0.2}
+          strokeOpacity={0.2}
         />
-      </g>
-
-      {/* Task counter badge (bottom-left) */}
-      <g transform="translate(-28, 22)">
-        <circle r={8} fill="rgba(10, 14, 26, 0.9)" stroke={config.color} strokeWidth={0.5} strokeOpacity={0.4} />
-        <text
-          textAnchor="middle"
-          y={3}
-          fill={config.color}
-          fontSize="7"
-          fontWeight="700"
-          style={{ pointerEvents: 'none' }}
-        >
-          {taskCount}
-        </text>
-      </g>
-
-      {/* Skill count badge (bottom-right) */}
-      <g transform="translate(28, 22)">
-        <circle r={8} fill="rgba(10, 14, 26, 0.9)" stroke={config.color} strokeWidth={0.5} strokeOpacity={0.4} />
-        <text
-          textAnchor="middle"
-          y={3}
-          fill={config.color}
-          fontSize="7"
-          fontWeight="700"
-          style={{ pointerEvents: 'none' }}
-        >
-          {skillCount}
-        </text>
-      </g>
-
-      {/* Connection count badge (top-right, above status) */}
-      <g transform="translate(30, -18)">
-        <circle r={6} fill="rgba(10, 14, 26, 0.9)" stroke="#64748b" strokeWidth={0.5} strokeOpacity={0.3} />
-        <text
-          textAnchor="middle"
-          y={2.5}
-          fill="#94a3b8"
-          fontSize="6"
-          fontWeight="600"
-          style={{ pointerEvents: 'none' }}
-        >
-          {connectionCount}
-        </text>
       </g>
 
       {/* Expand/collapse button for agents with children */}
       {hasChildren && (
         <g
-          transform="translate(0, -42)"
+          transform="translate(0, -36)"
           className="cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onToggleCollapse() }}
         >
           <circle
-            r={7}
+            r={5}
             fill="rgba(10, 14, 26, 0.9)"
             stroke={config.color}
-            strokeWidth={0.8}
-            strokeOpacity={0.5}
+            strokeWidth={0.4}
+            strokeOpacity={0.4}
           />
-          <foreignObject x={-5} y={-5} width={10} height={10} style={{ pointerEvents: 'none' }}>
+          <foreignObject x={-4} y={-4} width={8} height={8} style={{ pointerEvents: 'none' }}>
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {isCollapsed
-                ? React.createElement(ChevronRight, { size: 8, color: config.color })
-                : React.createElement(ChevronDown, { size: 8, color: config.color })
+                ? React.createElement(ChevronRight, { size: 7, color: config.color })
+                : React.createElement(ChevronDown, { size: 7, color: config.color })
               }
             </div>
           </foreignObject>
-        </g>
-      )}
-
-      {/* Mini progress bar at bottom */}
-      <g transform="translate(-16, 34)">
-        <rect width={32} height={3} rx={1.5} fill="rgba(255,255,255,0.05)" />
-        <rect
-          width={32 * taskProgress}
-          height={3}
-          rx={1.5}
-          fill={config.color}
-          fillOpacity={0.7}
-        />
-      </g>
-
-      {/* Skills as small floating tags */}
-      {skills.slice(0, 4).map((skill, i) => {
-        const angle = -Math.PI / 2 + ((i - (Math.min(skills.length, 4) - 1) / 2)) * 0.55
-        const tagR = 56
-        const tx = Math.cos(angle) * tagR
-        const ty = Math.sin(angle) * tagR + 10
-        return (
-          <g key={i} transform={`translate(${tx}, ${ty})`}>
-            <rect
-              x={-skill.length * 3.2 - 4}
-              y={-6}
-              width={skill.length * 6.4 + 8}
-              height={12}
-              rx={3}
-              fill={`rgba(${config.colorRgb}, 0.15)`}
-              stroke={config.color}
-              strokeWidth={0.5}
-              strokeOpacity={0.3}
-            />
-            <text
-              textAnchor="middle"
-              y={2}
-              fill={config.color}
-              fontSize="7"
-              opacity={0.85}
-              style={{ pointerEvents: 'none' }}
-            >
-              {skill.trim()}
-            </text>
-          </g>
-        )
-      })}
-      {skills.length > 4 && (
-        <g transform={`translate(0, ${56 + 22})`}>
-          <text
-            textAnchor="middle"
-            fill={config.color}
-            fontSize="7"
-            opacity={0.6}
-            style={{ pointerEvents: 'none' }}
-          >
-            +{skills.length - 4} more
-          </text>
         </g>
       )}
     </g>
@@ -879,8 +769,8 @@ function AgentTooltip({
         rx={8}
         fill="rgba(10, 14, 26, 0.95)"
         stroke={config.color}
-        strokeWidth={0.5}
-        strokeOpacity={0.3}
+        strokeWidth={0.3}
+        strokeOpacity={0.2}
       />
       {/* Agent name */}
       <text
@@ -971,6 +861,14 @@ function AgentDetailPanel({
       }}
     >
       <ScrollArea className="h-full">
+        {/* Top colored stripe */}
+        <div
+          style={{
+            height: 3,
+            background: `linear-gradient(90deg, transparent, ${config.color}, transparent)`,
+            opacity: 0.7,
+          }}
+        />
         <div className="p-5">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
@@ -989,14 +887,18 @@ function AgentDetailPanel({
                 <p className="text-xs" style={{ color: config.color }}>{agent.role}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onClose}
-              className="text-slate-400 hover:text-white h-8 w-8"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+              style={{
+                background: `rgba(${config.colorRgb}, 0.15)`,
+                border: `1px solid rgba(${config.colorRgb}, 0.3)`,
+                color: config.color,
+              }}
             >
-              <X className="h-4 w-4" />
-            </Button>
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span>Back</span>
+            </button>
           </div>
 
           {/* Status & Formula row */}
@@ -1314,8 +1216,8 @@ function MiniMap({
               r={radius}
               fill="none"
               stroke={cfg.color}
-              strokeWidth={0.5}
-              strokeOpacity={0.2}
+              strokeWidth={0.3}
+              strokeOpacity={0.15}
               strokeDasharray="2 4"
             />
           )
@@ -1334,8 +1236,8 @@ function MiniMap({
               x2={to.x * scale}
               y2={to.y * scale}
               stroke={conn.type === 'sync' ? '#64748b' : conn.type === 'twin' ? '#06b6d4' : '#f59e0b'}
-              strokeWidth={0.5}
-              strokeOpacity={0.3}
+              strokeWidth={0.3}
+              strokeOpacity={0.2}
               strokeDasharray={conn.type === 'sync' ? '1 2' : conn.type === 'twin' ? '2 1' : undefined}
             />
           )
@@ -1366,8 +1268,8 @@ function MiniMap({
           height={vpH}
           fill="none"
           stroke="#fff"
-          strokeWidth={0.8}
-          strokeOpacity={0.4}
+          strokeWidth={0.4}
+          strokeOpacity={0.3}
           rx={1}
         />
       </svg>
@@ -1797,16 +1699,11 @@ export default function AgentHierarchy() {
 
   // Compute per-agent metrics
   const agentMetrics = useMemo(() => {
-    const metrics: Record<string, { taskCount: number; skillCount: number; connectionCount: number; taskProgress: number }> = {}
+    const metrics: Record<string, { skillCount: number }> = {}
     for (const agent of agents) {
       const skills = agent.skills ? agent.skills.split(',').filter(Boolean) : []
-      const connCount = connections.filter(c => c.from === agent.id || c.to === agent.id).length
-      const taskCount = Array.isArray(agent.tasks) ? agent.tasks.length : 0
       metrics[agent.id] = {
-        taskCount,
         skillCount: skills.length,
-        connectionCount: connCount,
-        taskProgress: taskCount > 0 ? Math.min(1, (taskCount * 0.3) + 0.2) : 0.1,
       }
     }
     return metrics
@@ -2172,8 +2069,8 @@ export default function AgentHierarchy() {
                   r={radius}
                   fill={`rgba(${cfg.colorRgb}, ${isHighlighted ? 0.04 : 0.015})`}
                   stroke={cfg.color}
-                  strokeWidth={isHighlighted ? 1.5 : 0.5}
-                  strokeOpacity={isHighlighted ? 0.3 : 0.08}
+                  strokeWidth={isHighlighted ? 0.75 : 0.25}
+                  strokeOpacity={isHighlighted ? 0.2 : 0.06}
                   strokeDasharray="4 8"
                 />
 
@@ -2192,8 +2089,8 @@ export default function AgentHierarchy() {
                       rx={6}
                       fill="rgba(10, 14, 26, 0.9)"
                       stroke={cfg.color}
-                      strokeWidth={0.5}
-                      strokeOpacity={0.3}
+                      strokeWidth={0.3}
+                      strokeOpacity={0.2}
                     />
                     <foreignObject x={0} y={-7} width={12} height={12} style={{ pointerEvents: 'none' }}>
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2255,8 +2152,8 @@ export default function AgentHierarchy() {
                 x2={c2.x}
                 y2={c2.y}
                 stroke="#334155"
-                strokeWidth={0.5}
-                strokeOpacity={0.15}
+                strokeWidth={0.3}
+                strokeOpacity={0.1}
                 strokeDasharray="4 8"
               />
             )
@@ -2292,7 +2189,7 @@ export default function AgentHierarchy() {
           {visibleAgents.map(agent => {
             const pos = positions[agent.id]
             if (!pos) return null
-            const metrics = agentMetrics[agent.id] || { taskCount: 0, skillCount: 0, connectionCount: 0, taskProgress: 0 }
+            const metrics = agentMetrics[agent.id] || { skillCount: 0 }
             const isHighlighted = searchQuery.trim() ? searchMatches.has(agent.id) : hoveredGroup === agent.roleGroup || activeFilter === agent.roleGroup
             const isCollapsed = collapsedNodes.has(agent.id)
             return (
@@ -2305,10 +2202,7 @@ export default function AgentHierarchy() {
                   isHighlighted={!!isHighlighted}
                   isDimmed={isAgentDimmed(agent)}
                   isCollapsed={isCollapsed}
-                  taskCount={metrics.taskCount}
                   skillCount={metrics.skillCount}
-                  connectionCount={metrics.connectionCount}
-                  taskProgress={metrics.taskProgress}
                   onClick={() => setSelectedAgent(selectedAgent?.id === agent.id ? null : agent)}
                   onToggleCollapse={() => toggleCollapseNode(agent.id)}
                   onHover={setHoveredAgent}
