@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,17 @@ import {
   Database,
   Sparkles,
   ChevronDown,
+  Building2,
+  BarChart3,
+  ClipboardList,
+  Radio,
+  Search,
+  TrendingUp,
+  ShieldCheck,
+  Flame,
+  Bug,
+  CheckCircle,
+  type LucideIcon,
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -41,7 +52,7 @@ interface Agent {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: typeof Brain; label: string }> = {
+const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: LucideIcon; label: string }> = {
   'Стратегия': { color: '#f59e0b', colorRgb: '245,158,11', icon: Brain, label: 'Strategy' },
   'Тактика': { color: '#10b981', colorRgb: '16,185,129', icon: Target, label: 'Tactics' },
   'Контроль': { color: '#f43f5e', colorRgb: '244,63,94', icon: Shield, label: 'Control' },
@@ -64,6 +75,27 @@ const FORMULA_COLORS: Record<string, string> = {
   Reflexion: '#f43f5e',
   ReAct: '#06b6d4',
   MoA: '#ec4899',
+}
+
+// Avatar icon mapping: Lucide icon name string -> Lucide React component
+const AVATAR_ICON_MAP: Record<string, LucideIcon> = {
+  'building-2': Building2,
+  'bar-chart-3': BarChart3,
+  'sparkles': Sparkles,
+  'target': Target,
+  'clipboard-list': ClipboardList,
+  'radio': Radio,
+  'search': Search,
+  'trending-up': TrendingUp,
+  'shield-check': ShieldCheck,
+  'zap': Zap,
+  'flame': Flame,
+  'bug': Bug,
+  'check-circle': CheckCircle,
+}
+
+function getAvatarIcon(avatarName: string): LucideIcon {
+  return AVATAR_ICON_MAP[avatarName] || Brain
 }
 
 // ─── Background Particles ────────────────────────────────────────────────────
@@ -89,7 +121,6 @@ function BackgroundParticles() {
     resize()
     window.addEventListener('resize', resize)
 
-    // Initialize particles
     if (particlesRef.current.length === 0) {
       for (let i = 0; i < 120; i++) {
         particlesRef.current.push({
@@ -161,20 +192,17 @@ function ConnectionLine({
   const animationRef = useRef<number>(0)
   const pathRef = useRef<SVGPathElement>(null)
 
-  // Compute control points for a curved line
   const midX = (x1 + x2) / 2
   const midY = (y1 + y2) / 2
   const dx = x2 - x1
   const dy = y2 - y1
   const dist = Math.sqrt(dx * dx + dy * dy)
   const offset = dist * 0.2
-  // Perpendicular offset for curve
   const cx1 = midX - (dy / dist) * offset
   const cy1 = midY + (dx / dist) * offset
 
   const pathD = `M ${x1} ${y1} Q ${cx1} ${cy1} ${x2} ${y2}`
 
-  // Initialize flow particles
   useEffect(() => {
     if (particlesRef.current.length === 0) {
       const count = type === 'twin' ? 2 : 3
@@ -188,7 +216,6 @@ function ConnectionLine({
     }
   }, [type])
 
-  // Animate particles along path
   useEffect(() => {
     const animate = () => {
       for (const p of particlesRef.current) {
@@ -201,7 +228,6 @@ function ConnectionLine({
     return () => cancelAnimationFrame(animationRef.current)
   }, [])
 
-  // Render flow particles using getPointAtLength
   const FlowParticles = () => {
     const [points, setPoints] = useState<Array<{ x: number; y: number }>>([])
 
@@ -307,6 +333,7 @@ function AgentNode({
   const statusColor = STATUS_COLORS[agent.status] || STATUS_COLORS.offline
   const formulaColor = FORMULA_COLORS[agent.formula] || '#888'
   const skills = agent.skills ? agent.skills.split(',').filter(Boolean) : []
+  const AvatarIcon = getAvatarIcon(agent.avatar)
 
   return (
     <g
@@ -377,15 +404,12 @@ function AgentNode({
         filter="url(#orbGlow)"
       />
 
-      {/* Avatar */}
-      <text
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize="22"
-        style={{ pointerEvents: 'none' }}
-      >
-        {agent.avatar}
-      </text>
+      {/* Avatar SVG icon via foreignObject */}
+      <foreignObject x={-12} y={-12} width={24} height={24} style={{ pointerEvents: 'none' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AvatarIcon size={18} color={config.color} strokeWidth={2} />
+        </div>
+      </foreignObject>
 
       {/* Agent name */}
       <text
@@ -512,6 +536,13 @@ function AgentNode({
   )
 }
 
+// ─── Agent Icon Helper (for HTML context) ────────────────────────────────────
+
+function AgentAvatarIcon({ avatar, size = 20, color }: { avatar: string; size?: number; color: string }) {
+  const IconComponent = getAvatarIcon(avatar)
+  return React.createElement(IconComponent, { size, color, strokeWidth: 2 })
+}
+
 // ─── Agent Detail Panel ──────────────────────────────────────────────────────
 
 function AgentDetailPanel({
@@ -552,13 +583,13 @@ function AgentDetailPanel({
           <div className="flex items-start justify-between mb-5">
             <div className="flex items-center gap-3">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
                 style={{
                   background: `rgba(${config.colorRgb}, 0.15)`,
                   border: `1px solid rgba(${config.colorRgb}, 0.3)`,
                 }}
               >
-                {agent.avatar}
+                <AgentAvatarIcon avatar={agent.avatar} size={24} color={config.color} />
               </div>
               <div>
                 <h3 className="text-white font-bold text-base">{agent.name}</h3>
@@ -631,12 +662,12 @@ function AgentDetailPanel({
             >
               <span className="font-bold text-sm" style={{ color: formulaColor }}>{agent.formula}</span>
               <p className="text-slate-400 text-[10px] mt-1">
-                {agent.formula === 'ToT' && 'Tree of Thoughts — explores multiple reasoning paths'}
-                {agent.formula === 'CoVe' && 'Chain of Verification — validates outputs with self-checks'}
-                {agent.formula === 'ReWOO' && 'Research without Observation — plans then executes'}
-                {agent.formula === 'Reflexion' && 'Self-reflection — learns from past mistakes'}
-                {agent.formula === 'ReAct' && 'Reasoning + Action — interleaves thought and action'}
-                {agent.formula === 'MoA' && 'Mixture of Agents — combines multiple agent outputs'}
+                {agent.formula === 'ToT' && 'Tree of Thoughts -- explores multiple reasoning paths'}
+                {agent.formula === 'CoVe' && 'Chain of Verification -- validates outputs with self-checks'}
+                {agent.formula === 'ReWOO' && 'Research without Observation -- plans then executes'}
+                {agent.formula === 'Reflexion' && 'Self-reflection -- learns from past mistakes'}
+                {agent.formula === 'ReAct' && 'Reasoning + Action -- interleaves thought and action'}
+                {agent.formula === 'MoA' && 'Mixture of Agents -- combines multiple agent outputs'}
               </p>
             </div>
           </div>
@@ -669,13 +700,15 @@ function AgentDetailPanel({
               {parent && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-slate-500 w-16">Parent</span>
-                  <span className="text-slate-200">{parent.avatar} {parent.name}</span>
+                  <AgentAvatarIcon avatar={parent.avatar} size={14} color={ROLE_CONFIG[parent.roleGroup]?.color || '#888'} />
+                  <span className="text-slate-200">{parent.name}</span>
                 </div>
               )}
               {twin && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-slate-500 w-16">Twin</span>
-                  <span className="text-slate-200">{twin.avatar} {twin.name}</span>
+                  <AgentAvatarIcon avatar={twin.avatar} size={14} color={ROLE_CONFIG[twin.roleGroup]?.color || '#888'} />
+                  <span className="text-slate-200">{twin.name}</span>
                 </div>
               )}
               {children.length > 0 && (
@@ -684,7 +717,7 @@ function AgentDetailPanel({
                   <div className="ml-2 mt-1 space-y-1">
                     {children.map(c => (
                       <div key={c.id} className="flex items-center gap-1.5 text-xs text-slate-300">
-                        <span>{c.avatar}</span>
+                        <AgentAvatarIcon avatar={c.avatar} size={14} color={ROLE_CONFIG[c.roleGroup]?.color || '#888'} />
                         <span>{c.name}</span>
                       </div>
                     ))}
@@ -730,7 +763,6 @@ export default function AgentHierarchy() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 })
 
-  // Fetch agents
   const fetchAgents = useCallback(async () => {
     try {
       const res = await fetch('/api/hierarchy')
@@ -747,7 +779,6 @@ export default function AgentHierarchy() {
     fetchAgents()
   }, [fetchAgents])
 
-  // Seed data
   const handleSeed = useCallback(async () => {
     setLoading(true)
     try {
@@ -758,7 +789,6 @@ export default function AgentHierarchy() {
     }
   }, [fetchAgents])
 
-  // Track dimensions
   useEffect(() => {
     const update = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight })
@@ -768,7 +798,6 @@ export default function AgentHierarchy() {
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  // Calculate positions using radial layout
   const { positions, connections } = useMemo(() => {
     const cx = dimensions.width / 2
     const cy = dimensions.height / 2
@@ -785,7 +814,6 @@ export default function AgentHierarchy() {
 
     const pos: Record<string, { x: number; y: number }> = {}
 
-    // Position each group
     for (const group of ROLE_ORDER) {
       const groupAgents = agents.filter(a => a.roleGroup === group)
       const radius = groupRadii[group] || baseRadius
@@ -800,7 +828,6 @@ export default function AgentHierarchy() {
       })
     }
 
-    // Build connections
     const conns: Array<{
       id: string; from: string; to: string; type: 'parent' | 'twin'
     }> = []
@@ -816,7 +843,6 @@ export default function AgentHierarchy() {
       }
     }
 
-    // Twin connections (avoid duplicates)
     const twinSeen = new Set<string>()
     for (const agent of agents) {
       if (agent.twinId && pos[agent.id] && pos[agent.twinId]) {
@@ -836,7 +862,6 @@ export default function AgentHierarchy() {
     return { positions: pos, connections: conns }
   }, [agents, dimensions])
 
-  // Zoom & pan
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.92 : 1.08
@@ -868,13 +893,11 @@ export default function AgentHierarchy() {
     setPan({ x: 0, y: 0 })
   }, [])
 
-  // Filter logic
   const isAgentDimmed = useCallback((agent: Agent) => {
     if (!activeFilter) return false
     return agent.roleGroup !== activeFilter
   }, [activeFilter])
 
-  // Stats
   const stats = useMemo(() => {
     const byGroup: Record<string, number> = {}
     const byStatus: Record<string, number> = {}
@@ -959,7 +982,7 @@ export default function AgentHierarchy() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-600/20 border border-cyan-500/30">
-              <Brain className="w-4.5 h-4.5 text-cyan-400" />
+              <Brain className="w-4 h-4 text-cyan-400" />
             </div>
             <div>
               <span className="text-white font-bold text-sm tracking-wide">P-MAS</span>
@@ -1207,27 +1230,6 @@ export default function AgentHierarchy() {
             allAgents={agents}
             onClose={() => setSelectedAgent(null)}
           />
-        )}
-      </AnimatePresence>
-
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: '#0a0e1a' }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <motion.div
-                className="w-12 h-12 rounded-full border-2 border-cyan-500 border-t-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              />
-              <p className="text-slate-400 text-sm">Loading hierarchy...</p>
-            </div>
-          </motion.div>
         )}
       </AnimatePresence>
     </div>

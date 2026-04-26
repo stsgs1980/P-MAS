@@ -1,7 +1,7 @@
 # P-MAS Agent Hierarchy — Worklog
 
 ## Project Status
-P-MAS (Prompt-based Multi-Agent System) dashboard is live with fullscreen Agent Hierarchy visualization. Dev server running on port 3000, all APIs responding correctly.
+P-MAS (Prompt-based Multi-Agent System) dashboard is live with fullscreen Agent Hierarchy visualization. Dev server running on port 3000, all APIs responding correctly. All Unicode emojis replaced with Lucide SVG icons per No-Unicode Policy v2.1.
 
 ## Completed Tasks
 
@@ -18,8 +18,8 @@ P-MAS (Prompt-based Multi-Agent System) dashboard is live with fullscreen Agent 
 
 ### Task 3: Frontend — Agent Hierarchy Visualization
 - Fullscreen dark space-themed (#0a0e1a) SVG canvas with animated background particles
-- 4 role groups in radial layout: Стратегия (inner), Тактика, Контроль, Исполнение (outer)
-- Agent nodes with: emoji avatar, name, formula badge, status indicator, skills tags
+- 4 role groups in radial layout: Strategiya (inner), Taktika, Kontrol, Ispolnenie (outer)
+- Agent nodes with: Lucide SVG icon avatar, name, formula badge, status indicator, skills tags
 - Connection lines with animated data flow particles (parent-child solid, twin dashed)
 - Glass-morphism detail panel on agent click with full info including skills badges
 - Floating navigation with role group filters, stats, zoom/pan controls
@@ -28,19 +28,33 @@ P-MAS (Prompt-based Multi-Agent System) dashboard is live with fullscreen Agent 
 ### Task 4: Page Wiring + Database Seed
 - page.tsx uses dynamic import with ssr: false for client-side rendering
 - Database seeded with 13 agents covering all 4 role groups
-- Hierarchy relationships: Архитектор→Аналитик+Визионер, Координатор→Планировщик+Коммуникатор, Исполнитель-A↔Исполнитель-B (twins)
+- Hierarchy relationships: Arkhitektor->Analitik+Vizioner, Koordinator->Planirovshchik+Kommunikator, Ispolnitel-A<->Ispolnitel-B (twins)
 
 ### Task 5: Testing & Verification
 - Lint passes cleanly (0 errors)
-- API endpoints tested: /api/agents → 200, /api/hierarchy → 200, /api/seed → 200
+- API endpoints tested: /api/agents -> 200, /api/hierarchy -> 200, /api/seed -> 200
 - Browser tested with agent-browser: page renders, agents clickable, detail panel works, skills visible
 - No browser console errors
+
+### Task 6: No-Unicode Policy v2.1 Compliance
+- Replaced ALL Unicode emoji avatars with Lucide SVG icon identifiers:
+  - building-2, bar-chart-3, sparkles, target, clipboard-list, radio, search, trending-up, shield-check, zap, flame, bug, check-circle
+- Created AVATAR_ICON_MAP mapping Lucide icon name strings to React components
+- AgentNode SVG uses foreignObject to embed Lucide SVG icons inside SVG canvas
+- AgentDetailPanel uses AgentAvatarIcon helper with React.createElement for compliance
+- Seed API now deletes existing data before re-seeding (allows avatar field migration)
+- Verified: zero emoji/unicode graphics in src/ codebase
+- Lint passes, browser test confirms SVG icons render correctly
 
 ## Architecture Decisions
 - Skills stored as comma-separated string in SQLite (Prisma limitation), parsed on frontend
 - Client-side only rendering for SVG/Framer Motion animations (ssr: false)
 - Canvas for background particles (performance), SVG for agent nodes (interactivity)
 - requestAnimationFrame for all animations (no setInterval)
+- Avatar field stores Lucide icon name string, mapped to component via AVATAR_ICON_MAP
+- SVG foreignObject used to render Lucide React components inside SVG agent nodes
+- React.createElement used in AgentAvatarIcon to avoid lint error (component creation during render)
+- No-Unicode Policy v2.1 enforced: all visual symbols use SVG (Lucide), zero emoji in codebase
 
 ## Unresolved Issues
 - None currently — all features working as expected
