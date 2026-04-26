@@ -177,8 +177,41 @@ Complete rewrite of agent-hierarchy.tsx with all enhancement categories:
 - `bun run lint` passes cleanly (0 errors, 0 warnings)
 - Dev server compiles successfully
 
-## Next Phase Priorities
-- Add real-time agent status updates (WebSocket)
-- Add task creation and assignment UI within agent detail panel
-- Add animation for agent status changes
-- Improve mobile responsiveness for new UI elements
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix 3 UI issues: (1) Add visible back/return button to return to dashboard from hierarchy, (2) Make all lines thinner, (3) Reduce description clutter in agent nodes
+
+Work Log:
+- Added `onBack` prop to AgentHierarchy component
+- Created DashboardPanel component in page.tsx with stats, role group cards, and "Open Hierarchy" button
+- page.tsx now has activeView state toggling between 'dashboard' and 'hierarchy'
+- Added prominent cyan "Dashboard" button with ArrowLeft icon in hierarchy nav bar
+- Reduced strokeWidth values across the entire file:
+  - Background grid: 0.3 -> 0.15
+  - Connection lines: command 0.4+0.2 -> 0.2+0.1, twin 0.4 -> 0.2, sync 0.3 -> 0.15
+  - Twin pulsing glow: 0.4 -> 0.2
+  - Node activity ring: 0.2 -> 0.1
+  - Outer glow ring: 0.25 -> 0.12
+  - Selection ring: 0.5 -> 0.25
+  - Main orb: 0.6/0.4 -> 0.3/0.2
+  - Formula badge: 0.2 -> 0.1
+  - Collapse button: 0.4 -> 0.2
+  - Tooltip border: 0.3 -> 0.15
+  - Cluster rings: 0.75/0.25 -> 0.35/0.12
+  - Cluster header: 0.3 -> 0.15
+  - Inter-cluster lines: 0.3 -> 0.15
+  - Minimap: 0.3 -> 0.15, viewport 0.4 -> 0.2
+- Simplified agent nodes:
+  - REMOVED "X skills" text below agent name
+  - Shrunk formula badge (28x12 -> 24x10)
+  - Shrunk status dot (r=4 -> r=3)
+  - Reduced name font size (10 -> 9)
+  - Reduced all strokeOpacities for subtlety
+
+Stage Summary:
+- Dashboard panel created with navigation between dashboard and hierarchy views
+- All lines made significantly thinner across the entire visualization
+- Node descriptions simplified - removed skill count text, shrunk badges and labels
+- All changes verified: lint passes, dev server running, browser tested with agent-browser
+- Back button visible as cyan "Dashboard" with arrow in top-left of hierarchy nav bar

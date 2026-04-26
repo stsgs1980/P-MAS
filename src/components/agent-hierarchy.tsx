@@ -56,6 +56,8 @@ import {
   Layers,
   ListChecks,
   Hash,
+  ArrowLeft,
+  LayoutDashboard,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -235,7 +237,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={i * spacing}
           y2={height}
           stroke="#94a3b8"
-          strokeWidth={0.3}
+          strokeWidth={0.15}
         />
       ))}
       {Array.from({ length: Math.ceil(height / spacing) + 1 }, (_, i) => (
@@ -246,7 +248,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           x2={width}
           y2={i * spacing}
           stroke="#94a3b8"
-          strokeWidth={0.3}
+          strokeWidth={0.15}
         />
       ))}
     </g>
@@ -369,7 +371,7 @@ function ConnectionLine({
     )
   }
 
-  const strokeWidth = type === 'command' ? 0.4 + strength * 0.2 : type === 'twin' ? 0.4 : 0.3
+  const strokeWidth = type === 'command' ? 0.2 + strength * 0.1 : type === 'twin' ? 0.2 : 0.15
   const syncColor = '#64748b'
 
   const strokeColor = type === 'sync' ? syncColor : color
@@ -412,13 +414,13 @@ function ConnectionLine({
           d={pathD}
           fill="none"
           stroke={color}
-          strokeWidth={1}
-          strokeOpacity={0.1}
+          strokeWidth={0.2}
+          strokeOpacity={0.08}
           strokeDasharray="8 4"
         >
           <animate
             attributeName="strokeOpacity"
-            values="0.04;0.15;0.04"
+            values="0.03;0.1;0.03"
             dur="2s"
             repeatCount="indefinite"
           />
@@ -465,8 +467,8 @@ function ConnectionLine({
             rx={4}
             fill="rgba(10, 14, 26, 0.9)"
             stroke={strokeColor}
-            strokeWidth={0.3}
-            strokeOpacity={0.3}
+            strokeWidth={0.15}
+            strokeOpacity={0.2}
           />
           <text
             x={midX}
@@ -488,7 +490,7 @@ function ConnectionLine({
             rx={6}
             fill="rgba(10, 14, 26, 0.95)"
             stroke="rgba(255,255,255,0.1)"
-            strokeWidth={0.3}
+            strokeWidth={0.15}
           />
           <text
             x={midX}
@@ -564,8 +566,8 @@ function AgentNode({
           r={38}
           fill="none"
           stroke={config.color}
-          strokeWidth={0.2}
-          strokeOpacity={0.15}
+          strokeWidth={0.1}
+          strokeOpacity={0.12}
           strokeDasharray="3 10"
           animate={{ rotate: 360 }}
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
@@ -578,11 +580,11 @@ function AgentNode({
         r={35}
         fill="none"
         stroke={config.color}
-        strokeWidth={0.25}
-        strokeOpacity={0.08}
+        strokeWidth={0.12}
+        strokeOpacity={0.06}
         animate={{
           r: [35, 38, 35],
-          strokeOpacity: [0.1, 0.18, 0.1],
+          strokeOpacity: [0.07, 0.12, 0.07],
         }}
         transition={{
           duration: 3,
@@ -597,11 +599,11 @@ function AgentNode({
           r={40}
           fill="none"
           stroke={config.color}
-          strokeWidth={0.5}
-          strokeOpacity={0.4}
+          strokeWidth={0.25}
+          strokeOpacity={0.3}
           animate={{
             r: [40, 43, 40],
-            strokeOpacity: [0.4, 0.2, 0.4],
+            strokeOpacity: [0.3, 0.15, 0.3],
           }}
           transition={{
             duration: 2,
@@ -616,8 +618,8 @@ function AgentNode({
         r={28}
         fill={`rgba(${config.colorRgb}, 0.12)`}
         stroke={config.color}
-        strokeWidth={isHighlighted ? 0.6 : 0.4}
-        strokeOpacity={isHighlighted ? 0.6 : 0.3}
+        strokeWidth={isHighlighted ? 0.3 : 0.2}
+        strokeOpacity={isHighlighted ? 0.4 : 0.2}
         animate={{
           r: [28, 29, 28],
         }}
@@ -644,46 +646,34 @@ function AgentNode({
 
       {/* Agent name */}
       <text
-        y={42}
+        y={40}
         textAnchor="middle"
         fill="#e2e8f0"
-        fontSize="10"
+        fontSize="9"
         fontWeight="600"
         style={{ pointerEvents: 'none' }}
       >
         {agent.name}
       </text>
 
-      {/* Skill count text below name */}
-      <text
-        y={52}
-        textAnchor="middle"
-        fill={config.color}
-        fontSize="7"
-        opacity={0.6}
-        style={{ pointerEvents: 'none' }}
-      >
-        {skillCount} skills
-      </text>
-
       {/* Formula badge */}
-      <g transform="translate(-22, -22)">
+      <g transform="translate(-18, -18)">
         <rect
-          width={28}
-          height={12}
-          rx={3}
+          width={24}
+          height={10}
+          rx={2}
           fill={formulaColor}
-          fillOpacity={0.2}
+          fillOpacity={0.15}
           stroke={formulaColor}
-          strokeWidth={0.2}
-          strokeOpacity={0.4}
+          strokeWidth={0.1}
+          strokeOpacity={0.3}
         />
         <text
-          x={14}
-          y={9}
+          x={12}
+          y={7.5}
           textAnchor="middle"
           fill={formulaColor}
-          fontSize="7"
+          fontSize="6"
           fontWeight="700"
           style={{ pointerEvents: 'none' }}
         >
@@ -691,10 +681,10 @@ function AgentNode({
         </text>
       </g>
 
-      {/* Status indicator */}
-      <g transform="translate(20, -24)">
+      {/* Status indicator dot */}
+      <g transform="translate(18, -20)">
         <motion.circle
-          r={4}
+          r={3}
           fill={statusColor}
           animate={{
             opacity: agent.status === 'active'
@@ -709,13 +699,6 @@ function AgentNode({
             ease: 'easeInOut',
           }}
         />
-        <circle
-          r={4}
-          fill="none"
-          stroke={statusColor}
-          strokeWidth={0.2}
-          strokeOpacity={0.2}
-        />
       </g>
 
       {/* Expand/collapse button for agents with children */}
@@ -729,8 +712,8 @@ function AgentNode({
             r={5}
             fill="rgba(10, 14, 26, 0.9)"
             stroke={config.color}
-            strokeWidth={0.4}
-            strokeOpacity={0.4}
+            strokeWidth={0.2}
+            strokeOpacity={0.3}
           />
           <foreignObject x={-4} y={-4} width={8} height={8} style={{ pointerEvents: 'none' }}>
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -769,8 +752,8 @@ function AgentTooltip({
         rx={8}
         fill="rgba(10, 14, 26, 0.95)"
         stroke={config.color}
-        strokeWidth={0.3}
-        strokeOpacity={0.2}
+        strokeWidth={0.15}
+        strokeOpacity={0.15}
       />
       {/* Agent name */}
       <text
@@ -1216,8 +1199,8 @@ function MiniMap({
               r={radius}
               fill="none"
               stroke={cfg.color}
-              strokeWidth={0.3}
-              strokeOpacity={0.15}
+              strokeWidth={0.15}
+              strokeOpacity={0.12}
               strokeDasharray="2 4"
             />
           )
@@ -1236,8 +1219,8 @@ function MiniMap({
               x2={to.x * scale}
               y2={to.y * scale}
               stroke={conn.type === 'sync' ? '#64748b' : conn.type === 'twin' ? '#06b6d4' : '#f59e0b'}
-              strokeWidth={0.3}
-              strokeOpacity={0.2}
+              strokeWidth={0.15}
+              strokeOpacity={0.15}
               strokeDasharray={conn.type === 'sync' ? '1 2' : conn.type === 'twin' ? '2 1' : undefined}
             />
           )
@@ -1268,8 +1251,8 @@ function MiniMap({
           height={vpH}
           fill="none"
           stroke="#fff"
-          strokeWidth={0.4}
-          strokeOpacity={0.3}
+          strokeWidth={0.2}
+          strokeOpacity={0.25}
           rx={1}
         />
       </svg>
@@ -1425,7 +1408,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export default function AgentHierarchy() {
+export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
@@ -1846,8 +1829,23 @@ export default function AgentHierarchy() {
             border: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          {/* Logo */}
+          {/* Logo + Back Button */}
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
+                style={{
+                  background: 'rgba(6, 182, 212, 0.15)',
+                  border: '1px solid rgba(6, 182, 212, 0.4)',
+                  color: '#22d3ee',
+                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.08)',
+                }}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
+            )}
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-600/20 border border-cyan-500/30">
               <Brain className="w-4 h-4 text-cyan-400" />
             </div>
@@ -2069,8 +2067,8 @@ export default function AgentHierarchy() {
                   r={radius}
                   fill={`rgba(${cfg.colorRgb}, ${isHighlighted ? 0.04 : 0.015})`}
                   stroke={cfg.color}
-                  strokeWidth={isHighlighted ? 0.75 : 0.25}
-                  strokeOpacity={isHighlighted ? 0.2 : 0.06}
+                  strokeWidth={isHighlighted ? 0.35 : 0.12}
+                  strokeOpacity={isHighlighted ? 0.15 : 0.04}
                   strokeDasharray="4 8"
                 />
 
@@ -2089,8 +2087,8 @@ export default function AgentHierarchy() {
                       rx={6}
                       fill="rgba(10, 14, 26, 0.9)"
                       stroke={cfg.color}
-                      strokeWidth={0.3}
-                      strokeOpacity={0.2}
+                      strokeWidth={0.15}
+                      strokeOpacity={0.1}
                     />
                     <foreignObject x={0} y={-7} width={12} height={12} style={{ pointerEvents: 'none' }}>
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2152,8 +2150,8 @@ export default function AgentHierarchy() {
                 x2={c2.x}
                 y2={c2.y}
                 stroke="#334155"
-                strokeWidth={0.3}
-                strokeOpacity={0.1}
+                strokeWidth={0.15}
+                strokeOpacity={0.07}
                 strokeDasharray="4 8"
               />
             )
