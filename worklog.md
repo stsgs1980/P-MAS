@@ -238,3 +238,263 @@ Stage Summary:
 - Memory group: RAG, context, knowledge archival
 - Monitoring group: observation, alerting, diagnostics
 - All verified: lint passes, seed successful, browser shows all 6 groups
+
+---
+
+Task ID: 4
+Agent: Main Agent
+Task: Expand P-MAS architecture with 2 new role groups, 6 new formulas, 6 new agents, and new edge types
+
+Work Log:
+- Added 2 new role groups: Коммуникация (Communication, #ec4899) and Обучение (Learning/Training, #f97316)
+- Added 6 new prompting formulas: DSPy, PromptChaining, LeastToMost, StepBack, PlanAndSolve, MetaCoT (total 20)
+- Added 6 new agents:
+  - Shlyuz (Gateway Agent) in Коммуникация -- formula: PromptChaining, avatar: network
+  - Protokolista (Protocol Agent) in Коммуникация -- formula: StepBack, avatar: workflow
+  - Dispeter (Dispatcher Agent) in Коммуникация -- formula: PlanAndSolve, avatar: git-branch
+  - Trener (Trainer Agent) in Обучение -- formula: DSPy, avatar: refresh-ccw
+  - Adapter (Adapter Agent) in Обучение -- formula: MetaCoT, avatar: sparkles
+  - Otsenochnik (Evaluator Agent) in Обучение -- formula: LeastToMost, avatar: bar-chart-3
+- Added 6 new tasks for the new agents (Route API Requests, Format Protocol Messages, Balance Task Queue, Fine-Tune Agent Responses, Adapt Skills to New Domain, Benchmark Agent Performance)
+- Added hierarchy relationships:
+  - Коммуникация: Shlyuz -> Protokolista, Dispeter
+  - Обучение: Trener -> Adapter, Otsenochnik
+- Updated hierarchy API (/api/hierarchy/route.ts):
+  - Expanded groups object to include all 8 role groups (added Память, Мониторинг, Коммуникация, Обучение)
+  - Updated EdgeType to include all 6 types: command, sync, twin, delegate, supervise, broadcast
+  - Added delegate edge generation: Koordinator (Тактика) delegates to all Исполнение agents
+  - Added supervise edge generation: all Контроль agents supervise all Исполнение agents
+  - Added broadcast edge generation: Стратегия root agents broadcast to group leads in all other groups
+  - Added paused/standby to stats
+- Updated agent-hierarchy.tsx:
+  - ROLE_CONFIG: added Коммуникация (#ec4899/pink) and Обучение (#f97316/orange) with distinct colors
+  - ROLE_ORDER: added Коммуникация and Обучение at end
+  - FORMULA_COLORS: added all 6 new formulas with distinct colors
+  - Formula descriptions: added all 6 new formula descriptions in detail panel
+  - Agent creation dialog: includes all 20 formulas
+- Updated page.tsx:
+  - Fixed ROLE_GROUPS formulas: Коммуникация -> 'PromptChaining, StepBack, PlanAndSolve', Обучение -> 'DSPy, MetaCoT, LeastToMost'
+  - Fixed colors: Коммуникация -> #ec4899 (pink), Обучение -> #f97316 (orange) for consistency
+  - Stats: 26 agents, 8 groups, 20 formulas, 6 edge types
+  - Footer updated to v3.0
+
+Stage Summary:
+- Total: 8 role groups, 20 cognitive formulas, 6 edge types, 26 agents, 26 tasks
+- Hierarchy API returns 55 connections across 6 edge types
+- Seed API returns 8 role groups, 20 formulas
+- All verified: lint passes (0 errors), seed successful (26 agents, 26 tasks), hierarchy API returns all 8 groups and 6 edge types
+- No Unicode emoji -- all avatars use Lucide icon name strings
+- All avatar strings are in AVATAR_ICON_MAP
+Task ID: 2
+Agent: Main Agent
+Task: Update frontend constants and create enhanced dashboard (8 groups, 20 formulas)
+
+Work Log:
+- Added 2 new role groups to ROLE_CONFIG: Коммуникация (Communication, #f97316, Network icon) and Обучение (Learning, #a855f7, Sparkles icon)
+- Updated ROLE_ORDER from 6 to 8 groups: added Коммуникация, Обучение
+- Added 6 new formula colors to FORMULA_COLORS: DSPy (#22d3ee), PromptChaining (#34d399), LeastToMost (#fb923c), StepBack (#f472b6), PlanAndSolve (#a3e635), MetaCoT (#c084fc) -- total 20 formulas
+- Updated Agent Creation Dialog formula dropdown to include all 20 formulas
+- Added 6 new formula descriptions to Agent Detail Panel: DSPy, PromptChaining, LeastToMost, StepBack, PlanAndSolve, MetaCoT
+- Updated groupRadii to include explicit radii for all 8 groups (was only 4 explicit, now all 8)
+- Completely rewrote DashboardPanel in page.tsx with enhanced sections:
+  1. Header: P-MAS logo, title, subtitle, Open Hierarchy button
+  2. Quick Stats Row: 8 stat cards (Total Agents: 26, Role Groups: 8, Cognitive Formulas: 20, Edge Types: 6, Active Agents: 16, Idle Agents: 4, Tasks: 26, Formulas Coverage: 100%)
+  3. Role Groups Grid: 8 cards (2 cols md, 4 cols lg) with gradient accent bar, icon, name/label, agent count badge, description, formula tags, hover scale effect
+  4. Prompting Formulas Taxonomy: 20 formulas in 4 categorized groups (Foundational, Verification, Planning, Advanced) with colored left border
+  5. Edge Types: 6 cards with Lucide icons, line style, name, description
+  6. Architecture Overview: ASCII text diagram showing all 8 groups and their connections
+  7. Footer: "P-MAS Dashboard v3.0 -- 8 Groups / 20 Formulas / 6 Edge Types / 26 Agents"
+- All styling: dark space theme (#0a0e1a), no Unicode emoji, Lucide SVG icons only, rgba() for semi-transparent backgrounds, responsive design, sticky footer
+- Added hexToRgb helper function for dynamic color conversion
+- Default view changed from 'hierarchy' to 'dashboard'
+
+Stage Summary:
+- P-MAS dashboard upgraded from v2.1 to v3.0
+- 8 role groups, 20 cognitive formulas, 6 edge types
+- All changes verified: lint passes cleanly (0 errors), dev server compiles, no browser errors
+- No Unicode emoji used anywhere -- all Lucide SVG icons
+
+---
+
+Task ID: 5
+Agent: Main Agent
+Task: Add significant new features to the P-MAS dashboard and enhance styling
+
+Work Log:
+- Added **System Health Monitor** section after Architecture Overview:
+  - Animated progress bars for CPU (34%), Memory (67%), Network I/O (23%) with smooth width transitions
+  - Agent Uptime indicator (99.7%) with animated green pulse dot
+  - Active Connections (55) with SVG spark line
+  - Error Rate (0.3%) with TrendingDown icon
+  - Glass-morphism card with subtle animated gradient border (CSS animation `gradientShift`)
+  - Lucide icons: Cpu, HardDrive, Wifi for metric categories
+
+- Added **Recent Activity Timeline** section:
+  - 10 simulated events with colored dots matching agent role group colors
+  - Each event: timestamp (relative), agent name in group color, description in slate-400
+  - Scrollable container (max-h-64 overflow-y-auto) with custom scrollbar styling
+  - Vertical connector lines between timeline entries
+  - Activity events: Shlyuz routed task, Revizor quality check, Arkhitektor broadcast, Trener DSPy update, etc.
+
+- Added **Formula-to-Agent Mapping Grid** section:
+  - CSS grid matrix: 20 formula rows x 8 role group columns
+  - Formula names as row headers (colored by formula color), group abbreviations as column headers (colored by group color)
+  - Colored dots (with glow shadow) where formula-group mapping exists, empty cells otherwise
+  - Mapping data: CoT->Память/Мониторинг, ToT->Стратегия, GoT->Стратегия/Мониторинг, etc.
+  - Legend below grid mapping abbreviations to full group names
+
+- Added **Formula Flow Diagram** SVG section (after Formula Taxonomy):
+  - 20 formula nodes rendered as colored circles with abbreviations
+  - 19 directed edges with arrows showing formula derivation/relationship flow
+  - Layout: 5-row hierarchy (CoT->ToT->GoT, MetaCoT, AoT->SoT, CoVe->Reflexion->SelfConsistency->SelfRefine, etc.)
+  - Each node has glow ring + main circle with formula color, label text
+  - SVG viewBox 440x370, responsive sizing with max-w-2xl
+
+- **Enhanced Header Styling**:
+  - Added subtle animated gradient background (rgba cyan/violet/emerald, 0.02-0.04 opacity)
+  - Background animates with `gradientShift` keyframe (12s ease infinite)
+  - Added glowing green pulse indicator dot next to "P-MAS" text (animate-ping + relative green dot)
+
+- **Enhanced Role Group Cards**:
+  - Added status summary line below description in each card
+  - Each group shows: green dot + "X active", yellow dot + "X idle", etc.
+  - Specific counts per group: Стратегия 3 active, Тактика 2 active/1 idle, Контроль 3 active, Исполнение 4 active/1 idle, Память 2 active/1 standby, Мониторинг 2 active/1 paused, Коммуникация 2 active/1 idle, Обучение 2 active/1 idle
+
+- **Layout Improvements**:
+  - Recent Activity Timeline and Formula-Agent Mapping Grid displayed side-by-side on large screens (lg:grid-cols-2)
+  - Footer version bumped to v3.1
+  - Added CSS keyframes: gradientShift (for header and health monitor), pulseGlow, flowDash
+  - Custom scrollbar styling for activity timeline (webkit + standard)
+
+- New imports: TrendingUp, TrendingDown, Cpu, HardDrive, Wifi (Lucide icons)
+- Added `useRef` to imports (for potential future use)
+- All styling uses hex/rgba only, no Unicode emoji, dark space theme (#0a0e1a)
+
+Stage Summary:
+- P-MAS dashboard upgraded from v3.0 to v3.1
+- 4 new major sections added: System Health Monitor, Recent Activity Timeline, Formula-to-Agent Mapping Grid, Formula Flow Diagram
+- Header enhanced with animated gradient and glowing pulse dot
+- Role group cards enhanced with status summary lines
+- All changes verified: lint passes cleanly (0 errors), dev server compiles successfully
+- No Unicode emoji -- all visual indicators use SVG elements and Lucide icons
+
+---
+
+Task ID: 6
+Agent: Frontend Styling Expert
+Task: Polish hierarchy + dashboard styling with visual enhancements
+
+Work Log:
+
+**agent-hierarchy.tsx Enhancements:**
+
+A. Navigation Bar Enhancement:
+- Added subtle bottom border gradient (cyan->transparent) as an absolute-positioned div inside the nav bar
+- Added faint glow box-shadow (rgba(6,182,212,0.06)) to the nav bar container
+
+B. Cluster Rings Enhancement:
+- For hovered/filtered groups: increased strokeWidth from 0.35->0.5 and strokeOpacity from 0.15->0.25
+- For active filter group: added pulsing glow circle with orbGlow filter and animate strokeOpacity (0.08->0.18->0.08, dur 3s)
+- Added 4 orbit dots (r=1.5) per cluster ring at 0/90/180/270 degree offsets
+- Each orbit dot animates via animateTransform (rotate at different speeds 20-44s) and animate opacity pulse
+- Highlighted group dots have higher opacity (0.4->0.8) vs normal (0.1->0.3)
+
+C. Agent Node Enhancement:
+- When highlighted (search match): added pulsing outer glow ring (r=44->48, strokeOpacity 0.15->0.06)
+- When selected: added ping animation -- expanding ring from r=28 to r=55 that fades out (1.5s infinite)
+- Formula badge enlarged: width 24->30, height 10->12, rx 2->3, fontSize 6->7, repositioned
+
+D. Connection Line Enhancement:
+- For delegate edges: added diamond icon at midpoint (polygon, r=4, delegateColor)
+- For broadcast edges: added megaphone SVG icon at midpoint (speaker shape + sound wave lines)
+- Data flow particles enlarged: r=2.5 -> r=3
+
+E. Legend & Stats Panel Enhancement:
+- Legend panel: added gradient border overlay using background-clip technique (cyan->transparent->violet)
+- Stats panel: added animated gradient background (gradientShift 8s) + gradient border overlay
+- Stats panel: added overflow-hidden for proper gradient containment
+
+**page.tsx Enhancements:**
+
+A. Quick Stats Cards Enhancement:
+- Added hover glow effect: boxShadow changes to `0 0 20px rgba(color, 0.15)` on mouseenter
+- Added colored left bar (3px wide, matching stat color, opacity 0.6) as absolute-positioned div
+- Added ml-2 to text content to offset from left bar
+
+B. Role Groups Cards Enhancement:
+- Added hover lift effect: translateY(-2px) on mouseenter via inline style manipulation
+- Added transition duration-200 for smooth hover
+- Added inner glow to icon container: `inset 0 0 8px rgba(colorRgb, 0.1)`
+
+C. Formula Flow Diagram Enhancement:
+- Added animated pulse to CoT node: expanding ring (r+6 -> r+14) that fades out (2s infinite)
+- Made arrow lines thicker: strokeWidth 1 -> 1.5
+- Added subtle shadow behind SVG diagram container: `boxShadow: '0 4px 30px rgba(0,0,0,0.3)'`
+
+D. System Health Monitor Enhancement:
+- Progress bars: added shimmer effect (CSS animation 'shimmer') -- a highlight moving across the bar (200% background, 2s infinite)
+- Added `@keyframes shimmer` to the style block
+- 99.7% uptime value: added textShadow glow `0 0 8px rgba(34,197,94,0.4)` + pulseGlow animation
+
+E. Activity Timeline Enhancement:
+- Added hover effect: `hover:bg-white/[0.02]` with transition-colors duration-150
+- Added rounded-lg and px-2 for hover highlight padding
+- Timeline connector: changed from solid rgba(255,255,255,0.06) to gradient `linear-gradient(to bottom, dotColor, transparent)` with opacity 0.4
+
+F. General Enhancement:
+- Added smooth scroll behavior: `html { scroll-behavior: smooth; }` via style tag + scrollBehavior: 'smooth' on container
+- Added scroll-to-top button: appears when scrolled past 50% of page, uses ArrowUp icon, cyan themed with glow
+- Footer version bumped from v3.1 to v3.2
+- Added ArrowUp to lucide-react imports
+
+**Verification:**
+- `bun run lint` passes cleanly (0 errors, 0 warnings)
+- `bun run build` compiles successfully
+- No Unicode emoji -- all visual indicators use SVG elements and Lucide icons
+- Dark space theme (#0a0e1a) maintained throughout
+
+---
+
+## Current Project Status (v3.2)
+
+### Architecture Summary
+- **8 Role Groups**: Стратегия, Тактика, Контроль, Исполнение, Память, Мониторинг, Коммуникация, Обучение
+- **20 Cognitive Formulas**: CoT, ToT, GoT, AoT, SoT, CoVe, Reflexion, SelfConsistency, SelfRefine, ReWOO, ReAct, PromptChaining, PlanAndSolve, StepBack, LeastToMost, MoA, LATS, PoT, DSPy, MetaCoT
+- **6 Edge Types**: Command, Sync, Twin, Delegate, Supervise, Broadcast
+- **6 Agent Statuses**: Active, Idle, Error, Offline, Paused, Standby
+- **26 Agents** across 8 groups with 55 connections
+- **26 Tasks** assigned to agents
+
+### Dashboard Sections (page.tsx)
+1. Header with animated gradient and green pulse indicator
+2. Quick Stats Row (8 metrics)
+3. Role Groups Grid (8 cards with status summaries)
+4. Prompting Formulas Taxonomy (4 categories, 20 formulas)
+5. Formula Flow Diagram (SVG with 20 nodes + 19 edges)
+6. Edge Types (6 cards)
+7. Architecture Overview (ASCII diagram)
+8. System Health Monitor (CPU, Memory, Network, Uptime, Connections, Error Rate)
+9. Recent Activity Timeline (10 events)
+10. Formula-to-Agent Mapping Grid (20x8 matrix)
+11. Scroll-to-top button
+12. Footer (v3.2)
+
+### Hierarchy Visualization (agent-hierarchy.tsx)
+- Fullscreen SVG canvas with background particles + grid
+- 8 concentric cluster rings with orbit dots and animated pulses
+- 26 agent nodes with: avatar icon, name, formula badge, status dot, collapse button
+- 55 connections across 6 edge types with data flow particles
+- Hover tooltips, search filtering, zoom/pan, minimap, stats panel, legend
+- Agent creation dialog, view mode toggle (radial/grid)
+
+### Verification
+- `bun run lint`: 0 errors
+- Seed API: 26 agents, 26 tasks, 8 groups, 20 formulas
+- Hierarchy API: 55 connections across 6 edge types
+- Browser tested with agent-browser: all sections rendering, navigation works
+- No Unicode emoji -- No-Unicode Policy v2.1 enforced
+
+### Unresolved Issues
+- Cron job creation failed (401 Unauthorized) - needs investigation
+- System health metrics are simulated (not real-time from backend)
+- Activity timeline shows static data (not real-time events)

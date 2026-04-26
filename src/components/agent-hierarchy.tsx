@@ -113,9 +113,11 @@ const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: Lucid
   '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': { color: '#06b6d4', colorRgb: '6,182,212', icon: Zap, label: 'Execution' },
   '\u041f\u0430\u043c\u044f\u0442\u044c': { color: '#8b5cf6', colorRgb: '139,92,246', icon: Database, label: 'Memory' },
   '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': { color: '#14b8a6', colorRgb: '20,184,166', icon: Activity, label: 'Monitoring' },
+  '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f': { color: '#ec4899', colorRgb: '236,72,153', icon: Network, label: 'Communication' },
+  '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435': { color: '#f97316', colorRgb: '249,115,22', icon: Sparkles, label: 'Learning' },
 }
 
-const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435', '\u041f\u0430\u043c\u044f\u0442\u044c', '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433']
+const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435', '\u041f\u0430\u043c\u044f\u0442\u044c', '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433', '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f', '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435']
 
 const STATUS_COLORS: Record<string, string> = {
   active: '#22c55e',
@@ -141,6 +143,12 @@ const FORMULA_COLORS: Record<string, string> = {
   LATS: '#4ade80',
   SelfConsistency: '#c084fc',
   PoT: '#f472b6',
+  DSPy: '#22d3ee',
+  PromptChaining: '#34d399',
+  LeastToMost: '#a3e635',
+  StepBack: '#e879f9',
+  PlanAndSolve: '#fbbf24',
+  MetaCoT: '#818cf8',
 }
 
 const EDGE_CONFIG: Record<EdgeType, { strokeDasharray: string | undefined; label: string; icon: LucideIcon }> = {
@@ -395,7 +403,7 @@ function ConnectionLine({
             key={i}
             cx={pt.x}
             cy={pt.y}
-            r={2.5}
+            r={3}
             fill={color}
             opacity={0.8}
           >
@@ -506,6 +514,26 @@ function ConnectionLine({
         </>
       )}
 
+      {/* Diamond icon at midpoint for delegate edges */}
+      {type === 'delegate' && (
+        <polygon
+          points={`${midX},${midY - 4} ${midX + 4},${midY} ${midX},${midY + 4} ${midX - 4},${midY}`}
+          fill={delegateColor}
+          opacity={0.7}
+        />
+      )}
+
+      {/* Megaphone icon at midpoint for broadcast edges */}
+      {type === 'broadcast' && (
+        <g transform={`translate(${midX}, ${midY})`} opacity={0.7}>
+          <polygon points="-3,-3 2,-1 2,1 -3,3" fill={broadcastColor} />
+          <rect x={2} y={-2} width={2} height={4} rx={0.5} fill={broadcastColor} />
+          <line x1={5} y1={-3} x2={6} y2={-4} stroke={broadcastColor} strokeWidth={0.5} />
+          <line x1={5} y1={0} x2={7} y2={0} stroke={broadcastColor} strokeWidth={0.5} />
+          <line x1={5} y1={3} x2={6} y2={4} stroke={broadcastColor} strokeWidth={0.5} />
+        </g>
+      )}
+
       <FlowParticles />
 
       {/* Edge label on hover */}
@@ -612,6 +640,31 @@ function AgentNode({
       onMouseLeave={() => onHover(null)}
       style={{ opacity: isDimmed ? 0.2 : isCollapsed ? 0.4 : 1, transition: 'opacity 0.4s ease' }}
     >
+      {/* Highlighted (search match) pulsing outer glow */}
+      {isHighlighted && (
+        <motion.circle
+          r={44}
+          fill="none"
+          stroke={config.color}
+          strokeWidth={0.3}
+          strokeOpacity={0.15}
+          animate={{
+            r: [44, 48, 44],
+            strokeOpacity: [0.15, 0.06, 0.15],
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+
+      {/* Selection ping animation (expanding ring that fades) */}
+      {isSelected && (
+        <circle r={28} fill="none" stroke={config.color} strokeWidth={0.4} strokeOpacity={0.5}>
+          <animate attributeName="r" from="28" to="55" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="strokeOpacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="strokeWidth" from="0.4" to="0" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+      )}
+
       {/* Activity indicator ring - spins when active */}
       {agent.status === 'active' && (
         <motion.circle
@@ -709,11 +762,11 @@ function AgentNode({
       </text>
 
       {/* Formula badge */}
-      <g transform="translate(-18, -18)">
+      <g transform="translate(-15, -19)">
         <rect
-          width={24}
-          height={10}
-          rx={2}
+          width={30}
+          height={12}
+          rx={3}
           fill={formulaColor}
           fillOpacity={0.15}
           stroke={formulaColor}
@@ -721,11 +774,11 @@ function AgentNode({
           strokeOpacity={0.3}
         />
         <text
-          x={12}
-          y={7.5}
+          x={15}
+          y={9}
           textAnchor="middle"
           fill={formulaColor}
-          fontSize="6"
+          fontSize="7"
           fontWeight="700"
           style={{ pointerEvents: 'none' }}
         >
@@ -1006,6 +1059,12 @@ function AgentDetailPanel({
                 {agent.formula === 'LATS' && 'Language Agent Tree Search -- MCTS + LLM reasoning'}
                 {agent.formula === 'SelfConsistency' && 'Self-Consistency -- multiple paths + majority vote'}
                 {agent.formula === 'PoT' && 'Program of Thought -- reasons via code execution'}
+                {agent.formula === 'DSPy' && 'DSPy -- Declarative Self-Improving Prompt Optimization'}
+                {agent.formula === 'PromptChaining' && 'Prompt Chaining -- Sequential task decomposition via chained prompts'}
+                {agent.formula === 'LeastToMost' && 'Least-to-Most -- Progressive complexity reasoning from simple to hard'}
+                {agent.formula === 'StepBack' && 'Step-Back -- Abstract before solving for deeper reasoning'}
+                {agent.formula === 'PlanAndSolve' && 'Plan-and-Solve -- Two-phase: plan first, then execute'}
+                {agent.formula === 'MetaCoT' && 'Meta-Co-T -- Meta-reasoning over Chain of Thought decomposition'}
               </p>
             </div>
           </div>
@@ -1104,7 +1163,7 @@ function AgentDetailPanel({
 function LegendPanel() {
   return (
     <div
-      className="rounded-xl p-3"
+      className="rounded-xl p-3 relative"
       style={{
         background: 'rgba(10, 14, 26, 0.85)',
         backdropFilter: 'blur(16px)',
@@ -1112,6 +1171,18 @@ function LegendPanel() {
         width: 180,
       }}
     >
+      {/* Gradient border overlay */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.06), transparent, rgba(139,92,246,0.06))',
+          border: '1px solid transparent',
+          backgroundImage: 'linear-gradient(rgba(10,14,26,0.85), rgba(10,14,26,0.85)), linear-gradient(135deg, rgba(6,182,212,0.2), transparent, rgba(139,92,246,0.2))',
+          backgroundOrigin: 'border-box',
+          backgroundClip: 'padding-box, border-box',
+          borderRadius: '12px',
+        }}
+      />
       <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Legend</h4>
 
       {/* Edge types */}
@@ -1172,7 +1243,7 @@ function LegendPanel() {
 function StatsDashboard({ stats }: { stats: { total: number; active: number; idle: number; error: number; offline: number; tasks: number } }) {
   return (
     <div
-      className="rounded-xl p-3"
+      className="rounded-xl p-3 relative overflow-hidden"
       style={{
         background: 'rgba(10, 14, 26, 0.85)',
         backdropFilter: 'blur(16px)',
@@ -1180,6 +1251,26 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
         width: 180,
       }}
     >
+      {/* Animated gradient background */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.04), rgba(139,92,246,0.04), rgba(16,185,129,0.04))',
+          backgroundSize: '200% 200%',
+          animation: 'gradientShift 8s ease infinite',
+        }}
+      />
+      {/* Gradient border overlay */}
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(10,14,26,0.85), rgba(10,14,26,0.85)), linear-gradient(135deg, rgba(6,182,212,0.2), transparent, rgba(16,185,129,0.2))',
+          backgroundOrigin: 'border-box',
+          backgroundClip: 'padding-box, border-box',
+          border: '1px solid transparent',
+          borderRadius: '12px',
+        }}
+      />
       <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Stats</h4>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -1448,7 +1539,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{ background: 'rgba(15, 20, 35, 0.95)' }}>
-                  {['CoT', 'ToT', 'GoT', 'AoT', 'SoT', 'CoVe', 'ReWOO', 'Reflexion', 'ReAct', 'MoA', 'SelfRefine', 'LATS', 'SelfConsistency', 'PoT'].map(f => (
+                  {['CoT', 'ToT', 'GoT', 'AoT', 'SoT', 'CoVe', 'ReWOO', 'Reflexion', 'ReAct', 'MoA', 'SelfRefine', 'LATS', 'SelfConsistency', 'PoT', 'DSPy', 'PromptChaining', 'LeastToMost', 'StepBack', 'PlanAndSolve', 'MetaCoT'].map(f => (
                     <SelectItem key={f} value={f}>{f}</SelectItem>
                   ))}
                 </SelectContent>
@@ -1565,6 +1656,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': baseRadius + ringSpacing,
       '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': baseRadius + ringSpacing * 2,
       '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': baseRadius + ringSpacing * 3,
+      '\u041f\u0430\u043c\u044f\u0442\u044c': baseRadius + ringSpacing * 4,
+      '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': baseRadius + ringSpacing * 5,
+      '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f': baseRadius + ringSpacing * 6,
+      '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435': baseRadius + ringSpacing * 7,
     }
 
     const pos: Record<string, { x: number; y: number }> = {}
@@ -1951,13 +2046,21 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       {/* Navigation bar */}
       <div className="fixed top-0 left-0 right-0 z-40 px-4 py-3">
         <div
-          className="flex items-center justify-between rounded-xl px-4 py-2.5"
+          className="flex items-center justify-between rounded-xl px-4 py-2.5 relative"
           style={{
             background: 'rgba(10, 14, 26, 0.8)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 24px rgba(6, 182, 212, 0.06)',
           }}
         >
+          {/* Bottom border gradient (cyan->transparent) */}
+          <div
+            className="absolute bottom-0 left-2 right-2 h-px rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
+            }}
+          />
           {/* Logo + Back Button */}
           <div className="flex items-center gap-3">
             {onBack && (
@@ -2196,10 +2299,64 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   r={radius}
                   fill={`rgba(${cfg.colorRgb}, ${isHighlighted ? 0.04 : 0.015})`}
                   stroke={cfg.color}
-                  strokeWidth={isHighlighted ? 0.35 : 0.12}
-                  strokeOpacity={isHighlighted ? 0.15 : 0.04}
+                  strokeWidth={isHighlighted ? 0.5 : 0.12}
+                  strokeOpacity={isHighlighted ? 0.25 : 0.04}
                   strokeDasharray="4 8"
                 />
+
+                {/* Active filter group: glow + pulse */}
+                {activeFilter === group && (
+                  <>
+                    <circle
+                      cx={dimensions.width / 2}
+                      cy={dimensions.height / 2}
+                      r={radius}
+                      fill="none"
+                      stroke={cfg.color}
+                      strokeWidth={0.6}
+                      strokeOpacity={0.12}
+                      strokeDasharray="4 8"
+                      filter="url(#orbGlow)"
+                    >
+                      <animate
+                        attributeName="strokeOpacity"
+                        values="0.08;0.18;0.08"
+                        dur="3s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </>
+                )}
+
+                {/* Orbit dots along cluster ring */}
+                {[0, 1, 2, 3].map(dotIdx => {
+                  const dotAngleOffset = (2 * Math.PI * dotIdx) / 4
+                  return (
+                    <circle
+                      key={`orbit-${group}-${dotIdx}`}
+                      cx={dimensions.width / 2 + Math.cos(dotAngleOffset) * radius}
+                      cy={dimensions.height / 2 + Math.sin(dotAngleOffset) * radius}
+                      r={1.5}
+                      fill={cfg.color}
+                      opacity={isHighlighted ? 0.6 : 0.2}
+                    >
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from={`0 ${dimensions.width / 2} ${dimensions.height / 2}`}
+                        to={`${360 / (4 + dotIdx)} ${dimensions.width / 2} ${dimensions.height / 2}`}
+                        dur={`${20 + dotIdx * 8}s`}
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values={isHighlighted ? '0.4;0.8;0.4' : '0.1;0.3;0.1'}
+                        dur="2s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  )
+                })}
 
                 {/* Cluster header badge on ring */}
                 {viewMode === 'radial' && !isCollapsedGroup && (

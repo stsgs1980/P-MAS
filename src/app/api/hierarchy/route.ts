@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 
-type EdgeType = 'command' | 'sync' | 'twin'
+type EdgeType = 'command' | 'sync' | 'twin' | 'delegate' | 'supervise' | 'broadcast'
 
 interface TypedConnection {
   id: string
@@ -32,10 +32,14 @@ export async function GET() {
 
     // Group by roleGroup
     const groups = {
-      '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f': agents.filter(a => a.roleGroup === '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f'),
-      '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': agents.filter(a => a.roleGroup === '\u0422\u0430\u043a\u0442\u0438\u043a\u0430'),
-      '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': agents.filter(a => a.roleGroup === '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c'),
-      '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': agents.filter(a => a.roleGroup === '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435'),
+      'Стратегия': agents.filter(a => a.roleGroup === 'Стратегия'),
+      'Тактика': agents.filter(a => a.roleGroup === 'Тактика'),
+      'Контроль': agents.filter(a => a.roleGroup === 'Контроль'),
+      'Исполнение': agents.filter(a => a.roleGroup === 'Исполнение'),
+      'Память': agents.filter(a => a.roleGroup === 'Память'),
+      'Мониторинг': agents.filter(a => a.roleGroup === 'Мониторинг'),
+      'Коммуникация': agents.filter(a => a.roleGroup === 'Коммуникация'),
+      'Обучение': agents.filter(a => a.roleGroup === 'Обучение'),
     }
 
     // Stats
@@ -45,6 +49,8 @@ export async function GET() {
       idle: agents.filter(a => a.status === 'idle').length,
       error: agents.filter(a => a.status === 'error').length,
       offline: agents.filter(a => a.status === 'offline').length,
+      paused: agents.filter(a => a.status === 'paused').length,
+      standby: agents.filter(a => a.status === 'standby').length,
       tasks: agents.reduce((sum, a) => sum + (a.tasks?.length || 0), 0),
     }
 
@@ -103,6 +109,58 @@ export async function GET() {
             strength: 1,
           })
         }
+      }
+    }
+
+    // 4. Delegate edges: Тактика coordinator delegates to Исполнение agents
+    const taktikaGroup = groups['Тактика'] || []
+    const ispolnenieGroup = groups['Исполнение'] || []
+    const coordinator = taktikaGroup.find(a => a.role === 'Tactical Coordinator')
+    if (coordinator) {
+      for (const execAgent of ispolnenieGroup) {
+        connections.push({
+          id: `delegate-${coordinator.id}-${execAgent.id}`,
+          from: coordinator.id,
+          to: execAgent.id,
+          type: 'delegate',
+          strength: 0.8,
+        })
+      }
+    }
+
+    // 5. Supervise edges: Контроль agents supervise Исполнение agents
+    const kontrolGroup = groups['Контроль'] || []
+    for (const controlAgent of kontrolGroup) {
+      for (const execAgent of ispolnenieGroup) {
+        connections.push({
+          id: `supervise-${controlAgent.id}-${execAgent.id}`,
+          from: controlAgent.id,
+          to: execAgent.id,
+          type: 'supervise',
+          strength: 0.6,
+        })
+      }
+    }
+
+    // 6. Broadcast edges: Стратегия root agents broadcast to group leads in all other groups
+    const strategiyaGroup = groups['Стратегия'] || []
+    const strategiyaRoots = strategiyaGroup.filter(a => !a.parentId)
+    const otherGroupLeadIds: string[] = []
+    for (const [groupName, groupAgents] of Object.entries(groups)) {
+      if (groupName === 'Стратегия') continue
+      // Group lead = agent with no parent in that group, or first agent
+      const lead = groupAgents.find(a => !a.parentId) || groupAgents[0]
+      if (lead) otherGroupLeadIds.push(lead.id)
+    }
+    for (const rootAgent of strategiyaRoots) {
+      for (const leadId of otherGroupLeadIds) {
+        connections.push({
+          id: `broadcast-${rootAgent.id}-${leadId}`,
+          from: rootAgent.id,
+          to: leadId,
+          type: 'broadcast',
+          strength: 0.7,
+        })
       }
     }
 

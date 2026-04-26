@@ -33,6 +33,16 @@ const sampleAgents = [
   { name: 'Nablyudatel', role: 'System Observer', roleGroup: 'Мониторинг', status: 'active', formula: 'CoT', skills: 'observation,logging,metrics', description: 'Observes all agent activity and collects runtime metrics', avatar: 'monitor' },
   { name: 'Alert-Operator', role: 'Alert Agent', roleGroup: 'Мониторинг', status: 'paused', formula: 'LATS', skills: 'alerting,escalation,notification', description: 'Monitors for anomalies and triggers alerts using tree search reasoning', avatar: 'bell' },
   { name: 'Diagnost', role: 'Diagnostics Agent', roleGroup: 'Мониторинг', status: 'active', formula: 'GoT', skills: 'diagnostics,root-cause,analysis', description: 'Diagnoses issues by modeling failure graphs and tracing root causes', avatar: 'gauge' },
+
+  // === Коммуникация (Communication) ===
+  { name: 'Shlyuz', role: 'Gateway Agent', roleGroup: 'Коммуникация', status: 'active', formula: 'PromptChaining', skills: 'gateway,routing,protocol-translation', description: 'API gateway agent that routes requests and translates protocols between agent groups', avatar: 'network' },
+  { name: 'Protokolista', role: 'Protocol Agent', roleGroup: 'Коммуникация', status: 'active', formula: 'StepBack', skills: 'formatting,serialization,messaging', description: 'Handles message formatting, inter-agent protocol, and data serialization by abstracting before solving', avatar: 'workflow' },
+  { name: 'Dispeter', role: 'Dispatcher Agent', roleGroup: 'Коммуникация', status: 'active', formula: 'PlanAndSolve', skills: 'dispatching,load-balancing,queue', description: 'Dispatches tasks, balances load, and manages queues using plan-then-execute reasoning', avatar: 'git-branch' },
+
+  // === Обучение (Learning/Training) ===
+  { name: 'Trener', role: 'Trainer Agent', roleGroup: 'Обучение', status: 'active', formula: 'DSPy', skills: 'fine-tuning,feedback,skill-improvement', description: 'Fine-tunes agent behavior, integrates feedback loops, and improves skills via declarative self-improving optimization', avatar: 'refresh-ccw' },
+  { name: 'Adapter', role: 'Adapter Agent', roleGroup: 'Обучение', status: 'active', formula: 'MetaCoT', skills: 'adaptation,transfer,knowledge-acquisition', description: 'Acquires new skills and transfers knowledge across domains using meta-reasoning over chain of thought', avatar: 'sparkles' },
+  { name: 'Otsenochnik', role: 'Evaluator Agent', roleGroup: 'Обучение', status: 'idle', formula: 'LeastToMost', skills: 'scoring,reward-modeling,benchmarking', description: 'Evaluates performance, models rewards, and tracks benchmarks using progressive complexity reasoning', avatar: 'bar-chart-3' },
 ]
 
 const sampleTasks = [
@@ -56,6 +66,12 @@ const sampleTasks = [
   { title: 'Monitor Agent Health', description: 'Check all agent statuses and collect metrics', status: 'running', priority: 'high', agentIndex: 17 },
   { title: 'Alert: Memory Threshold', description: 'Notify when memory usage exceeds 80%', status: 'pending', priority: 'critical', agentIndex: 18 },
   { title: 'Diagnose Latency Spike', description: 'Root-cause analysis of response latency increase', status: 'running', priority: 'high', agentIndex: 19 },
+  { title: 'Route API Requests', description: 'Configure gateway routing rules for inter-group communication', status: 'running', priority: 'high', agentIndex: 20 },
+  { title: 'Format Protocol Messages', description: 'Standardize message format for cross-agent protocol', status: 'pending', priority: 'medium', agentIndex: 21 },
+  { title: 'Balance Task Queue', description: 'Redistribute pending tasks across available agents', status: 'running', priority: 'high', agentIndex: 22 },
+  { title: 'Fine-Tune Agent Responses', description: 'Apply feedback loops to improve agent output quality', status: 'pending', priority: 'medium', agentIndex: 23 },
+  { title: 'Adapt Skills to New Domain', description: 'Transfer knowledge from existing domain to new task area', status: 'pending', priority: 'low', agentIndex: 24 },
+  { title: 'Benchmark Agent Performance', description: 'Score agents on standardized benchmarks and track improvements', status: 'pending', priority: 'medium', agentIndex: 25 },
 ]
 
 export async function POST() {
@@ -119,6 +135,20 @@ export async function POST() {
     }
     if (created[17] && created[19]) {
       await db.agent.update({ where: { id: created[19].id }, data: { parentId: created[17].id } })
+    }
+    // Коммуникация: Shlyuz -> Protokolista, Dispeter
+    if (created[20] && created[21]) {
+      await db.agent.update({ where: { id: created[21].id }, data: { parentId: created[20].id } })
+    }
+    if (created[20] && created[22]) {
+      await db.agent.update({ where: { id: created[22].id }, data: { parentId: created[20].id } })
+    }
+    // Обучение: Trener -> Adapter, Otsenochnik
+    if (created[23] && created[24]) {
+      await db.agent.update({ where: { id: created[24].id }, data: { parentId: created[23].id } })
+    }
+    if (created[23] && created[25]) {
+      await db.agent.update({ where: { id: created[25].id }, data: { parentId: created[23].id } })
     }
 
     // Create sample tasks
