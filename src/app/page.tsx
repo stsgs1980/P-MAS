@@ -71,10 +71,10 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Total Agents', value: '13', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.08)' },
-            { label: 'Active', value: '8', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.08)' },
-            { label: 'Role Groups', value: '4', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.08)' },
-            { label: 'Cognitive Types', value: '6', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.08)' },
+            { label: 'Total Agents', value: '20', color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.08)' },
+            { label: 'Role Groups', value: '6', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.08)' },
+            { label: 'Cognitive Formulas', value: '14', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.08)' },
+            { label: 'Edge Types', value: '6', color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -92,12 +92,14 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Role Groups */}
         <h2 className="text-white font-semibold text-sm mb-4">Role Groups</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {[
-            { name: 'Стратегия', label: 'Strategy', color: '#f59e0b', colorRgb: '245,158,11', agents: 2, formula: 'ToT' },
-            { name: 'Тактика', label: 'Tactics', color: '#10b981', colorRgb: '16,185,129', agents: 3, formula: 'CoVe / ReWOO' },
-            { name: 'Контроль', label: 'Control', color: '#f43f5e', colorRgb: '244,63,94', agents: 3, formula: 'Reflexion' },
-            { name: 'Исполнение', label: 'Execution', color: '#06b6d4', colorRgb: '6,182,212', agents: 5, formula: 'ReAct / MoA' },
+            { name: 'Стратегия', label: 'Strategy', color: '#f59e0b', colorRgb: '245,158,11', agents: 3, formulas: 'ToT, CoVe, GoT', desc: 'Strategic planning, analysis, vision' },
+            { name: 'Тактика', label: 'Tactics', color: '#10b981', colorRgb: '16,185,129', agents: 3, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication' },
+            { name: 'Контроль', label: 'Control', color: '#f43f5e', colorRgb: '244,63,94', agents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety' },
+            { name: 'Исполнение', label: 'Execution', color: '#06b6d4', colorRgb: '6,182,212', agents: 5, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing' },
+            { name: 'Память', label: 'Memory / Knowledge', color: '#8b5cf6', colorRgb: '139,92,246', agents: 3, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management' },
+            { name: 'Мониторинг', label: 'Monitoring', color: '#14b8a6', colorRgb: '20,184,166', agents: 3, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics' },
           ].map((group) => (
             <div
               key={group.name}
@@ -119,8 +121,67 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
                   {group.agents}
                 </span>
               </div>
-              <p className="text-slate-400 text-xs mb-2">{group.label}</p>
-              <p className="text-slate-500 text-[10px]">Formula: {group.formula}</p>
+              <p className="text-slate-400 text-xs mb-2">{group.desc}</p>
+              <p className="text-slate-500 text-[10px]">Formulas: {group.formulas}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Prompting Formulas Taxonomy */}
+        <h2 className="text-white font-semibold text-sm mb-4">Prompting Formulas (14)</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+          {[
+            { name: 'CoT', full: 'Chain of Thought', color: '#94a3b8' },
+            { name: 'ToT', full: 'Tree of Thoughts', color: '#f59e0b' },
+            { name: 'GoT', full: 'Graph of Thoughts', color: '#eab308' },
+            { name: 'AoT', full: 'Algorithm of Thoughts', color: '#a78bfa' },
+            { name: 'SoT', full: 'Skeleton of Thought', color: '#fb923c' },
+            { name: 'CoVe', full: 'Chain of Verification', color: '#8b5cf6' },
+            { name: 'ReWOO', full: 'Research w/o Observation', color: '#10b981' },
+            { name: 'Reflexion', full: 'Self-Reflection', color: '#f43f5e' },
+            { name: 'ReAct', full: 'Reasoning + Action', color: '#06b6d4' },
+            { name: 'MoA', full: 'Mixture of Agents', color: '#ec4899' },
+            { name: 'SelfRefine', full: 'Self-Refine', color: '#38bdf8' },
+            { name: 'LATS', full: 'Lang Agent Tree Search', color: '#4ade80' },
+            { name: 'SelfConsistency', full: 'Self-Consistency', color: '#c084fc' },
+            { name: 'PoT', full: 'Program of Thought', color: '#f472b6' },
+          ].map((formula) => (
+            <div
+              key={formula.name}
+              className="rounded-lg p-3 text-center"
+              style={{
+                background: `${formula.color}10`,
+                border: `1px solid ${formula.color}30`,
+              }}
+            >
+              <p className="font-bold text-xs" style={{ color: formula.color }}>{formula.name}</p>
+              <p className="text-slate-500 text-[8px] mt-1 leading-tight">{formula.full}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Edge Types */}
+        <h2 className="text-white font-semibold text-sm mb-4">Edge Types (6)</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          {[
+            { name: 'Command', desc: 'Parent to child', color: '#f59e0b', style: 'solid' },
+            { name: 'Sync', desc: 'Peer sync', color: '#64748b', style: 'dotted' },
+            { name: 'Twin', desc: 'Mirror agents', color: '#06b6d4', style: 'dashed' },
+            { name: 'Delegate', desc: 'Task delegation', color: '#8b5cf6', style: 'dash-dot' },
+            { name: 'Supervise', desc: 'Oversight link', color: '#14b8a6', style: 'fine dot' },
+            { name: 'Broadcast', desc: 'One-to-many', color: '#f97316', style: 'long dash' },
+          ].map((edge) => (
+            <div
+              key={edge.name}
+              className="rounded-lg p-3"
+              style={{
+                background: `${edge.color}10`,
+                border: `1px solid ${edge.color}30`,
+              }}
+            >
+              <div className="w-full h-0.5 mb-2" style={{ borderTop: `2px ${edge.style === 'solid' ? 'solid' : edge.style === 'dotted' ? 'dotted' : 'dashed'} ${edge.color}` }} />
+              <p className="font-bold text-[10px]" style={{ color: edge.color }}>{edge.name}</p>
+              <p className="text-slate-500 text-[8px] mt-0.5">{edge.desc}</p>
             </div>
           ))}
         </div>
@@ -151,7 +212,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
       {/* Footer */}
       <footer className="mt-auto px-6 py-4 border-t border-white/5">
-        <p className="text-center text-slate-600 text-xs">P-MAS Dashboard v2.1 -- No Unicode Policy Enforced</p>
+        <p className="text-center text-slate-600 text-xs">P-MAS Dashboard v2.1 -- No Unicode Policy Enforced -- 6 Groups / 14 Formulas / 6 Edge Types</p>
       </footer>
     </div>
   )

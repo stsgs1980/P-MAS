@@ -58,6 +58,19 @@ import {
   Hash,
   ArrowLeft,
   LayoutDashboard,
+  BookOpen,
+  HardDrive,
+  FileSearch,
+  Monitor,
+  Bell,
+  Gauge,
+  Network,
+  Megaphone,
+  EyeOff,
+  Workflow,
+  GitBranch,
+  RefreshCcw,
+  Binary,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -79,7 +92,7 @@ interface Agent {
   tasks?: unknown[]
 }
 
-type EdgeType = 'command' | 'sync' | 'twin'
+type EdgeType = 'command' | 'sync' | 'twin' | 'delegate' | 'supervise' | 'broadcast'
 
 interface Connection {
   id: string
@@ -98,30 +111,45 @@ const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: Lucid
   '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': { color: '#10b981', colorRgb: '16,185,129', icon: Target, label: 'Tactics' },
   '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': { color: '#f43f5e', colorRgb: '244,63,94', icon: Shield, label: 'Control' },
   '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': { color: '#06b6d4', colorRgb: '6,182,212', icon: Zap, label: 'Execution' },
+  '\u041f\u0430\u043c\u044f\u0442\u044c': { color: '#8b5cf6', colorRgb: '139,92,246', icon: Database, label: 'Memory' },
+  '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': { color: '#14b8a6', colorRgb: '20,184,166', icon: Activity, label: 'Monitoring' },
 }
 
-const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
+const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435', '\u041f\u0430\u043c\u044f\u0442\u044c', '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433']
 
 const STATUS_COLORS: Record<string, string> = {
   active: '#22c55e',
   idle: '#eab308',
   error: '#ef4444',
   offline: '#6b7280',
+  paused: '#f97316',
+  standby: '#6366f1',
 }
 
 const FORMULA_COLORS: Record<string, string> = {
+  CoT: '#94a3b8',
   ToT: '#f59e0b',
+  GoT: '#eab308',
+  AoT: '#a78bfa',
+  SoT: '#fb923c',
   CoVe: '#8b5cf6',
   ReWOO: '#10b981',
   Reflexion: '#f43f5e',
   ReAct: '#06b6d4',
   MoA: '#ec4899',
+  SelfRefine: '#38bdf8',
+  LATS: '#4ade80',
+  SelfConsistency: '#c084fc',
+  PoT: '#f472b6',
 }
 
 const EDGE_CONFIG: Record<EdgeType, { strokeDasharray: string | undefined; label: string; icon: LucideIcon }> = {
   command: { strokeDasharray: undefined, label: 'Command', icon: ArrowRight },
   sync: { strokeDasharray: '3 5', label: 'Sync', icon: ArrowLeftRight },
   twin: { strokeDasharray: '8 4', label: 'Twin', icon: Diamond },
+  delegate: { strokeDasharray: '6 3', label: 'Delegate', icon: Workflow },
+  supervise: { strokeDasharray: '2 4', label: 'Supervise', icon: Eye },
+  broadcast: { strokeDasharray: '12 4 2 4', label: 'Broadcast', icon: Megaphone },
 }
 
 const AVATAR_ICON_MAP: Record<string, LucideIcon> = {
@@ -141,6 +169,18 @@ const AVATAR_ICON_MAP: Record<string, LucideIcon> = {
   'brain': Brain,
   'shield': Shield,
   'activity': Activity,
+  'book-open': BookOpen,
+  'hard-drive': HardDrive,
+  'file-search': FileSearch,
+  'monitor': Monitor,
+  'bell': Bell,
+  'gauge': Gauge,
+  'network': Network,
+  'megaphone': Megaphone,
+  'workflow': Workflow,
+  'git-branch': GitBranch,
+  'refresh-ccw': RefreshCcw,
+  'binary': Binary,
 }
 
 function getAvatarIcon(avatarName: string): LucideIcon {
@@ -371,10 +411,22 @@ function ConnectionLine({
     )
   }
 
-  const strokeWidth = type === 'command' ? 0.2 + strength * 0.1 : type === 'twin' ? 0.2 : 0.15
+  const strokeWidth = type === 'command' ? 0.2 + strength * 0.1
+    : type === 'twin' ? 0.2
+    : type === 'delegate' ? 0.18
+    : type === 'supervise' ? 0.12
+    : type === 'broadcast' ? 0.15
+    : 0.15
   const syncColor = '#64748b'
+  const delegateColor = '#8b5cf6'
+  const superviseColor = '#14b8a6'
+  const broadcastColor = '#f97316'
 
-  const strokeColor = type === 'sync' ? syncColor : color
+  const strokeColor = type === 'sync' ? syncColor
+    : type === 'delegate' ? delegateColor
+    : type === 'supervise' ? superviseColor
+    : type === 'broadcast' ? broadcastColor
+    : color
 
   return (
     <g
@@ -940,12 +992,20 @@ function AgentDetailPanel({
             >
               <span className="font-bold text-sm" style={{ color: formulaColor }}>{agent.formula}</span>
               <p className="text-slate-400 text-[10px] mt-1">
+                {agent.formula === 'CoT' && 'Chain of Thought -- step-by-step reasoning decomposition'}
                 {agent.formula === 'ToT' && 'Tree of Thoughts -- explores multiple reasoning paths'}
+                {agent.formula === 'GoT' && 'Graph of Thoughts -- models reasoning as a directed graph'}
+                {agent.formula === 'AoT' && 'Algorithm of Thoughts -- algorithmic reasoning via LLM'}
+                {agent.formula === 'SoT' && 'Skeleton of Thought -- outline first, then fill details'}
                 {agent.formula === 'CoVe' && 'Chain of Verification -- validates outputs with self-checks'}
                 {agent.formula === 'ReWOO' && 'Research without Observation -- plans then executes'}
                 {agent.formula === 'Reflexion' && 'Self-reflection -- learns from past mistakes'}
                 {agent.formula === 'ReAct' && 'Reasoning + Action -- interleaves thought and action'}
                 {agent.formula === 'MoA' && 'Mixture of Agents -- combines multiple agent outputs'}
+                {agent.formula === 'SelfRefine' && 'Self-Refine -- iteratively improves its own output'}
+                {agent.formula === 'LATS' && 'Language Agent Tree Search -- MCTS + LLM reasoning'}
+                {agent.formula === 'SelfConsistency' && 'Self-Consistency -- multiple paths + majority vote'}
+                {agent.formula === 'PoT' && 'Program of Thought -- reasons via code execution'}
               </p>
             </div>
           </div>
@@ -1057,7 +1117,7 @@ function LegendPanel() {
       {/* Edge types */}
       <div className="space-y-1.5 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5 bg-amber-500" style={{ borderTop: '2px solid #f59e0b' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px solid #f59e0b' }} />
           <span className="text-[9px] text-slate-300">Command (solid)</span>
         </div>
         <div className="flex items-center gap-2">
@@ -1067,6 +1127,18 @@ function LegendPanel() {
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #06b6d4' }} />
           <span className="text-[9px] text-slate-300">Twin (dashed)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #8b5cf6' }} />
+          <span className="text-[9px] text-slate-300">Delegate (dash-dot)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #14b8a6' }} />
+          <span className="text-[9px] text-slate-300">Supervise (fine dot)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #f97316' }} />
+          <span className="text-[9px] text-slate-300">Broadcast (long dash)</span>
         </div>
       </div>
 
@@ -1376,7 +1448,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent style={{ background: 'rgba(15, 20, 35, 0.95)' }}>
-                  {['ToT', 'CoVe', 'ReWOO', 'Reflexion', 'ReAct', 'MoA'].map(f => (
+                  {['CoT', 'ToT', 'GoT', 'AoT', 'SoT', 'CoVe', 'ReWOO', 'Reflexion', 'ReAct', 'MoA', 'SelfRefine', 'LATS', 'SelfConsistency', 'PoT'].map(f => (
                     <SelectItem key={f} value={f}>{f}</SelectItem>
                   ))}
                 </SelectContent>
@@ -1610,6 +1682,63 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             to: agent.twinId,
             type: 'twin',
             strength: 1,
+          })
+        }
+      }
+    }
+
+    // Delegate edges: tactical coordinator delegates to execution agents
+    const taktikaAgents = agents.filter(a => a.roleGroup === 'Тактика')
+    const ispolnenieAgents = agents.filter(a => a.roleGroup === 'Исполнение')
+    for (const t of taktikaAgents) {
+      if (t.role.includes('Coordinator') && pos[t.id]) {
+        for (const e of ispolnenieAgents) {
+          if (!e.parentId && pos[e.id]) {
+            conns.push({
+              id: `delegate-${t.id}-${e.id}`,
+              from: t.id,
+              to: e.id,
+              type: 'delegate',
+              strength: 0.7,
+            })
+          }
+        }
+      }
+    }
+
+    // Supervise edges: control agents supervise execution agents
+    const kontrolAgents = agents.filter(a => a.roleGroup === 'Контроль')
+    for (const c of kontrolAgents) {
+      if (pos[c.id]) {
+        // Each control agent supervises 1-2 execution agents
+        for (const e of ispolnenieAgents) {
+          if (pos[e.id] && conns.filter(cn => cn.type === 'supervise' && cn.to === e.id).length === 0) {
+            conns.push({
+              id: `supervise-${c.id}-${e.id}`,
+              from: c.id,
+              to: e.id,
+              type: 'supervise',
+              strength: 0.4,
+            })
+            break // one supervise per control agent per execution agent
+          }
+        }
+      }
+    }
+
+    // Broadcast edges: strategy agents broadcast to all group leads
+    const strategyAgents = agents.filter(a => a.roleGroup === 'Стратегия' && !a.parentId)
+    for (const s of strategyAgents) {
+      if (pos[s.id]) {
+        // Broadcast to group leads (agents without parents in each group)
+        const groupLeads = agents.filter(a => !a.parentId && a.roleGroup !== 'Стратегия' && pos[a.id])
+        for (const lead of groupLeads) {
+          conns.push({
+            id: `broadcast-${s.id}-${lead.id}`,
+            from: s.id,
+            to: lead.id,
+            type: 'broadcast',
+            strength: 0.5,
           })
         }
       }

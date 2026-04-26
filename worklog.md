@@ -215,3 +215,26 @@ Stage Summary:
 - Node descriptions simplified - removed skill count text, shrunk badges and labels
 - All changes verified: lint passes, dev server running, browser tested with agent-browser
 - Back button visible as cyan "Dashboard" with arrow in top-left of hierarchy nav bar
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Expand P-MAS architecture to cover all role groups, prompting formulas, and edge types
+
+Work Log:
+- Added 2 new role groups: Память (Memory/Knowledge, #8b5cf6) and Мониторинг (Monitoring, #14b8a6)
+- Added 8 new prompting formulas: CoT, GoT, AoT, SoT, SelfRefine, LATS, SelfConsistency, PoT (total 14)
+- Added 3 new edge types: delegate, supervise, broadcast (total 6)
+- Added 2 new agent statuses: paused (#f97316), standby (#6366f1) (total 6)
+- Added 7 new agents: Koder (Исполнение), Arkhivarius, RAG-Specialist, Kontekst-Manager (Память), Nablyudatel, Alert-Operator, Diagnost (Мониторинг)
+- Total now: 20 agents, 20 tasks
+- Updated connection logic with delegate, supervise, broadcast edges
+- Updated Legend, Agent Creation Dialog, Detail Panel formulas, Dashboard
+- Re-seeded DB: 20 agents, 20 tasks, 14 formulas, 6 role groups
+
+Stage Summary:
+- Complete P-MAS taxonomy: 6 role groups, 14 cognitive formulas, 6 edge types, 6 statuses
+- CoT added as foundational formula
+- Memory group: RAG, context, knowledge archival
+- Monitoring group: observation, alerting, diagnostics
+- All verified: lint passes, seed successful, browser shows all 6 groups
