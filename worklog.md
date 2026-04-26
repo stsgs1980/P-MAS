@@ -221,3 +221,37 @@ Stage Summary:
 - All visual QA passed - no bugs or rendering errors
 - Monochrome Cyan design system consistently applied throughout
 - Project is in stable state, ready for further development
+
+---
+Task ID: 9
+Agent: Main Orchestrator
+Task: Fix hydration error, remove ColorPreview, improve status colors, expand layout
+
+Work Log:
+- Fixed hydration error: Changed `lastUpdated` from `useState(new Date())` to `useState<string>('')` with client-only time rendering via `useEffect` + `setInterval`
+- Used `{lastUpdated || '--:--:--'}` pattern to show placeholder during SSR, avoiding server/client time mismatch
+- Removed entire ColorPreviewModal component (~400 lines) and its data constants
+- Removed "Preview Colors" button from header
+- Removed unused `Palette` import, fixed `Palette` reference in QuickActionsPanel → replaced with `Activity`
+- Improved STATUS_DISTRIBUTION colors for better visual distinction:
+  - Active: #22D3EE (bright cyan)
+  - Idle: #6B7280 (gray)
+  - Paused: #F59E0B (amber/yellow)
+  - Standby: #8B5CF6 (purple)
+  - Error: #EF4444 (red)
+  - Offline: #4B5563 (dark gray)
+- Updated STATUS_COLORS in agent-hierarchy.tsx to match
+- Updated statusSummary colors in ROLE_GROUPS (paused=#F59E0B, standby=#8B5CF6)
+- Expanded Recent Activity: removed max-h-64 constraint, added flex-1 for vertical expansion
+- Changed layout width from max-w-7xl to max-w-[1280px] (3 locations)
+- Recreated ArchitectureDiagram component (was accidentally deleted with ColorPreviewModal)
+- Lint: 0 errors after all fixes
+- Dev server: 200 OK
+
+Stage Summary:
+- Hydration error fixed by using client-only time rendering
+- ColorSchemePreview completely removed
+- Status colors now distinct and semantically appropriate
+- Layout uses full 1280px width
+- Recent Activity expands to fill available space
+- No lint errors, no runtime errors

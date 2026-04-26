@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, Palette, X, Bell, RefreshCw, Search } from 'lucide-react'
+import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 const AgentHierarchy = dynamic(
@@ -27,8 +27,8 @@ const ROLE_GROUPS = [
   { name: 'Тактика', label: 'Tactics', color: '#22D3EE', colorRgb: '34,211,238', icon: Target, agents: 3, activeAgents: 2, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
   { name: 'Контроль', label: 'Control', color: '#06B6D4', colorRgb: '6,182,212', icon: Shield, agents: 3, activeAgents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety', statusSummary: [{ color: '#06B6D4', label: '3 active' }] },
   { name: 'Исполнение', label: 'Execution', color: '#06B6D4', colorRgb: '6,182,212', icon: Zap, agents: 5, activeAgents: 4, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing', statusSummary: [{ color: '#06B6D4', label: '4 active' }, { color: '#6B7280', label: '1 idle' }] },
-  { name: 'Память', label: 'Memory / Knowledge', color: '#0891B2', colorRgb: '8,145,178', icon: Database, agents: 3, activeAgents: 2, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 standby' }] },
-  { name: 'Мониторинг', label: 'Monitoring', color: '#0E7490', colorRgb: '14,116,144', icon: Activity, agents: 3, activeAgents: 2, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#9CA3AF', label: '1 paused' }] },
+  { name: 'Память', label: 'Memory / Knowledge', color: '#0891B2', colorRgb: '8,145,178', icon: Database, agents: 3, activeAgents: 2, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#8B5CF6', label: '1 standby' }] },
+  { name: 'Мониторинг', label: 'Monitoring', color: '#0E7490', colorRgb: '14,116,144', icon: Activity, agents: 3, activeAgents: 2, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#22D3EE', label: '2 active' }, { color: '#F59E0B', label: '1 paused' }] },
   { name: 'Коммуникация', label: 'Communication', color: '#155E75', colorRgb: '21,94,117', icon: Network, agents: 3, activeAgents: 2, formulas: 'PromptChaining, StepBack, PlanAndSolve', desc: 'Inter-agent messaging, routing, protocol translation', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
   { name: 'Обучение', label: 'Learning / Training', color: '#164E63', colorRgb: '22,78,99', icon: Sparkles, agents: 3, activeAgents: 2, formulas: 'DSPy, MetaCoT, LeastToMost', desc: 'Fine-tuning, feedback loops, skill acquisition', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
 ]
@@ -184,11 +184,11 @@ const PERFORMANCE_METRICS = [
 ]
 
 const STATUS_DISTRIBUTION = [
-  { label: 'Active', count: 16, color: '#06B6D4' },
+  { label: 'Active', count: 16, color: '#22D3EE' },
   { label: 'Idle', count: 4, color: '#6B7280' },
-  { label: 'Paused', count: 1, color: '#9CA3AF' },
-  { label: 'Standby', count: 1, color: '#6B7280' },
-  { label: 'Error', count: 0, color: '#FFC107' },
+  { label: 'Paused', count: 1, color: '#F59E0B' },
+  { label: 'Standby', count: 1, color: '#8B5CF6' },
+  { label: 'Error', count: 0, color: '#EF4444' },
   { label: 'Offline', count: 4, color: '#4B5563' },
 ]
 
@@ -441,7 +441,7 @@ function SystemHealthMonitor() {
 function RecentActivityTimeline() {
   return (
     <div
-      className="rounded-xl p-4 sm:p-6"
+      className="rounded-xl p-4 sm:p-6 flex flex-col flex-1"
       style={{
         background: 'rgba(45, 45, 45, 0.3)',
         border: '1px solid rgba(51, 51, 51, 0.5)',
@@ -452,13 +452,13 @@ function RecentActivityTimeline() {
         Recent Activity
       </h3>
       <div
-        className="max-h-64 overflow-y-auto space-y-0"
+        className="flex-1 overflow-y-auto space-y-0"
         style={{
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(255,255,255,0.1) transparent',
         }}
       >
-        <div className="activity-scroll max-h-64 overflow-y-auto space-y-0">
+        <div className="activity-scroll overflow-y-auto space-y-0">
           {ACTIVITY_EVENTS.map((event, i) => {
             const groupConfig = ROLE_GROUPS.find(g => g.name === event.group)
             const dotColor = groupConfig?.color || '#94a3b8'
@@ -1244,7 +1244,7 @@ function QuickActionsPanel() {
     { label: 'Reseed Data', icon: Database, onClick: handleReseed, loading: reseeding },
     { label: 'Export Config', icon: Download, onClick: handleExportConfig },
     { label: 'Reset View', icon: ArrowUp, onClick: handleResetView },
-    { label: 'Toggle Theme', icon: Palette, onClick: handleToggleTheme },
+    { label: 'Toggle Theme', icon: Activity, onClick: handleToggleTheme },
   ]
 
   return (
@@ -1294,291 +1294,34 @@ function QuickActionsPanel() {
   )
 }
 
-// ─── Color Preview Modal ──────────────────────────────────────────────────────
-
-const COLOR_PREVIEW_SCHEMES = [
-  {
-    id: 'current-blue',
-    name: 'A: Current Blue',
-    accent: '#4A90E2',
-    light: '#6BB6FF',
-    dim: '#3A7BD5',
-    muted: '#2A5B9E',
-    groups: ['#6BB6FF', '#4A90E2', '#3A7BD5', '#2A5B9E', '#1E3A5F', '#B0B0B0', '#888888', '#666666'],
-    statuses: [
-      { label: 'Active', color: '#4A90E2' },
-      { label: 'Idle', color: '#B0B0B0' },
-      { label: 'Error', color: '#FFC107' },
-      { label: 'Paused', color: '#888888' },
-      { label: 'Standby', color: '#777777' },
-      { label: 'Offline', color: '#555555' },
-    ],
-    edges: [
-      { label: 'Command', color: '#4A90E2' },
-      { label: 'Sync', color: '#777777' },
-      { label: 'Twin', color: '#888888' },
-      { label: 'Delegate', color: '#999999' },
-    ],
-    recommended: false,
-  },
-  {
-    id: 'dark-blue',
-    name: 'B: Dark Blue',
-    accent: '#2563EB',
-    light: '#3B82F6',
-    dim: '#1D4ED8',
-    muted: '#1E40AF',
-    groups: ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF', '#172554', '#B0B0B0', '#888888', '#666666'],
-    statuses: [
-      { label: 'Active', color: '#2563EB' },
-      { label: 'Idle', color: '#B0B0B0' },
-      { label: 'Error', color: '#FFC107' },
-      { label: 'Paused', color: '#888888' },
-      { label: 'Standby', color: '#777777' },
-      { label: 'Offline', color: '#555555' },
-    ],
-    edges: [
-      { label: 'Command', color: '#2563EB' },
-      { label: 'Sync', color: '#777777' },
-      { label: 'Twin', color: '#888888' },
-      { label: 'Delegate', color: '#999999' },
-    ],
-    recommended: false,
-  },
-  {
-    id: 'cyan',
-    name: 'C: Cyan (Active)',
-    accent: '#06B6D4',
-    light: '#67E8F9',
-    dim: '#0891B2',
-    muted: '#0E7490',
-    groups: ['#67E8F9', '#22D3EE', '#06B6D4', '#06B6D4', '#0891B2', '#0E7490', '#155E75', '#164E63'],
-    statuses: [
-      { label: 'Active', color: '#06B6D4' },
-      { label: 'Idle', color: '#6B7280' },
-      { label: 'Error', color: '#FFC107' },
-      { label: 'Paused', color: '#9CA3AF' },
-      { label: 'Standby', color: '#6B7280' },
-      { label: 'Offline', color: '#4B5563' },
-    ],
-    edges: [
-      { label: 'Command', color: '#06B6D4' },
-      { label: 'Sync', color: '#64748B' },
-      { label: 'Twin', color: '#22D3EE' },
-      { label: 'Delegate', color: '#0891B2' },
-    ],
-    recommended: true,
-  },
-]
-
-const PREVIEW_GROUP_NAMES = ['Стратегия', 'Тактика', 'Контроль', 'Исполнение', 'Память', 'Мониторинг', 'Коммуникация', 'Обучение']
-const PREVIEW_FORMULA_NAMES = ['CoT', 'ToT', 'ReAct', 'MoA', 'DSPy', 'Reflexion']
-const PREVIEW_FORMULA_COLORS = ['#999999', '#888888', '#999999', '#777777', '#888888', '#999999']
-
-function ColorPreviewModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto"
-      style={{ background: 'rgba(0,0,0,0.92)' }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 min-h-screen"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Palette className="w-5 h-5" style={{ color: '#B0B0B0' }} />
-            <h2 className="text-white text-lg font-bold tracking-wide">Color Scheme Comparison</h2>
-            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(176,176,176,0.1)', color: '#B0B0B0', border: '1px solid rgba(176,176,176,0.2)' }}>Monochrome Redesign</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg transition-colors duration-200 hover:bg-white/10"
-            style={{ color: '#B0B0B0' }}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {COLOR_PREVIEW_SCHEMES.map((scheme) => (
-            <div
-              key={scheme.id}
-              className="rounded-xl p-4 relative"
-              style={{
-                background: 'rgba(26,26,26,0.92)',
-                border: scheme.recommended
-                  ? `1.5px solid ${scheme.accent}66`
-                  : '1px solid rgba(51,51,51,0.5)',
-                boxShadow: scheme.recommended
-                  ? `0 0 30px ${scheme.accent}15, inset 0 0 30px ${scheme.accent}08`
-                  : 'none',
-              }}
-            >
-              {scheme.recommended && (
-                <div
-                  className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase"
-                  style={{
-                    background: scheme.accent,
-                    color: '#000000',
-                    boxShadow: `0 0 12px ${scheme.accent}44`,
-                  }}
-                >
-                  Recommended
-                </div>
-              )}
-
-              <div className="text-center mb-4 mt-1">
-                <span className="text-sm font-bold" style={{ color: scheme.accent }}>{scheme.name}</span>
-              </div>
-
-              <div className="rounded-lg p-3 mb-3 flex items-center gap-2" style={{ background: 'rgba(13,13,13,0.8)', borderLeft: `2px solid ${scheme.accent}` }}>
-                <Brain className="w-4 h-4" style={{ color: scheme.accent }} />
-                <span className="text-white font-bold text-sm">P-MAS</span>
-                <span className="text-[9px]" style={{ color: scheme.accent }}>Multi-Agent System</span>
-              </div>
-
-              <div className="grid grid-cols-4 gap-1.5 mb-3">
-                {[
-                  { label: 'Agents', value: '26' },
-                  { label: 'Groups', value: '8' },
-                  { label: 'Formulas', value: '20' },
-                  { label: 'Active', value: '16' },
-                ].map((stat) => (
-                  <div key={stat.label} className="rounded-md p-1.5 text-center" style={{ background: 'rgba(13,13,13,0.8)', borderLeft: `2px solid ${scheme.accent}` }}>
-                    <div className="text-[10px] font-bold" style={{ color: scheme.accent }}>{stat.value}</div>
-                    <div className="text-[7px] text-[#B0B0B0]">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mb-3">
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Groups</div>
-                <div className="flex flex-wrap gap-1">
-                  {PREVIEW_GROUP_NAMES.map((name, i) => (
-                    <div key={name} className="flex items-center gap-1 rounded px-1.5 py-0.5" style={{ background: `${scheme.groups[i]}15`, border: `1px solid ${scheme.groups[i]}33` }}>
-                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: scheme.groups[i] }} />
-                      <span className="text-[7px] font-medium" style={{ color: scheme.groups[i] }}>{name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Formulas</div>
-                <div className="flex flex-wrap gap-1">
-                  {PREVIEW_FORMULA_NAMES.map((name, i) => (
-                    <span key={name} className="rounded px-1.5 py-0.5 text-[7px] font-medium" style={{ background: `${PREVIEW_FORMULA_COLORS[i]}15`, border: `1px solid ${PREVIEW_FORMULA_COLORS[i]}33`, color: PREVIEW_FORMULA_COLORS[i] }}>{name}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Statuses</div>
-                <div className="flex flex-wrap gap-2">
-                  {scheme.statuses.map((status) => (
-                    <div key={status.label} className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full" style={{ background: status.color }} />
-                      <span className="text-[8px]" style={{ color: status.color }}>{status.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Edges</div>
-                <div className="flex flex-wrap gap-2">
-                  {scheme.edges.map((edge) => (
-                    <div key={edge.label} className="flex items-center gap-1.5">
-                      <svg width="24" height="4">
-                        <line x1="0" y1="2" x2="24" y2="2" stroke={edge.color} strokeWidth="1.5" />
-                      </svg>
-                      <span className="text-[8px]" style={{ color: edge.color }}>{edge.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Performance</div>
-                <div className="space-y-1">
-                  {[
-                    { label: 'Arkhitektor', pct: 96 },
-                    { label: 'Koordinator', pct: 94 },
-                    { label: 'Revizor', pct: 91 },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2">
-                      <span className="text-[7px] w-16 text-right" style={{ color: scheme.accent }}>{item.label}</span>
-                      <div className="flex-1 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="h-full rounded-full" style={{ width: `${item.pct}%`, background: `linear-gradient(90deg, ${scheme.accent}44, ${scheme.accent}aa)` }} />
-                      </div>
-                      <span className="text-[7px] w-5 text-right" style={{ color: scheme.accent }}>{item.pct}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-[8px] text-[#B0B0B0] uppercase tracking-wider mb-1.5 font-medium">Accent Shades</div>
-                <div className="grid grid-cols-4 gap-1">
-                  {[
-                    { label: 'Light', color: scheme.light },
-                    { label: 'Accent', color: scheme.accent },
-                    { label: 'Dim', color: scheme.dim },
-                    { label: 'Muted', color: scheme.muted },
-                  ].map((swatch) => (
-                    <div key={swatch.label} className="text-center">
-                      <div className="h-8 rounded-md mb-0.5" style={{ background: swatch.color, boxShadow: `0 0 8px ${swatch.color}33` }} />
-                      <div className="text-[7px] font-mono" style={{ color: swatch.color }}>{swatch.color}</div>
-                      <div className="text-[6px] text-[#666666]">{swatch.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-[10px] text-[#666666]">Compare monochrome schemes side by side. Only the accent color and its shades change; formulas stay gray, statuses use accent for active + warning yellow for errors.</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Architecture SVG Diagram ──────────────────────────────────────────────────
+// ─── Architecture Overview Diagram ────────────────────────────────────────────
 
 function ArchitectureDiagram() {
-  const boxW = 90
-  const boxH = 32
-  const gap = 20
-
-  const layoutNodes = [
-    { id: 'Стратегия', x: 220, y: 20, color: '#67E8F9' },
-    { id: 'Тактика', x: 100, y: 80, color: '#22D3EE' },
-    { id: 'Исполнение', x: 340, y: 80, color: '#06B6D4' },
-    { id: 'Контроль', x: 100, y: 140, color: '#06B6D4' },
-    { id: 'Мониторинг', x: 220, y: 140, color: '#0E7490' },
-    { id: 'Память', x: 340, y: 140, color: '#0891B2' },
-    { id: 'Коммуникация', x: 160, y: 200, color: '#155E75' },
-    { id: 'Обучение', x: 340, y: 200, color: '#164E63' },
+  const groups = [
+    { name: 'Стратегия', x: 200, y: 30, color: '#67E8F9' },
+    { name: 'Тактика', x: 400, y: 30, color: '#22D3EE' },
+    { name: 'Исполнение', x: 600, y: 30, color: '#06B6D4' },
+    { name: 'Контроль', x: 200, y: 110, color: '#06B6D4' },
+    { name: 'Мониторинг', x: 600, y: 110, color: '#0E7490' },
+    { name: 'Память', x: 200, y: 190, color: '#0891B2' },
+    { name: 'Коммуникация', x: 400, y: 190, color: '#155E75' },
+    { name: 'Обучение', x: 600, y: 190, color: '#164E63' },
   ]
 
-  const layoutEdges = [
-    { from: 'Стратегия', to: 'Тактика', label: 'broadcast', color: '#0E7490' },
-    { from: 'Тактика', to: 'Исполнение', label: 'delegate', color: '#0891B2' },
-    { from: 'Стратегия', to: 'Мониторинг', label: 'command', color: '#06B6D4' },
-    { from: 'Контроль', to: 'Мониторинг', label: 'supervise', color: '#475569' },
-    { from: 'Тактика', to: 'Контроль', label: '', color: '#64748B' },
-    { from: 'Коммуникация', to: 'Исполнение', label: 'delegate', color: '#0891B2' },
-    { from: 'Коммуникация', to: 'Память', label: 'sync', color: '#64748B' },
-    { from: 'Память', to: 'Обучение', label: '', color: '#64748B' },
-    { from: 'Контроль', to: 'Исполнение', label: '', color: '#64748B' },
+  const connections = [
+    { from: 0, to: 1, label: 'delegate', color: '#0891B2' },
+    { from: 1, to: 2, label: 'command', color: '#06B6D4' },
+    { from: 3, to: 2, label: 'supervise', color: '#475569' },
+    { from: 4, to: 2, label: 'supervise', color: '#475569' },
+    { from: 5, to: 6, label: 'sync', color: '#64748B' },
+    { from: 6, to: 2, label: 'delegate', color: '#0891B2' },
+    { from: 7, to: 2, label: 'delegate', color: '#0891B2' },
+    { from: 7, to: 5, label: 'sync', color: '#64748B' },
+    { from: 0, to: 4, label: 'broadcast', color: '#0E7490' },
   ]
 
-  const nodeMap = Object.fromEntries(layoutNodes.map(n => [n.id, n]))
+  const boxW = 140
+  const boxH = 36
 
   return (
     <div
@@ -1588,124 +1331,57 @@ function ArchitectureDiagram() {
         border: '1px solid rgba(51, 51, 51, 0.5)',
       }}
     >
-      <svg
-        viewBox="0 0 480 260"
-        className="w-full max-w-2xl mx-auto"
-        style={{ minHeight: '220px' }}
-      >
-        {/* Edges */}
-        {layoutEdges.map((edge, i) => {
-          const from = nodeMap[edge.from]
-          const to = nodeMap[edge.to]
-          if (!from || !to) return null
-          const startX = from.x + boxW / 2
-          const startY = from.y + boxH
-          const endX = to.x + boxW / 2
-          const endY = to.y
-          const midY = (startY + endY) / 2
-
+      <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
+        <Network className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
+        Architecture Overview
+      </h3>
+      <svg viewBox="0 0 800 250" className="w-full" style={{ minHeight: '200px' }}>
+        {/* Connections */}
+        {connections.map((conn, i) => {
+          const from = groups[conn.from]
+          const to = groups[conn.to]
+          const fx = from.x + boxW / 2
+          const fy = from.y + boxH / 2
+          const tx = to.x + boxW / 2
+          const ty = to.y + boxH / 2
+          const mx = (fx + tx) / 2
+          const my = (fy + ty) / 2
           return (
             <g key={i}>
-              <path
-                d={`M${startX},${startY} C${startX},${midY} ${endX},${midY} ${endX},${endY}`}
-                fill="none"
-                stroke={edge.color}
-                strokeWidth="1.2"
-                strokeOpacity="0.5"
-              />
-              {/* Arrow */}
-              <polygon
-                points={`${endX},${endY} ${endX - 3},${endY - 6} ${endX + 3},${endY - 6}`}
-                fill={edge.color}
-                fillOpacity="0.6"
-              />
-              {/* Edge label */}
-              {edge.label && (
-                <text
-                  x={(startX + endX) / 2}
-                  y={midY - 2}
-                  textAnchor="middle"
-                  fill={edge.color}
-                  fontSize="6"
-                  opacity="0.6"
-                  fontWeight="600"
-                >
-                  {edge.label}
-                </text>
-              )}
+              <line x1={fx} y1={fy} x2={tx} y2={ty} stroke={conn.color} strokeWidth="1" strokeOpacity="0.4" strokeDasharray={conn.label === 'sync' ? '4 3' : conn.label === 'broadcast' ? '8 3 2 3' : 'none'} />
+              <text x={mx} y={my - 4} textAnchor="middle" fill={conn.color} fontSize="7" fontWeight="600" style={{ pointerEvents: 'none' }}>{conn.label}</text>
             </g>
           )
         })}
-
-        {/* Nodes */}
-        {layoutNodes.map((node) => (
-          <g key={node.id}>
-            {/* Glow */}
+        {/* Group boxes */}
+        {groups.map((g, i) => (
+          <g key={i}>
             <rect
-              x={node.x - 2}
-              y={node.y - 2}
-              width={boxW + 4}
-              height={boxH + 4}
-              rx={8}
-              fill={node.color}
-              fillOpacity="0.06"
-              stroke={node.color}
-              strokeWidth="0.5"
-              strokeOpacity="0.2"
-            />
-            {/* Box */}
-            <rect
-              x={node.x}
-              y={node.y}
+              x={g.x}
+              y={g.y}
               width={boxW}
               height={boxH}
               rx={6}
-              fill={`${node.color}15`}
-              stroke={node.color}
+              fill={`${g.color}12`}
+              stroke={g.color}
               strokeWidth="0.8"
               strokeOpacity="0.4"
             />
-            {/* Top accent line */}
-            <line
-              x1={node.x + 6}
-              y1={node.y}
-              x2={node.x + boxW - 6}
-              y2={node.y}
-              stroke={node.color}
-              strokeWidth="1.5"
-              strokeOpacity="0.6"
-            />
-            {/* Label */}
             <text
-              x={node.x + boxW / 2}
-              y={node.y + boxH / 2 + 2}
+              x={g.x + boxW / 2}
+              y={g.y + boxH / 2 + 1}
               textAnchor="middle"
               dominantBaseline="middle"
-              fill={node.color}
-              fontSize="8"
-              fontWeight="700"
+              fill={g.color}
+              fontSize="10"
+              fontWeight="600"
+              style={{ pointerEvents: 'none' }}
             >
-              {node.id}
+              {g.name}
             </text>
           </g>
         ))}
       </svg>
-
-      {/* Legend */}
-      <div className="mt-3 flex flex-wrap gap-3">
-        {[
-          { label: 'broadcast', color: '#0E7490' },
-          { label: 'delegate', color: '#0891B2' },
-          { label: 'command', color: '#06B6D4' },
-          { label: 'supervise', color: '#475569' },
-          { label: 'sync', color: '#64748B' },
-        ].map((conn) => (
-          <div key={conn.label} className="flex items-center gap-1.5">
-            <svg width="16" height="8"><line x1="0" y1="4" x2="16" y2="4" stroke={conn.color} strokeWidth="1.5" /></svg>
-            <span className="text-[8px] font-mono" style={{ color: conn.color }}>{conn.label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -1714,19 +1390,22 @@ function ArchitectureDiagram() {
 
 function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const [showScrollTop, setShowScrollTop] = useState(false)
-  const [showColorPreview, setShowColorPreview] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [lastUpdated, setLastUpdated] = useState<string>('')
   const [showNotifications, setShowNotifications] = useState(false)
 
-  // Live clock - update every minute
+  // Live clock - only on client to avoid hydration mismatch
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  }
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setLastUpdated(new Date())
-    }, 60000)
+      setLastUpdated(formatTime(new Date()))
+    }, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [formatTime])
 
   // Scroll listener
   useEffect(() => {
@@ -1742,16 +1421,11 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const handleRefresh = useCallback(() => {
     setRefreshing(true)
     setTimeout(() => {
-      setLastUpdated(new Date())
+      setLastUpdated(formatTime(new Date()))
       setRefreshing(false)
       toast.success('Dashboard data refreshed')
     }, 1200)
   }, [])
-
-  // Format time
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
 
   // Filter function for search
   const matchesSearch = (text: string): boolean => {
@@ -1830,7 +1504,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           animation: 'gradientShift 12s ease infinite',
         }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1280px] mx-auto">
           {/* Top row: Logo + actions */}
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-3">
@@ -1932,19 +1606,6 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
                   </div>
                 )}
               </div>
-              {/* Preview Colors */}
-              <button
-                onClick={() => setShowColorPreview(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 hover:scale-105"
-                style={{
-                  background: 'rgba(155, 155, 155, 0.1)',
-                  border: '1px solid rgba(155, 155, 155, 0.25)',
-                  color: '#B0B0B0',
-                }}
-              >
-                <Palette className="w-4 h-4" />
-                <span className="hidden sm:inline">Preview Colors</span>
-              </button>
               {/* Open Hierarchy */}
               <button
                 onClick={onOpenHierarchy}
@@ -1972,7 +1633,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <div className="flex items-center justify-between mt-2 relative z-10">
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" style={{ color: '#6B7280' }} />
-              <span className="text-[10px] text-slate-500">Last Updated: {formatTime(lastUpdated)}</span>
+              <span className="text-[10px] text-slate-500">Last Updated: {lastUpdated || '--:--:--'}</span>
             </div>
             {/* Mobile search */}
             <div className="relative sm:hidden">
@@ -1991,7 +1652,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-[1280px] mx-auto w-full">
         {/* Quick Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {QUICK_STATS.map((stat, index) => {
@@ -2324,7 +1985,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           className="absolute top-0 left-0 right-0 h-px"
           style={{ background: 'linear-gradient(90deg, #06B6D4, transparent)' }}
         />
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1280px] mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             {/* Left: Logo + version + status */}
             <div className="flex items-center gap-2 justify-center md:justify-start">
@@ -2348,7 +2009,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
                 <span style={{ color: '#333333' }}>|</span>
                 <span className="text-[10px]" style={{ color: '#B0B0B0' }}>6 Edges</span>
               </div>
-              <span className="text-[9px] text-slate-600">Last refreshed: {formatTime(lastUpdated)}</span>
+              <span className="text-[9px] text-slate-600">Last refreshed: {lastUpdated || '--:--:--'}</span>
             </div>
 
             {/* Right: Tech stack */}
@@ -2377,7 +2038,6 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <ArrowUp className="w-4 h-4" />
         </button>
       )}
-      {showColorPreview && <ColorPreviewModal onClose={() => setShowColorPreview(false)} />}
     </div>
   )
 }

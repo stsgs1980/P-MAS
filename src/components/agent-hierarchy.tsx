@@ -137,12 +137,12 @@ const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: Lucid
 const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435', '\u041f\u0430\u043c\u044f\u0442\u044c', '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433', '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f', '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435']
 
 const STATUS_COLORS: Record<string, string> = {
-  active: '#06B6D4',
+  active: '#22D3EE',
   idle: '#6B7280',
-  error: '#FFC107',
+  error: '#EF4444',
   offline: '#4B5563',
-  paused: '#9CA3AF',
-  standby: '#6B7280',
+  paused: '#F59E0B',
+  standby: '#8B5CF6',
 }
 
 const FORMULA_COLORS: Record<string, string> = {
