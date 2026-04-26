@@ -129,7 +129,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const FORMULA_COLORS: Record<string, string> = {
-  CoT: '#94a3b8',
+  CoT: '#B0B0B0',
   ToT: '#f59e0b',
   GoT: '#eab308',
   AoT: '#a78bfa',
@@ -195,15 +195,15 @@ function getAvatarIcon(avatarName: string): LucideIcon {
   return AVATAR_ICON_MAP[avatarName] || Brain
 }
 
-// ─── Background Particles ────────────────────────────────────────────────────
+// ─── Background Terrain Contour Lines ─────────────────────────────────────────
 
 function BackgroundParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(0)
-  const particlesRef = useRef<Array<{
-    x: number; y: number; vx: number; vy: number
-    size: number; opacity: number; pulse: number; pulseDir: number
+  const contoursRef = useRef<Array<{
+    cx: number; cy: number; rings: number[]; opacity: number; pulse: number; pulseDir: number
   }>>([])
+  const markersRef = useRef<Array<{ x: number; y: number }>>([])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -214,43 +214,85 @@ function BackgroundParticles() {
     const resize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      // Regenerate contours on resize
+      contoursRef.current = []
+      markersRef.current = []
     }
     resize()
     window.addEventListener('resize', resize)
 
-    if (particlesRef.current.length === 0) {
-      for (let i = 0; i < 120; i++) {
-        particlesRef.current.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          size: Math.random() * 2 + 0.5,
-          opacity: Math.random() * 0.5 + 0.1,
+    if (contoursRef.current.length === 0) {
+      // Generate 5 contour line groups at random positions
+      for (let i = 0; i < 5; i++) {
+        const ringCount = 4 + Math.floor(Math.random() * 3) // 4-6 concentric rings
+        const baseSize = 40 + Math.random() * 60
+        const rings: number[] = []
+        for (let r = 0; r < ringCount; r++) {
+          rings.push(baseSize + r * (15 + Math.random() * 10))
+        }
+        contoursRef.current.push({
+          cx: Math.random() * canvas.width,
+          cy: Math.random() * canvas.height,
+          rings,
+          opacity: 0.08 + Math.random() * 0.12,
           pulse: 0,
           pulseDir: Math.random() > 0.5 ? 1 : -1,
+        })
+      }
+      // Generate cross/plus map grid markers
+      for (let i = 0; i < 25; i++) {
+        markersRef.current.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
         })
       }
     }
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      for (const p of particlesRef.current) {
-        p.x += p.vx
-        p.y += p.vy
-        p.pulse += 0.005 * p.pulseDir
-        if (p.pulse > 1 || p.pulse < -1) p.pulseDir *= -1
 
-        if (p.x < 0) p.x = canvas.width
-        if (p.x > canvas.width) p.x = 0
-        if (p.y < 0) p.y = canvas.height
-        if (p.y > canvas.height) p.y = 0
-
-        const currentOpacity = p.opacity + p.pulse * 0.15
+      // Draw cross/plus map grid markers
+      for (const m of markersRef.current) {
+        ctx.strokeStyle = 'rgba(51, 51, 51, 0.3)'
+        ctx.lineWidth = 0.8
         ctx.beginPath()
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(180, 200, 255, ${currentOpacity})`
-        ctx.fill()
+        ctx.moveTo(m.x - 3, m.y)
+        ctx.lineTo(m.x + 3, m.y)
+        ctx.moveTo(m.x, m.y - 3)
+        ctx.lineTo(m.x, m.y + 3)
+        ctx.stroke()
+      }
+
+      // Draw contour lines
+      for (const c of contoursRef.current) {
+        c.pulse += 0.003 * c.pulseDir
+        if (c.pulse > 1 || c.pulse < -1) c.pulseDir *= -1
+
+        const currentOpacity = c.opacity + c.pulse * 0.06
+
+        for (let ri = 0; ri < c.rings.length; ri++) {
+          const baseR = c.rings[ri]
+          // Draw irregular ellipse by varying radius with angle
+          ctx.beginPath()
+          const segments = 48
+          for (let s = 0; s <= segments; s++) {
+            const angle = (2 * Math.PI * s) / segments
+            // Create irregular shape with multiple sine waves
+            const irregularity =
+              Math.sin(angle * 3 + ri * 0.5) * baseR * 0.08 +
+              Math.sin(angle * 5 + ri * 1.2) * baseR * 0.04 +
+              Math.cos(angle * 2 + ri * 0.8) * baseR * 0.06
+            const r = baseR + irregularity
+            const px = c.cx + Math.cos(angle) * r
+            const py = c.cy + Math.sin(angle) * r * 0.85 // slight vertical compression
+            if (s === 0) ctx.moveTo(px, py)
+            else ctx.lineTo(px, py)
+          }
+          ctx.closePath()
+          ctx.strokeStyle = `rgba(74, 144, 226, ${currentOpacity * (1 - ri * 0.12)})`
+          ctx.lineWidth = 0.6
+          ctx.stroke()
+        }
       }
       animationRef.current = requestAnimationFrame(animate)
     }
@@ -276,7 +318,7 @@ function BackgroundParticles() {
 function BackgroundGrid({ width, height }: { width: number; height: number }) {
   const spacing = 60
   return (
-    <g opacity={0.04}>
+    <g opacity={0.08}>
       {Array.from({ length: Math.ceil(width / spacing) + 1 }, (_, i) => (
         <line
           key={`vg-${i}`}
@@ -284,7 +326,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           y1={0}
           x2={i * spacing}
           y2={height}
-          stroke="#94a3b8"
+          stroke="#333333"
           strokeWidth={0.15}
         />
       ))}
@@ -295,7 +337,7 @@ function BackgroundGrid({ width, height }: { width: number; height: number }) {
           y1={i * spacing}
           x2={width}
           y2={i * spacing}
-          stroke="#94a3b8"
+          stroke="#333333"
           strokeWidth={0.15}
         />
       ))}
@@ -545,7 +587,7 @@ function ConnectionLine({
             width={64}
             height={16}
             rx={4}
-            fill="rgba(10, 14, 26, 0.9)"
+            fill="rgba(26, 26, 26, 0.92)"
             stroke={strokeColor}
             strokeWidth={0.15}
             strokeOpacity={0.2}
@@ -568,15 +610,15 @@ function ConnectionLine({
             width={120}
             height={28}
             rx={6}
-            fill="rgba(10, 14, 26, 0.95)"
-            stroke="rgba(255,255,255,0.1)"
+            fill="rgba(13, 13, 13, 0.95)"
+            stroke="rgba(51,51,51,0.5)"
             strokeWidth={0.15}
           />
           <text
             x={midX}
             y={midY + 20}
             textAnchor="middle"
-            fill="#e2e8f0"
+            fill="#FFFFFF"
             fontSize="8"
             style={{ pointerEvents: 'none' }}
           >
@@ -753,7 +795,7 @@ function AgentNode({
       <text
         y={40}
         textAnchor="middle"
-        fill="#e2e8f0"
+        fill="#FFFFFF"
         fontSize="9"
         fontWeight="600"
         style={{ pointerEvents: 'none' }}
@@ -815,7 +857,7 @@ function AgentNode({
         >
           <circle
             r={5}
-            fill="rgba(10, 14, 26, 0.9)"
+            fill="rgba(26, 26, 26, 0.92)"
             stroke={config.color}
             strokeWidth={0.2}
             strokeOpacity={0.3}
@@ -855,7 +897,7 @@ function AgentTooltip({
         width={150}
         height={52}
         rx={8}
-        fill="rgba(10, 14, 26, 0.95)"
+        fill="rgba(13, 13, 13, 0.95)"
         stroke={config.color}
         strokeWidth={0.15}
         strokeOpacity={0.15}
@@ -864,7 +906,7 @@ function AgentTooltip({
       <text
         x={12}
         y={16}
-        fill="#e2e8f0"
+        fill="#FFFFFF"
         fontSize="10"
         fontWeight="700"
         style={{ pointerEvents: 'none' }}
@@ -886,7 +928,7 @@ function AgentTooltip({
       <text
         x={128}
         y={15}
-        fill="#94a3b8"
+        fill="#B0B0B0"
         fontSize="7"
         style={{ pointerEvents: 'none' }}
       >
@@ -896,7 +938,7 @@ function AgentTooltip({
       <text
         x={12}
         y={42}
-        fill="#64748b"
+        fill="#B0B0B0"
         fontSize="7"
         style={{ pointerEvents: 'none' }}
       >
@@ -942,7 +984,7 @@ function AgentDetailPanel({
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className="fixed right-4 top-16 bottom-4 w-[340px] z-50 rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(15, 20, 35, 0.85)',
+        background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(24px)',
         border: `1px solid rgba(${config.colorRgb}, 0.3)`,
         boxShadow: `0 0 40px rgba(${config.colorRgb}, 0.1), 0 8px 32px rgba(0,0,0,0.5)`,
@@ -1029,13 +1071,13 @@ function AgentDetailPanel({
 
           {/* Description */}
           <div className="mb-5">
-            <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Description</h4>
-            <p className="text-slate-300 text-xs leading-relaxed">{agent.description}</p>
+            <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Description</h4>
+            <p className="text-[#B0B0B0] text-xs leading-relaxed">{agent.description}</p>
           </div>
 
           {/* Cognitive Formula */}
           <div className="mb-5">
-            <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Cognitive Formula</h4>
+            <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Cognitive Formula</h4>
             <div
               className="rounded-lg p-3"
               style={{
@@ -1044,7 +1086,7 @@ function AgentDetailPanel({
               }}
             >
               <span className="font-bold text-sm" style={{ color: formulaColor }}>{agent.formula}</span>
-              <p className="text-slate-400 text-[10px] mt-1">
+              <p className="text-[#B0B0B0] text-[10px] mt-1">
                 {agent.formula === 'CoT' && 'Chain of Thought -- step-by-step reasoning decomposition'}
                 {agent.formula === 'ToT' && 'Tree of Thoughts -- explores multiple reasoning paths'}
                 {agent.formula === 'GoT' && 'Graph of Thoughts -- models reasoning as a directed graph'}
@@ -1071,7 +1113,7 @@ function AgentDetailPanel({
 
           {/* Skills */}
           <div className="mb-5">
-            <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Skills</h4>
+            <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Skills</h4>
             <div className="flex flex-wrap gap-1.5">
               {skills.map((skill, i) => (
                 <Badge
@@ -1092,28 +1134,28 @@ function AgentDetailPanel({
 
           {/* Connections */}
           <div className="mb-5">
-            <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Connections</h4>
+            <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Connections</h4>
             <div className="space-y-1.5">
               {parent && (
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500 w-16">Parent</span>
+                  <span className="text-[#B0B0B0] w-16">Parent</span>
                   <AgentAvatarIcon avatar={parent.avatar} size={14} color={ROLE_CONFIG[parent.roleGroup]?.color || '#888'} />
-                  <span className="text-slate-200">{parent.name}</span>
+                  <span className="text-white">{parent.name}</span>
                 </div>
               )}
               {twin && (
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500 w-16">Twin</span>
+                  <span className="text-[#B0B0B0] w-16">Twin</span>
                   <AgentAvatarIcon avatar={twin.avatar} size={14} color={ROLE_CONFIG[twin.roleGroup]?.color || '#888'} />
-                  <span className="text-slate-200">{twin.name}</span>
+                  <span className="text-white">{twin.name}</span>
                 </div>
               )}
               {children.length > 0 && (
                 <div>
-                  <span className="text-slate-500 text-xs">Children</span>
+                  <span className="text-[#B0B0B0] text-xs">Children</span>
                   <div className="ml-2 mt-1 space-y-1">
                     {children.map(c => (
-                      <div key={c.id} className="flex items-center gap-1.5 text-xs text-slate-300">
+                      <div key={c.id} className="flex items-center gap-1.5 text-xs text-[#B0B0B0]">
                         <AgentAvatarIcon avatar={c.avatar} size={14} color={ROLE_CONFIG[c.roleGroup]?.color || '#888'} />
                         <span>{c.name}</span>
                       </div>
@@ -1123,10 +1165,10 @@ function AgentDetailPanel({
               )}
               {siblings.length > 0 && (
                 <div>
-                  <span className="text-slate-500 text-xs">Sync peers</span>
+                  <span className="text-[#B0B0B0] text-xs">Sync peers</span>
                   <div className="ml-2 mt-1 space-y-1">
                     {siblings.map(s => (
-                      <div key={s.id} className="flex items-center gap-1.5 text-xs text-slate-300">
+                      <div key={s.id} className="flex items-center gap-1.5 text-xs text-[#B0B0B0]">
                         <AgentAvatarIcon avatar={s.avatar} size={14} color={ROLE_CONFIG[s.roleGroup]?.color || '#888'} />
                         <span>{s.name}</span>
                       </div>
@@ -1139,7 +1181,7 @@ function AgentDetailPanel({
 
           {/* Task Count */}
           <div>
-            <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1.5">Tasks</h4>
+            <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1.5">Tasks</h4>
             <div
               className="rounded-lg px-3 py-2 inline-flex items-center gap-2"
               style={{
@@ -1149,7 +1191,7 @@ function AgentDetailPanel({
             >
               <Activity className="h-3.5 w-3.5" style={{ color: config.color }} />
               <span className="text-white font-bold text-sm">{agent.tasks?.length ?? 0}</span>
-              <span className="text-slate-400 text-[10px]">assigned</span>
+              <span className="text-[#B0B0B0] text-[10px]">assigned</span>
             </div>
           </div>
         </div>
@@ -1165,9 +1207,9 @@ function LegendPanel() {
     <div
       className="rounded-xl p-3 relative"
       style={{
-        background: 'rgba(10, 14, 26, 0.85)',
+        background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(51,51,51,0.5)',
         width: 180,
       }}
     >
@@ -1175,41 +1217,41 @@ function LegendPanel() {
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.06), transparent, rgba(139,92,246,0.06))',
+          background: 'linear-gradient(135deg, rgba(74,144,226,0.08), transparent, rgba(107,182,255,0.08))',
           border: '1px solid transparent',
-          backgroundImage: 'linear-gradient(rgba(10,14,26,0.85), rgba(10,14,26,0.85)), linear-gradient(135deg, rgba(6,182,212,0.2), transparent, rgba(139,92,246,0.2))',
+          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(74,144,226,0.25), transparent, rgba(107,182,255,0.25))',
           backgroundOrigin: 'border-box',
           backgroundClip: 'padding-box, border-box',
           borderRadius: '12px',
         }}
       />
-      <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Legend</h4>
+      <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Legend</h4>
 
       {/* Edge types */}
       <div className="space-y-1.5 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px solid #f59e0b' }} />
-          <span className="text-[9px] text-slate-300">Command (solid)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Command (solid)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #64748b' }} />
-          <span className="text-[9px] text-slate-300">Sync (dotted)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Sync (dotted)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #06b6d4' }} />
-          <span className="text-[9px] text-slate-300">Twin (dashed)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Twin (dashed)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #8b5cf6' }} />
-          <span className="text-[9px] text-slate-300">Delegate (dash-dot)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Delegate (dash-dot)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #14b8a6' }} />
-          <span className="text-[9px] text-slate-300">Supervise (fine dot)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Supervise (fine dot)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #f97316' }} />
-          <span className="text-[9px] text-slate-300">Broadcast (long dash)</span>
+          <span className="text-[9px] text-[#B0B0B0]">Broadcast (long dash)</span>
         </div>
       </div>
 
@@ -1218,7 +1260,7 @@ function LegendPanel() {
         {Object.entries(STATUS_COLORS).map(([status, color]) => (
           <div key={status} className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full" style={{ background: color }} />
-            <span className="text-[9px] text-slate-300 capitalize">{status}</span>
+            <span className="text-[9px] text-[#B0B0B0] capitalize">{status}</span>
           </div>
         ))}
       </div>
@@ -1226,12 +1268,12 @@ function LegendPanel() {
       {/* Node symbols */}
       <div className="mt-3 space-y-1">
         <div className="flex items-center gap-2">
-          {React.createElement(Hash, { size: 9, color: '#94a3b8' })}
-          <span className="text-[9px] text-slate-300">Connection count</span>
+          {React.createElement(Hash, { size: 9, color: '#B0B0B0' })}
+          <span className="text-[9px] text-[#B0B0B0]">Connection count</span>
         </div>
         <div className="flex items-center gap-2">
-          {React.createElement(ListChecks, { size: 9, color: '#94a3b8' })}
-          <span className="text-[9px] text-slate-300">Task count / Skill count</span>
+          {React.createElement(ListChecks, { size: 9, color: '#B0B0B0' })}
+          <span className="text-[9px] text-[#B0B0B0]">Task count / Skill count</span>
         </div>
       </div>
     </div>
@@ -1245,9 +1287,9 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
     <div
       className="rounded-xl p-3 relative overflow-hidden"
       style={{
-        background: 'rgba(10, 14, 26, 0.85)',
+        background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(51,51,51,0.5)',
         width: 180,
       }}
     >
@@ -1255,7 +1297,7 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.04), rgba(139,92,246,0.04), rgba(16,185,129,0.04))',
+          background: 'linear-gradient(135deg, rgba(74,144,226,0.04), rgba(107,182,255,0.04), rgba(74,144,226,0.04))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         }}
@@ -1264,30 +1306,30 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          backgroundImage: 'linear-gradient(rgba(10,14,26,0.85), rgba(10,14,26,0.85)), linear-gradient(135deg, rgba(6,182,212,0.2), transparent, rgba(16,185,129,0.2))',
+          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(74,144,226,0.25), transparent, rgba(107,182,255,0.25))',
           backgroundOrigin: 'border-box',
           backgroundClip: 'padding-box, border-box',
           border: '1px solid transparent',
           borderRadius: '12px',
         }}
       />
-      <h4 className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-2">Stats</h4>
+      <h4 className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-2">Stats</h4>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <span className="text-white font-bold text-lg">{stats.total}</span>
-          <p className="text-[9px] text-slate-500">Total</p>
+          <p className="text-[9px] text-[#B0B0B0]">Total</p>
         </div>
         <div>
           <span className="text-green-400 font-bold text-lg">{stats.active}</span>
-          <p className="text-[9px] text-slate-500">Active</p>
+          <p className="text-[9px] text-[#B0B0B0]">Active</p>
         </div>
         <div>
           <span className="text-yellow-400 font-bold text-lg">{stats.idle}</span>
-          <p className="text-[9px] text-slate-500">Idle</p>
+          <p className="text-[9px] text-[#B0B0B0]">Idle</p>
         </div>
         <div>
-          <span className="text-slate-400 font-bold text-lg">{stats.tasks}</span>
-          <p className="text-[9px] text-slate-500">Tasks</p>
+          <span className="text-[#B0B0B0] font-bold text-lg">{stats.tasks}</span>
+          <p className="text-[9px] text-[#B0B0B0]">Tasks</p>
         </div>
       </div>
     </div>
@@ -1327,9 +1369,9 @@ function MiniMap({
     <div
       className="rounded-xl overflow-hidden"
       style={{
-        background: 'rgba(10, 14, 26, 0.85)',
+        background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(51,51,51,0.5)',
         width: 160,
         padding: 10,
       }}
@@ -1413,7 +1455,7 @@ function MiniMap({
           width={vpW}
           height={vpH}
           fill="none"
-          stroke="#fff"
+          stroke="#4A90E2"
           strokeWidth={0.2}
           strokeOpacity={0.25}
           rx={1}
@@ -1471,7 +1513,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-slate-400 hover:text-white"
+          className="h-7 w-7 text-[#B0B0B0] hover:text-white"
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
@@ -1479,8 +1521,8 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
       <DialogContent
         className="max-w-sm"
         style={{
-          background: 'rgba(15, 20, 35, 0.95)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(26, 26, 26, 0.95)',
+          border: '1px solid rgba(51,51,51,0.5)',
         }}
       >
         <DialogHeader>
@@ -1488,7 +1530,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
         </DialogHeader>
         <div className="space-y-3 pt-2">
           <div>
-            <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Name</label>
+            <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Name</label>
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
@@ -1497,7 +1539,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
             />
           </div>
           <div>
-            <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Role</label>
+            <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Role</label>
             <Input
               value={role}
               onChange={e => setRole(e.target.value)}
@@ -1507,12 +1549,12 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Group</label>
+              <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Group</label>
               <Select value={roleGroup} onValueChange={setRoleGroupVal}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{ background: 'rgba(15, 20, 35, 0.95)' }}>
+                <SelectContent style={{ background: 'rgba(26, 26, 26, 0.95)' }}>
                   {ROLE_ORDER.map(g => (
                     <SelectItem key={g} value={g}>{g}</SelectItem>
                   ))}
@@ -1520,12 +1562,12 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
               </Select>
             </div>
             <div>
-              <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Status</label>
+              <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Status</label>
               <Select value={status} onValueChange={setStatusVal}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{ background: 'rgba(15, 20, 35, 0.95)' }}>
+                <SelectContent style={{ background: 'rgba(26, 26, 26, 0.95)' }}>
                   {['active', 'idle', 'error', 'offline'].map(s => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
@@ -1533,12 +1575,12 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
               </Select>
             </div>
             <div>
-              <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Formula</label>
+              <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Formula</label>
               <Select value={formula} onValueChange={setFormula}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white text-xs h-8">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent style={{ background: 'rgba(15, 20, 35, 0.95)' }}>
+                <SelectContent style={{ background: 'rgba(26, 26, 26, 0.95)' }}>
                   {['CoT', 'ToT', 'GoT', 'AoT', 'SoT', 'CoVe', 'ReWOO', 'Reflexion', 'ReAct', 'MoA', 'SelfRefine', 'LATS', 'SelfConsistency', 'PoT', 'DSPy', 'PromptChaining', 'LeastToMost', 'StepBack', 'PlanAndSolve', 'MetaCoT'].map(f => (
                     <SelectItem key={f} value={f}>{f}</SelectItem>
                   ))}
@@ -1547,7 +1589,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
             </div>
           </div>
           <div>
-            <label className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold mb-1 block">Skills (comma-separated)</label>
+            <label className="text-[#B0B0B0] text-[10px] uppercase tracking-wider font-semibold mb-1 block">Skills (comma-separated)</label>
             <Input
               value={skills}
               onChange={e => setSkillsStr(e.target.value)}
@@ -1558,7 +1600,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
           <Button
             onClick={handleSubmit}
             disabled={submitting || !name.trim() || !role.trim()}
-            className="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs gap-2"
+            className="w-full bg-[#4A90E2] hover:bg-[#3A7BD5] text-white text-xs gap-2"
           >
             <Plus className="w-3.5 h-3.5" />
             {submitting ? 'Creating...' : 'Create Agent'}
@@ -1968,7 +2010,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   // Empty state
   if (!loading && agents.length === 0) {
     return (
-      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#0a0e1a' }}>
+      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#000000' }}>
         <BackgroundParticles />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1977,20 +2019,20 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         >
           <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
             style={{
-              background: 'rgba(6, 182, 212, 0.1)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              boxShadow: '0 0 40px rgba(6, 182, 212, 0.15)',
+              background: 'rgba(74, 144, 226, 0.1)',
+              border: '1px solid rgba(74, 144, 226, 0.3)',
+              boxShadow: '0 0 40px rgba(74, 144, 226, 0.15)',
             }}
           >
-            <Database className="w-8 h-8 text-cyan-400" />
+            <Database className="w-8 h-8 text-[#4A90E2]" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">No Agent Data</h2>
-          <p className="text-slate-400 text-sm mb-6 max-w-xs">
+          <p className="text-[#B0B0B0] text-sm mb-6 max-w-xs">
             The agent hierarchy is empty. Seed sample data to explore the visualization.
           </p>
           <Button
             onClick={handleSeed}
-            className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2"
+            className="bg-[#4A90E2] hover:bg-[#3A7BD5] text-white gap-2"
           >
             <Sparkles className="w-4 h-4" />
             Seed Data
@@ -2004,7 +2046,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     <div
       ref={containerRef}
       className="w-screen h-screen overflow-hidden relative select-none"
-      style={{ background: '#0a0e1a' }}
+      style={{ background: '#000000' }}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -2018,8 +2060,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         <defs>
           <filter id="orbGlow">
             <feGaussianBlur stdDeviation="6" result="blur" />
+            <feFlood floodColor="#4A90E2" floodOpacity="0.15" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
@@ -2048,17 +2092,17 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         <div
           className="flex items-center justify-between rounded-xl px-4 py-2.5 relative"
           style={{
-            background: 'rgba(10, 14, 26, 0.8)',
+            background: 'rgba(26, 26, 26, 0.92)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 24px rgba(6, 182, 212, 0.06)',
+            border: '1px solid rgba(51,51,51,0.5)',
+            boxShadow: '0 4px 24px rgba(74, 144, 226, 0.06)',
           }}
         >
-          {/* Bottom border gradient (cyan->transparent) */}
+          {/* Bottom border gradient (road primary blue->transparent) */}
           <div
             className="absolute bottom-0 left-2 right-2 h-px rounded-full"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.3), transparent)',
             }}
           />
           {/* Logo + Back Button */}
@@ -2068,43 +2112,43 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 onClick={onBack}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
                 style={{
-                  background: 'rgba(6, 182, 212, 0.15)',
-                  border: '1px solid rgba(6, 182, 212, 0.4)',
-                  color: '#22d3ee',
-                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.08)',
+                  background: 'rgba(74, 144, 226, 0.15)',
+                  border: '1px solid rgba(74, 144, 226, 0.4)',
+                  color: '#4A90E2',
+                  boxShadow: '0 0 12px rgba(74, 144, 226, 0.08)',
                 }}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Dashboard</span>
               </button>
             )}
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-600/20 border border-cyan-500/30">
-              <Brain className="w-4 h-4 text-cyan-400" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#4A90E2]/20 border border-[#4A90E2]/30">
+              <Brain className="w-4 h-4 text-[#4A90E2]" />
             </div>
             <div>
               <span className="text-white font-bold text-sm tracking-wide">P-MAS</span>
-              <span className="text-slate-500 text-[10px] ml-2">Agent Hierarchy</span>
+              <span className="text-[#B0B0B0] text-[10px] ml-2">Agent Hierarchy</span>
             </div>
           </div>
 
           {/* Search bar */}
           <div className="hidden md:flex items-center relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-500" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#B0B0B0]" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search agents..."
-              className="w-48 pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder:text-slate-500 outline-none"
+              className="w-48 pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder:text-[#B0B0B0] outline-none"
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(45, 45, 45, 0.5)',
+                border: '1px solid rgba(51,51,51,0.5)',
               }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 text-slate-500 hover:text-white"
+                className="absolute right-2 text-[#B0B0B0] hover:text-white"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -2128,9 +2172,9 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   style={{
                     background: isActive
                       ? `rgba(${cfg.colorRgb}, 0.2)`
-                      : 'rgba(255,255,255,0.04)',
-                    color: isActive ? cfg.color : '#94a3b8',
-                    border: `1px solid ${isActive ? `rgba(${cfg.colorRgb}, 0.4)` : 'rgba(255,255,255,0.06)'}`,
+                      : 'rgba(45, 45, 45, 0.5)',
+                    color: isActive ? cfg.color : '#B0B0B0',
+                    border: `1px solid ${isActive ? `rgba(${cfg.colorRgb}, 0.4)` : 'rgba(51,51,51,0.5)'}`,
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -2156,7 +2200,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-7 w-7 ${viewMode === 'radial' ? 'text-white' : 'text-slate-500'}`}
+                className={`h-7 w-7 ${viewMode === 'radial' ? 'text-white' : 'text-[#B0B0B0]'}`}
                 onClick={() => setViewMode('radial')}
               >
                 <Circle className="h-3.5 w-3.5" />
@@ -2164,7 +2208,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-7 w-7 ${viewMode === 'grid' ? 'text-white' : 'text-slate-500'}`}
+                className={`h-7 w-7 ${viewMode === 'grid' ? 'text-white' : 'text-[#B0B0B0]'}`}
                 onClick={() => setViewMode('grid')}
               >
                 <LayoutGrid className="h-3.5 w-3.5" />
@@ -2179,11 +2223,11 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ background: STATUS_COLORS[status] }}
                   />
-                  <span className="text-slate-400">{count}</span>
+                  <span className="text-[#B0B0B0]">{count}</span>
                 </div>
               ))}
-              <span className="text-slate-600">|</span>
-              <span className="text-slate-300 font-semibold">{stats.total} agents</span>
+              <span className="text-[#333333]">|</span>
+              <span className="text-[#B0B0B0] font-semibold">{stats.total} agents</span>
             </div>
 
             {/* Zoom controls */}
@@ -2192,16 +2236,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-slate-400 hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
                 onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </Button>
-              <span className="text-[10px] text-slate-500 w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <span className="text-[10px] text-[#B0B0B0] w-10 text-center">{Math.round(zoom * 100)}%</span>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-slate-400 hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
                 onClick={() => setZoom(z => Math.min(3, z * 1.15))}
               >
                 <ZoomIn className="h-3.5 w-3.5" />
@@ -2209,7 +2253,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-slate-400 hover:text-white"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
                 onClick={resetView}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -2225,7 +2269,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           <Button
             variant="outline"
             size="sm"
-            className="text-slate-400 border-white/10 bg-[#0a0e1a]/80 backdrop-blur-md text-xs"
+            className="text-[#B0B0B0] border-white/10 bg-[#1A1A1A]/80 backdrop-blur-md text-xs"
             onClick={() => setActiveFilter(activeFilter ? null : ROLE_ORDER[0])}
           >
             <Eye className="w-3 h-3 mr-1" />
@@ -2234,7 +2278,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </Button>
           {activeFilter && (
             <div className="absolute top-9 left-0 flex flex-col gap-1 p-1.5 rounded-lg z-50"
-              style={{ background: 'rgba(10, 14, 26, 0.95)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'rgba(13, 13, 13, 0.95)', border: '1px solid rgba(51,51,51,0.5)' }}
             >
               {ROLE_ORDER.map(group => {
                 const cfg = ROLE_CONFIG[group]
@@ -2244,7 +2288,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                     onClick={() => setActiveFilter(activeFilter === group ? null : group)}
                     className="text-xs px-3 py-1.5 rounded text-left whitespace-nowrap"
                     style={{
-                      color: activeFilter === group ? cfg.color : '#94a3b8',
+                      color: activeFilter === group ? cfg.color : '#B0B0B0',
                       background: activeFilter === group ? `rgba(${cfg.colorRgb}, 0.15)` : 'transparent',
                     }}
                   >
@@ -2371,7 +2415,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                       width={group.length * 7 + 32}
                       height={20}
                       rx={6}
-                      fill="rgba(10, 14, 26, 0.9)"
+                      fill="rgba(26, 26, 26, 0.92)"
                       stroke={cfg.color}
                       strokeWidth={0.15}
                       strokeOpacity={0.1}
@@ -2435,7 +2479,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 y1={c1.y}
                 x2={c2.x}
                 y2={c2.y}
-                stroke="#334155"
+                stroke="#333333"
                 strokeWidth={0.15}
                 strokeOpacity={0.07}
                 strokeDasharray="4 8"
@@ -2533,7 +2577,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(10, 14, 26, 0.8)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(26, 26, 26, 0.92)' }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -2542,9 +2586,9 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="w-12 h-12 rounded-full border-2 border-cyan-500 border-t-transparent mx-auto mb-3"
+              className="w-12 h-12 rounded-full border-2 border-[#4A90E2] border-t-transparent mx-auto mb-3"
             />
-            <p className="text-slate-400 text-sm">Loading hierarchy...</p>
+            <p className="text-[#B0B0B0] text-sm">Loading hierarchy...</p>
           </motion.div>
         </div>
       )}

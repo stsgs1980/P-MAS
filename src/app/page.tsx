@@ -162,15 +162,15 @@ function SystemHealthMonitor() {
     <div
       className="rounded-xl p-4 sm:p-6 relative overflow-hidden"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
       }}
     >
       {/* Animated gradient border effect */}
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.03), rgba(139,92,246,0.03), rgba(16,185,129,0.03))',
+          background: 'linear-gradient(135deg, rgba(74,144,226,0.04), rgba(107,182,255,0.03), rgba(255,193,7,0.03))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         }}
@@ -178,7 +178,7 @@ function SystemHealthMonitor() {
 
       <div className="relative z-10">
         <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5 text-cyan-400" />
+          <Activity className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
           System Health Monitor
         </h3>
 
@@ -186,7 +186,7 @@ function SystemHealthMonitor() {
           {metrics.map((m) => {
             const MetricIcon = m.icon
             return (
-              <div key={m.label} className="rounded-lg p-3" style={{ background: 'rgba(10, 14, 26, 0.6)' }}>
+              <div key={m.label} className="rounded-lg p-3" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
                     <MetricIcon size={12} style={{ color: m.color }} />
@@ -216,7 +216,7 @@ function SystemHealthMonitor() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(10, 14, 26, 0.6)' }}>
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -224,22 +224,22 @@ function SystemHealthMonitor() {
             <span className="text-slate-400 text-[10px]">Agent Uptime</span>
             <span className="text-green-400 font-bold text-xs" style={{ textShadow: '0 0 8px rgba(34, 197, 94, 0.4)', animation: 'pulseGlow 2s ease-in-out infinite' }}>99.7%</span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(10, 14, 26, 0.6)' }}>
-            <Activity className="w-3 h-3 text-cyan-400" />
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
+            <Activity className="w-3 h-3" style={{ color: '#4A90E2' }} />
             <span className="text-slate-400 text-[10px]">Active Connections</span>
-            <span className="text-cyan-400 font-bold text-xs">55</span>
+            <span className="font-bold text-xs" style={{ color: '#4A90E2' }}>55</span>
             {/* Spark line */}
             <svg width="32" height="12" className="ml-1">
               <polyline
                 points="0,8 4,6 8,9 12,4 16,7 20,3 24,5 28,2 32,6"
                 fill="none"
-                stroke="#22d3ee"
+                stroke="#4A90E2"
                 strokeWidth="1"
                 opacity="0.6"
               />
             </svg>
           </div>
-          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(10, 14, 26, 0.6)' }}>
+          <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
             <TrendingDown className="w-3 h-3 text-green-400" />
             <span className="text-slate-400 text-[10px]">Error Rate</span>
             <span className="text-green-400 font-bold text-xs">0.3%</span>
@@ -258,8 +258,8 @@ function RecentActivityTimeline() {
     <div
       className="rounded-xl p-4 sm:p-6"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
@@ -330,8 +330,8 @@ function FormulaAgentMappingGrid() {
     <div
       className="rounded-xl p-4 sm:p-6 overflow-x-auto"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
@@ -450,8 +450,8 @@ function FormulaFlowDiagram() {
     <div
       className="rounded-xl p-4 sm:p-6 overflow-x-auto"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
       }}
     >
@@ -492,12 +492,12 @@ function FormulaFlowDiagram() {
                 y1={startY}
                 x2={endX}
                 y2={endY}
-                stroke="rgba(148, 163, 184, 0.2)"
+                stroke="rgba(74, 144, 226, 0.15)"
                 strokeWidth="1.5"
               />
               <polygon
                 points={`${endX},${endY} ${ax1},${ay1} ${ax2},${ay2}`}
-                fill="rgba(148, 163, 184, 0.3)"
+                fill="rgba(74, 144, 226, 0.3)"
               />
             </g>
           )
@@ -577,21 +577,22 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0a0e1a', scrollBehavior: 'smooth' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#000000', scrollBehavior: 'smooth' }}>
       <style>{`html { scroll-behavior: smooth; }`}</style>
       {/* Header */}
       <header
         className="px-4 sm:px-6 py-4 border-b border-white/5 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(6,182,212,0.04), rgba(139,92,246,0.03), rgba(16,185,129,0.02))',
+          background: 'linear-gradient(135deg, rgba(74,144,226,0.05), rgba(107,182,255,0.04), rgba(255,193,7,0.03))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 12s ease infinite',
         }}
       >
         <div className="flex items-center justify-between max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-cyan-600/20 border border-cyan-500/30 relative">
-              <Brain className="w-5 h-5 text-cyan-400" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center relative"
+              style={{ background: 'rgba(74,144,226,0.15)', border: '1px solid rgba(74,144,226,0.3)' }}>
+              <Brain className="w-5 h-5" style={{ color: '#4A90E2' }} />
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
@@ -615,10 +616,10 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
             onClick={onOpenHierarchy}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
             style={{
-              background: 'rgba(6, 182, 212, 0.15)',
-              border: '1px solid rgba(6, 182, 212, 0.4)',
-              color: '#22d3ee',
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.1)',
+              background: 'rgba(74, 144, 226, 0.15)',
+              border: '1px solid rgba(74, 144, 226, 0.4)',
+              color: '#4A90E2',
+              boxShadow: '0 0 20px rgba(74, 144, 226, 0.1)',
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -759,8 +760,8 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
               key={category.category}
               className="rounded-xl p-4"
               style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                background: 'rgba(45, 45, 45, 0.3)',
+                border: '1px solid rgba(51, 51, 51, 0.5)',
               }}
             >
               <h3 className="text-slate-300 text-xs font-bold mb-3 uppercase tracking-wider">{category.category}</h3>
@@ -835,8 +836,8 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         <div
           className="rounded-xl p-6 mb-6 overflow-x-auto"
           style={{
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            background: 'rgba(45, 45, 45, 0.3)',
+            border: '1px solid rgba(51, 51, 51, 0.5)',
           }}
         >
           <pre
@@ -891,9 +892,9 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
             onClick={onOpenHierarchy}
             className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-medium transition-all hover:scale-[1.01]"
             style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(6, 182, 212, 0.04))',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              color: '#22d3ee',
+              background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.12), rgba(74, 144, 226, 0.04))',
+              border: '1px solid rgba(74, 144, 226, 0.3)',
+              color: '#4A90E2',
             }}
           >
             <ChevronRight className="w-4 h-4" />
@@ -903,8 +904,8 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto px-4 sm:px-6 py-4 border-t border-white/5">
-        <p className="text-center text-slate-600 text-xs">P-MAS Dashboard v3.2 -- 8 Groups / 20 Formulas / 6 Edge Types / 26 Agents</p>
+      <footer className="mt-auto px-4 sm:px-6 py-4" style={{ background: '#0D0D0D', borderTop: '1px solid rgba(51,51,51,0.5)' }}>
+        <p className="text-center text-slate-600 text-xs">P-MAS Dashboard v4.0 -- Terrain Edition -- 8 Groups / 20 Formulas / 6 Edge Types / 26 Agents</p>
       </footer>
 
       {/* Scroll to top button */}
@@ -913,10 +914,10 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
           style={{
-            background: 'rgba(6, 182, 212, 0.2)',
-            border: '1px solid rgba(6, 182, 212, 0.4)',
-            color: '#22d3ee',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.15)',
+            background: 'rgba(74, 144, 226, 0.15)',
+            border: '1px solid rgba(74, 144, 226, 0.4)',
+            color: '#4A90E2',
+            boxShadow: '0 0 20px rgba(74, 144, 226, 0.15)',
             backdropFilter: 'blur(12px)',
           }}
         >

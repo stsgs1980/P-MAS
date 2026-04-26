@@ -498,3 +498,124 @@ F. General Enhancement:
 - Cron job creation failed (401 Unauthorized) - needs investigation
 - System health metrics are simulated (not real-time from backend)
 - Activity timeline shows static data (not real-time events)
+
+---
+Task ID: 2-a
+Agent: Full Stack Developer
+Task: Restyle agent-hierarchy.tsx with terrain/cartographic design system
+
+Work Log:
+- Replaced BackgroundParticles (floating space particles) with terrain contour lines using canvas API
+  - 5 contour groups with 4-6 concentric irregular ellipses each
+  - Irregular shapes using sine wave distortion (3 frequencies per ring)
+  - Contour lines use rgba(74, 144, 226, opacity) road primary blue instead of rgba(180, 200, 255)
+  - Added 25 cross/plus map grid markers at random positions using rgba(51, 51, 51, 0.3)
+  - Contour lines slowly pulse opacity for subtle animation
+- Updated BackgroundGrid: stroke #94a3b8 → #333333, opacity 0.04 → 0.08
+- Updated SVG defs: orbGlow filter now uses #4A90E2 flood color instead of default
+- Replaced all background colors:
+  - rgba(10,14,26,0.85) → rgba(26,26,26,0.92) (panels, legend, stats, minimap, nav)
+  - rgba(10,14,26,0.95) → rgba(13,13,13,0.95) (tooltips, mobile filter dropdown)
+  - rgba(10,14,26,0.9) → rgba(26,26,26,0.92) (edge hover labels, cluster header badges)
+  - rgba(10,14,26,0.8) → rgba(26,26,26,0.92) (loading overlay)
+  - rgba(15,20,35,0.85) → rgba(26,26,26,0.92) (detail panel)
+  - rgba(15,20,35,0.95) → rgba(26,26,26,0.95) (dialog content, select dropdowns)
+  - #0a0e1a → #000000 (main backgrounds, empty state)
+- Replaced border colors:
+  - rgba(255,255,255,0.06) → rgba(51,51,51,0.5) (panel borders, filter buttons)
+  - rgba(255,255,255,0.1) → rgba(51,51,51,0.5) (annotation tooltip border)
+  - rgba(255,255,255,0.08) → rgba(51,51,51,0.5) (dialog border)
+- Replaced text colors:
+  - #e2e8f0 → #FFFFFF (agent names in SVG, annotation text)
+  - #94a3b8 → #B0B0B0 (secondary text, CoT formula color)
+  - #64748b → #B0B0B0 (skills text in tooltip, tertiary text)
+  - All text-slate-* classes replaced with text-[#B0B0B0] throughout the file
+- Replaced accent colors:
+  - Nav bar border gradient: rgba(6,182,212,0.3) → rgba(74,144,226,0.3)
+  - Dashboard button: #22d3ee → #4A90E2, backgrounds and borders updated to road primary blue
+  - Logo icon: cyan-400 → #4A90E2
+  - Seed Data button: bg-cyan-600 → bg-[#4A90E2]
+  - Create Agent button: bg-cyan-600 → bg-[#4A90E2]
+  - Loading spinner: border-cyan-500 → border-[#4A90E2]
+  - Empty state icon: text-cyan-400 → text-[#4A90E2]
+- Updated legend/stats panel gradient borders:
+  - rgba(6,182,212,0.06) → rgba(74,144,226,0.08)
+  - rgba(139,92,246,0.06) → rgba(107,182,255,0.08)
+  - rgba(6,182,212,0.2) → rgba(74,144,226,0.25)
+  - rgba(139,92,246,0.2) → rgba(107,182,255,0.25)
+  - Stats gradient: rgba(6,182,212,0.04)/rgba(139,92,246,0.04)/rgba(16,185,129,0.04) → rgba(74,144,226,0.04)/rgba(107,182,255,0.04)/rgba(74,144,226,0.04)
+- Updated minimap: viewport stroke #fff → #4A90E2, inter-cluster stroke #334155 → #333333
+- Updated search bar: rgba(255,255,255,0.04) → rgba(45,45,45,0.5) background
+- Preserved: role group colors, formula colors, status colors, edge type colors, sync color #64748b, layout/positioning/animations
+
+Stage Summary:
+- Complete terrain/cartographic design system applied to agent-hierarchy.tsx
+- Space theme (#0a0e1a, cyan accents, floating particles) replaced with terrain theme (#000000, #1A1A1A, road primary blue, contour lines, map grid markers)
+- Lint passes cleanly (0 errors, 0 warnings)
+- Dev server compiles and serves without errors
+
+---
+
+Work Log:
+- Replaced main dashboard background from space theme `#0a0e1a` to terrain black `#000000`
+- Updated header gradient from cyan/violet/emerald to road primary/secondary/highlight: `rgba(74,144,226,0.05)`, `rgba(107,182,255,0.04)`, `rgba(255,193,7,0.03)`
+- Replaced logo icon from Tailwind classes `bg-cyan-600/20 border-cyan-500/30` to inline style `rgba(74,144,226,0.15)` / `rgba(74,144,226,0.3)`
+- Replaced Brain icon `text-cyan-400` with inline `style={{ color: '#4A90E2' }}`
+- Updated "Open Hierarchy" button: all cyan rgba/color values → road primary blue `#4A90E2` / `rgba(74,144,226,...)`
+- Replaced all 6 section card backgrounds `rgba(255, 255, 255, 0.02)` → `rgba(45, 45, 45, 0.3)` (terrain highlight)
+- Replaced all 6 section card borders `1px solid rgba(255, 255, 255, 0.06)` → `1px solid rgba(51, 51, 51, 0.5)` (grid line)
+- Updated System Health Monitor inner gradient to road primary/secondary/highlight colors
+- Replaced all 4 inner card backgrounds `rgba(10, 14, 26, 0.6)` → `rgba(13, 13, 13, 0.8)` (terrain shadow)
+- Updated SystemHealth Activity icon and Active Connections icon/text from `text-cyan-400` to inline `style={{ color: '#4A90E2' }}`
+- Updated spark line polyline stroke from `#22d3ee` to `#4A90E2`
+- Updated Formula Flow Diagram edge stroke from `rgba(148, 163, 184, 0.2)` → `rgba(74, 144, 226, 0.15)` and arrow fill from `rgba(148, 163, 184, 0.3)` → `rgba(74, 144, 226, 0.3)`
+- Updated quick actions button gradient and border from cyan to road primary blue
+- Updated footer: background `#0D0D0D` (terrain shadow), border `rgba(51,51,51,0.5)`, version "v4.0 -- Terrain Edition"
+- Updated scroll-to-top button: all cyan colors → road primary blue `#4A90E2` / `rgba(74,144,226,...)`
+- Preserved: role group colors, formula colors, status colors, edge type colors, semantic icon colors (emerald-400, violet-400, amber-400), section header left bars, data structures, layout
+
+Stage Summary:
+- Dashboard fully restyled from space theme to terrain/cartographic design system
+- Key color mappings: cyan → road primary blue (#4A90E2), white-transparent backgrounds → terrain highlight (#2D2D2D), space-dark → terrain shadow (#0D0D0D)
+- All semantic/data colors preserved (role groups, formulas, statuses, edges)
+- Lint passes cleanly (0 errors)
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Apply terrain/cartographic CSS design system to P-MAS dashboard and hierarchy visualization
+
+Work Log:
+- Analyzed user-provided CSS variable system: terrain backgrounds (#000000, #1A1A1A, #2D2D2D, #0D0D0D), route colors (#4A90E2, #6BB6FF, #FFC107), text colors (#FFFFFF, #B0B0B0, #4A90E2), grid (#333333), Inter font
+- Updated globals.css with full terrain design system CSS custom properties and terrain-specific keyframe animations
+- Delegated Task 2-a (subagent): Restyled agent-hierarchy.tsx with terrain design
+- Delegated Task 2-b (subagent): Restyled page.tsx dashboard with terrain design
+- Ran lint: 0 errors, 0 warnings
+- Tested with agent-browser: dashboard renders correctly, hierarchy view works, no console errors
+- Cron job creation attempted but failed (401 Unauthorized - known issue)
+
+Stage Summary:
+- P-MAS upgraded from v3.2 (Space Theme) to v4.0 (Terrain Edition)
+- Complete visual transformation from dark space aesthetic to terrain/cartographic design system
+- All semantic/data colors preserved (role groups, formulas, statuses, edges)
+- All functionality preserved (navigation, search, zoom, detail panel, etc.)
+
+## Current Project Status (v4.0 - Terrain Edition)
+
+### Design System (Terrain/Cartographic)
+- **Background**: #000000 (primary), #1A1A1A (terrain base), #2D2D2D (highlight), #0D0D0D (shadow)
+- **Routes**: #4A90E2 (primary), #6BB6FF (secondary), #FFC107 (highlight)
+- **Text**: #FFFFFF (primary), #B0B0B0 (secondary), #4A90E2 (accent)
+- **Grid**: #333333
+- **Typography**: Inter font family
+
+### Verification
+- `bun run lint`: 0 errors
+- Dev server: compiling and serving correctly
+- Browser tested: dashboard + hierarchy both rendering with terrain theme
+- No console errors
+
+### Unresolved Issues
+- Cron job creation failed (401 Unauthorized)
+- System health metrics are simulated (not real-time)
+- Activity timeline shows static data (not real-time)
