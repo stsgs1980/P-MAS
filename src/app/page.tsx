@@ -173,7 +173,7 @@ const PERFORMANCE_METRICS = [
   { label: 'Success Rate', value: '94.7%', color: '#22D3EE', icon: CheckCircle2 },
   { label: 'Tasks Completed', value: '187', color: '#06B6D4', icon: ListChecks, trendUp: true },
   { label: 'Active Workflows', value: '12', color: '#06B6D4', icon: Workflow },
-  { label: 'Error Recovery', value: '98.2%', color: '#FFC107', icon: RotateCcw },
+  { label: 'Error Recovery', value: '98.2%', color: '#22D3EE', icon: RotateCcw },
   { label: 'Knowledge Utilization', value: '76.3%', color: '#6B7280', icon: BookOpen },
 ]
 
