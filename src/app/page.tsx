@@ -23,77 +23,77 @@ export default function Home() {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const ROLE_GROUPS = [
-  { name: 'Стратегия', label: 'Strategy', color: '#f59e0b', colorRgb: '245,158,11', icon: Brain, agents: 3, formulas: 'ToT, CoVe, GoT', desc: 'Strategic planning, analysis, vision', statusSummary: [{ color: '#22c55e', label: '3 active' }] },
-  { name: 'Тактика', label: 'Tactics', color: '#10b981', colorRgb: '16,185,129', icon: Target, agents: 3, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication', statusSummary: [{ color: '#22c55e', label: '2 active' }, { color: '#eab308', label: '1 idle' }] },
-  { name: 'Контроль', label: 'Control', color: '#f43f5e', colorRgb: '244,63,94', icon: Shield, agents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety', statusSummary: [{ color: '#22c55e', label: '3 active' }] },
-  { name: 'Исполнение', label: 'Execution', color: '#06b6d4', colorRgb: '6,182,212', icon: Zap, agents: 5, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing', statusSummary: [{ color: '#22c55e', label: '4 active' }, { color: '#eab308', label: '1 idle' }] },
-  { name: 'Память', label: 'Memory / Knowledge', color: '#8b5cf6', colorRgb: '139,92,246', icon: Database, agents: 3, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#22c55e', label: '2 active' }, { color: '#6366f1', label: '1 standby' }] },
-  { name: 'Мониторинг', label: 'Monitoring', color: '#14b8a6', colorRgb: '20,184,166', icon: Activity, agents: 3, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#22c55e', label: '2 active' }, { color: '#f97316', label: '1 paused' }] },
-  { name: 'Коммуникация', label: 'Communication', color: '#ec4899', colorRgb: '236,72,153', icon: Network, agents: 3, formulas: 'PromptChaining, StepBack, PlanAndSolve', desc: 'Inter-agent messaging, routing, protocol translation', statusSummary: [{ color: '#22c55e', label: '2 active' }, { color: '#eab308', label: '1 idle' }] },
-  { name: 'Обучение', label: 'Learning / Training', color: '#f97316', colorRgb: '249,115,22', icon: Sparkles, agents: 3, formulas: 'DSPy, MetaCoT, LeastToMost', desc: 'Fine-tuning, feedback loops, skill acquisition', statusSummary: [{ color: '#22c55e', label: '2 active' }, { color: '#eab308', label: '1 idle' }] },
+  { name: 'Стратегия', label: 'Strategy', color: '#67E8F9', colorRgb: '103,232,249', icon: Brain, agents: 3, formulas: 'ToT, CoVe, GoT', desc: 'Strategic planning, analysis, vision', statusSummary: [{ color: '#06B6D4', label: '3 active' }] },
+  { name: 'Тактика', label: 'Tactics', color: '#22D3EE', colorRgb: '34,211,238', icon: Target, agents: 3, formulas: 'ReWOO, ReAct, SelfConsistency', desc: 'Coordination, planning, communication', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
+  { name: 'Контроль', label: 'Control', color: '#06B6D4', colorRgb: '6,182,212', icon: Shield, agents: 3, formulas: 'Reflexion, CoVe, ReAct', desc: 'Quality, evaluation, safety', statusSummary: [{ color: '#06B6D4', label: '3 active' }] },
+  { name: 'Исполнение', label: 'Execution', color: '#06B6D4', colorRgb: '6,182,212', icon: Zap, agents: 5, formulas: 'ReAct, MoA, SelfRefine, PoT', desc: 'Task execution, coding, testing', statusSummary: [{ color: '#06B6D4', label: '4 active' }, { color: '#6B7280', label: '1 idle' }] },
+  { name: 'Память', label: 'Memory / Knowledge', color: '#0891B2', colorRgb: '8,145,178', icon: Database, agents: 3, formulas: 'CoT, AoT, SoT', desc: 'Knowledge base, RAG, context management', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 standby' }] },
+  { name: 'Мониторинг', label: 'Monitoring', color: '#0E7490', colorRgb: '14,116,144', icon: Activity, agents: 3, formulas: 'CoT, LATS, GoT', desc: 'Observation, alerting, diagnostics', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#9CA3AF', label: '1 paused' }] },
+  { name: 'Коммуникация', label: 'Communication', color: '#155E75', colorRgb: '21,94,117', icon: Network, agents: 3, formulas: 'PromptChaining, StepBack, PlanAndSolve', desc: 'Inter-agent messaging, routing, protocol translation', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
+  { name: 'Обучение', label: 'Learning / Training', color: '#164E63', colorRgb: '22,78,99', icon: Sparkles, agents: 3, formulas: 'DSPy, MetaCoT, LeastToMost', desc: 'Fine-tuning, feedback loops, skill acquisition', statusSummary: [{ color: '#06B6D4', label: '2 active' }, { color: '#6B7280', label: '1 idle' }] },
 ]
 
 const FORMULA_TAXONOMY = [
   {
     category: 'Foundational',
     formulas: [
-      { name: 'CoT', full: 'Chain of Thought', color: '#94a3b8' },
-      { name: 'ToT', full: 'Tree of Thoughts', color: '#f59e0b' },
-      { name: 'GoT', full: 'Graph of Thoughts', color: '#eab308' },
-      { name: 'AoT', full: 'Algorithm of Thoughts', color: '#a78bfa' },
-      { name: 'SoT', full: 'Skeleton of Thought', color: '#fb923c' },
+      { name: 'CoT', full: 'Chain of Thought', color: '#999999' },
+      { name: 'ToT', full: 'Tree of Thoughts', color: '#999999' },
+      { name: 'GoT', full: 'Graph of Thoughts', color: '#999999' },
+      { name: 'AoT', full: 'Algorithm of Thoughts', color: '#999999' },
+      { name: 'SoT', full: 'Skeleton of Thought', color: '#999999' },
     ],
   },
   {
     category: 'Verification',
     formulas: [
-      { name: 'CoVe', full: 'Chain of Verification', color: '#8b5cf6' },
-      { name: 'Reflexion', full: 'Self-Reflection', color: '#f43f5e' },
-      { name: 'SelfConsistency', full: 'Self-Consistency', color: '#c084fc' },
-      { name: 'SelfRefine', full: 'Self-Refine', color: '#38bdf8' },
+      { name: 'CoVe', full: 'Chain of Verification', color: '#888888' },
+      { name: 'Reflexion', full: 'Self-Reflection', color: '#888888' },
+      { name: 'SelfConsistency', full: 'Self-Consistency', color: '#888888' },
+      { name: 'SelfRefine', full: 'Self-Refine', color: '#888888' },
     ],
   },
   {
     category: 'Planning',
     formulas: [
-      { name: 'ReWOO', full: 'Research w/o Observation', color: '#10b981' },
-      { name: 'ReAct', full: 'Reasoning + Action', color: '#06b6d4' },
-      { name: 'PromptChaining', full: 'Prompt Chaining', color: '#34d399' },
-      { name: 'PlanAndSolve', full: 'Plan-and-Solve', color: '#a3e635' },
-      { name: 'StepBack', full: 'Step-Back Prompting', color: '#f472b6' },
-      { name: 'LeastToMost', full: 'Least-to-Most', color: '#fb923c' },
+      { name: 'ReWOO', full: 'Research w/o Observation', color: '#777777' },
+      { name: 'ReAct', full: 'Reasoning + Action', color: '#777777' },
+      { name: 'PromptChaining', full: 'Prompt Chaining', color: '#777777' },
+      { name: 'PlanAndSolve', full: 'Plan-and-Solve', color: '#777777' },
+      { name: 'StepBack', full: 'Step-Back Prompting', color: '#777777' },
+      { name: 'LeastToMost', full: 'Least-to-Most', color: '#777777' },
     ],
   },
   {
     category: 'Advanced',
     formulas: [
-      { name: 'MoA', full: 'Mixture of Agents', color: '#ec4899' },
-      { name: 'LATS', full: 'Lang Agent Tree Search', color: '#4ade80' },
-      { name: 'PoT', full: 'Program of Thought', color: '#f472b6' },
-      { name: 'DSPy', full: 'Declarative Self-Improving', color: '#22d3ee' },
-      { name: 'MetaCoT', full: 'Meta Chain of Thought', color: '#c084fc' },
+      { name: 'MoA', full: 'Mixture of Agents', color: '#666666' },
+      { name: 'LATS', full: 'Lang Agent Tree Search', color: '#666666' },
+      { name: 'PoT', full: 'Program of Thought', color: '#666666' },
+      { name: 'DSPy', full: 'Declarative Self-Improving', color: '#666666' },
+      { name: 'MetaCoT', full: 'Meta Chain of Thought', color: '#666666' },
     ],
   },
 ]
 
 const EDGE_TYPES = [
-  { name: 'Command', desc: 'Parent to child directive', color: '#f59e0b', style: 'solid', icon: ArrowRight },
-  { name: 'Sync', desc: 'Peer synchronization', color: '#64748b', style: 'dotted', icon: ArrowLeftRight },
-  { name: 'Twin', desc: 'Mirror agent link', color: '#06b6d4', style: 'dashed', icon: Diamond },
-  { name: 'Delegate', desc: 'Task delegation', color: '#8b5cf6', style: 'dash-dot', icon: Workflow },
-  { name: 'Supervise', desc: 'Oversight feedback', color: '#14b8a6', style: 'fine dot', icon: Eye },
-  { name: 'Broadcast', desc: 'One-to-many signal', color: '#f97316', style: 'long dash', icon: Megaphone },
+  { name: 'Command', desc: 'Parent to child directive', color: '#06B6D4', style: 'solid', icon: ArrowRight },
+  { name: 'Sync', desc: 'Peer synchronization', color: '#64748B', style: 'dotted', icon: ArrowLeftRight },
+  { name: 'Twin', desc: 'Mirror agent link', color: '#22D3EE', style: 'dashed', icon: Diamond },
+  { name: 'Delegate', desc: 'Task delegation', color: '#0891B2', style: 'dash-dot', icon: Workflow },
+  { name: 'Supervise', desc: 'Oversight feedback', color: '#475569', style: 'fine dot', icon: Eye },
+  { name: 'Broadcast', desc: 'One-to-many signal', color: '#0E7490', style: 'long dash', icon: Megaphone },
 ]
 
 const QUICK_STATS = [
-  { label: 'Total Agents', value: '26', color: '#22d3ee', colorRgb: '6,182,212' },
-  { label: 'Role Groups', value: '8', color: '#f59e0b', colorRgb: '245,158,11' },
-  { label: 'Cognitive Formulas', value: '20', color: '#8b5cf6', colorRgb: '139,92,246' },
-  { label: 'Edge Types', value: '6', color: '#10b981', colorRgb: '16,185,129' },
-  { label: 'Active Agents', value: '16', color: '#22c55e', colorRgb: '34,197,94' },
-  { label: 'Idle Agents', value: '4', color: '#eab308', colorRgb: '234,179,8' },
-  { label: 'Tasks', value: '26', color: '#0ea5e9', colorRgb: '14,165,233' },
-  { label: 'Formulas Coverage', value: '100%', color: '#f43f5e', colorRgb: '244,63,94' },
+  { label: 'Total Agents', value: '26', color: '#06B6D4', colorRgb: '6,182,212' },
+  { label: 'Role Groups', value: '8', color: '#0891B2', colorRgb: '8,145,178' },
+  { label: 'Cognitive Formulas', value: '20', color: '#6B7280', colorRgb: '107,114,128' },
+  { label: 'Edge Types', value: '6', color: '#475569', colorRgb: '71,85,105' },
+  { label: 'Active Agents', value: '16', color: '#06B6D4', colorRgb: '6,182,212' },
+  { label: 'Idle Agents', value: '4', color: '#6B7280', colorRgb: '107,114,128' },
+  { label: 'Tasks', value: '26', color: '#22D3EE', colorRgb: '34,211,238' },
+  { label: 'Formulas Coverage', value: '100%', color: '#0891B2', colorRgb: '8,145,178' },
 ]
 
 // ─── Activity Timeline Data ────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ const ACTIVITY_EVENTS = [
 // ─── Formula-Agent Mapping Data ────────────────────────────────────────────────
 
 const GROUP_ABBREVIATIONS = ['Стр', 'Ткт', 'Кнт', 'Исп', 'Пмт', 'Мнц', 'Кмн', 'Обч']
-const GROUP_COLORS = ['#f59e0b', '#10b981', '#f43f5e', '#06b6d4', '#8b5cf6', '#14b8a6', '#ec4899', '#f97316']
+const GROUP_COLORS = ['#67E8F9', '#22D3EE', '#06B6D4', '#06B6D4', '#0891B2', '#0E7490', '#155E75', '#164E63']
 
 const FORMULA_AGENT_MAP: { formula: string; groups: number[] }[] = [
   { formula: 'CoT', groups: [4, 5] },
@@ -169,21 +169,21 @@ const TOP_PERFORMERS = [
 ]
 
 const PERFORMANCE_METRICS = [
-  { label: 'Avg Response Time', value: '1.2s', color: '#4A90E2', icon: Clock, sparkline: true },
-  { label: 'Success Rate', value: '94.7%', color: '#22c55e', icon: CheckCircle2 },
-  { label: 'Tasks Completed', value: '187', color: '#22c55e', icon: ListChecks, trendUp: true },
-  { label: 'Active Workflows', value: '12', color: '#4A90E2', icon: Workflow },
-  { label: 'Error Recovery', value: '98.2%', color: '#f59e0b', icon: RotateCcw },
-  { label: 'Knowledge Utilization', value: '76.3%', color: '#a855f7', icon: BookOpen },
+  { label: 'Avg Response Time', value: '1.2s', color: '#06B6D4', icon: Clock, sparkline: true },
+  { label: 'Success Rate', value: '94.7%', color: '#22D3EE', icon: CheckCircle2 },
+  { label: 'Tasks Completed', value: '187', color: '#06B6D4', icon: ListChecks, trendUp: true },
+  { label: 'Active Workflows', value: '12', color: '#06B6D4', icon: Workflow },
+  { label: 'Error Recovery', value: '98.2%', color: '#FFC107', icon: RotateCcw },
+  { label: 'Knowledge Utilization', value: '76.3%', color: '#6B7280', icon: BookOpen },
 ]
 
 const STATUS_DISTRIBUTION = [
-  { label: 'Active', count: 16, color: '#22c55e' },
-  { label: 'Idle', count: 4, color: '#eab308' },
-  { label: 'Paused', count: 1, color: '#f97316' },
-  { label: 'Standby', count: 1, color: '#6366f1' },
-  { label: 'Error', count: 0, color: '#ef4444' },
-  { label: 'Offline', count: 4, color: '#6b7280' },
+  { label: 'Active', count: 16, color: '#06B6D4' },
+  { label: 'Idle', count: 4, color: '#6B7280' },
+  { label: 'Paused', count: 1, color: '#9CA3AF' },
+  { label: 'Standby', count: 1, color: '#6B7280' },
+  { label: 'Error', count: 0, color: '#FFC107' },
+  { label: 'Offline', count: 4, color: '#4B5563' },
 ]
 
 // ─── Network Activity Data ──────────────────────────────────────────────────
@@ -205,9 +205,9 @@ function SystemHealthMonitor() {
   }, [])
 
   const metrics = [
-    { label: 'CPU Usage', value: 34, color: '#22d3ee', width: cpuWidth, icon: Cpu },
-    { label: 'Memory Usage', value: 67, color: '#f59e0b', width: memWidth, icon: HardDrive },
-    { label: 'Network I/O', value: 23, color: '#10b981', width: netWidth, icon: Wifi },
+    { label: 'CPU Usage', value: 34, color: '#06B6D4', width: cpuWidth, icon: Cpu },
+    { label: 'Memory Usage', value: 67, color: '#0891B2', width: memWidth, icon: HardDrive },
+    { label: 'Network I/O', value: 23, color: '#0E7490', width: netWidth, icon: Wifi },
   ]
 
   return (
@@ -222,7 +222,7 @@ function SystemHealthMonitor() {
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(74,144,226,0.04), rgba(107,182,255,0.03), rgba(255,193,7,0.03))',
+          background: 'linear-gradient(135deg, rgba(103,232,249,0.04), rgba(6,182,212,0.03), rgba(14,116,144,0.03))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         }}
@@ -230,7 +230,7 @@ function SystemHealthMonitor() {
 
       <div className="relative z-10">
         <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-          <Activity className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+          <Activity className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
           System Health Monitor
         </h3>
 
@@ -270,32 +270,32 @@ function SystemHealthMonitor() {
         <div className="flex flex-wrap gap-3">
           <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
             </span>
             <span className="text-slate-400 text-[10px]">Agent Uptime</span>
-            <span className="text-green-400 font-bold text-xs" style={{ textShadow: '0 0 8px rgba(34, 197, 94, 0.4)', animation: 'pulseGlow 2s ease-in-out infinite' }}>99.7%</span>
+            <span className="text-cyan-400 font-bold text-xs" style={{ textShadow: '0 0 8px rgba(6, 182, 212, 0.4)', animation: 'pulseGlow 2s ease-in-out infinite' }}>99.7%</span>
           </div>
           <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
-            <Activity className="w-3 h-3" style={{ color: '#4A90E2' }} />
+            <Activity className="w-3 h-3" style={{ color: '#06B6D4' }} />
             <span className="text-slate-400 text-[10px]">Active Connections</span>
-            <span className="font-bold text-xs" style={{ color: '#4A90E2' }}>55</span>
+            <span className="font-bold text-xs" style={{ color: '#06B6D4' }}>55</span>
             {/* Spark line */}
             <svg width="32" height="12" className="ml-1">
               <polyline
                 points="0,8 4,6 8,9 12,4 16,7 20,3 24,5 28,2 32,6"
                 fill="none"
-                stroke="#4A90E2"
+                stroke="#06B6D4"
                 strokeWidth="1"
                 opacity="0.6"
               />
             </svg>
           </div>
           <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
-            <TrendingDown className="w-3 h-3 text-green-400" />
+            <TrendingDown className="w-3 h-3 text-cyan-400" />
             <span className="text-slate-400 text-[10px]">Error Rate</span>
-            <span className="text-green-400 font-bold text-xs">0.3%</span>
-            <TrendingDown className="w-2.5 h-2.5 text-green-400" />
+            <span className="text-cyan-400 font-bold text-xs">0.3%</span>
+            <TrendingDown className="w-2.5 h-2.5 text-cyan-400" />
           </div>
         </div>
       </div>
@@ -315,7 +315,7 @@ function RecentActivityTimeline() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <Activity className="w-3.5 h-3.5 text-emerald-400" />
+        <Activity className="w-3.5 h-3.5 text-cyan-400" />
         Recent Activity
       </h3>
       <div
@@ -387,7 +387,7 @@ function FormulaAgentMappingGrid() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <Network className="w-3.5 h-3.5 text-violet-400" />
+        <Network className="w-3.5 h-3.5 text-gray-400" />
         Formula-to-Agent Mapping
       </h3>
       <div className="min-w-[480px]">
@@ -451,26 +451,26 @@ function FormulaAgentMappingGrid() {
 function FormulaFlowDiagram() {
   // Node positions for the flow diagram
   const nodes = [
-    { id: 'CoT', x: 60, y: 30, color: '#94a3b8' },
-    { id: 'ToT', x: 170, y: 30, color: '#f59e0b' },
-    { id: 'GoT', x: 280, y: 30, color: '#eab308' },
-    { id: 'MetaCoT', x: 60, y: 90, color: '#c084fc' },
-    { id: 'AoT', x: 280, y: 90, color: '#a78bfa' },
-    { id: 'SoT', x: 390, y: 90, color: '#fb923c' },
-    { id: 'CoVe', x: 60, y: 150, color: '#8b5cf6' },
-    { id: 'Reflexion', x: 170, y: 150, color: '#f43f5e' },
-    { id: 'SelfConsistency', x: 280, y: 150, color: '#c084fc' },
-    { id: 'SelfRefine', x: 390, y: 150, color: '#38bdf8' },
-    { id: 'ReAct', x: 60, y: 210, color: '#06b6d4' },
-    { id: 'ReWOO', x: 170, y: 210, color: '#10b981' },
-    { id: 'PromptChaining', x: 280, y: 210, color: '#34d399' },
-    { id: 'PlanAndSolve', x: 390, y: 210, color: '#a3e635' },
-    { id: 'PoT', x: 60, y: 270, color: '#f472b6' },
-    { id: 'StepBack', x: 170, y: 270, color: '#f472b6' },
-    { id: 'LeastToMost', x: 280, y: 270, color: '#fb923c' },
-    { id: 'DSPy', x: 60, y: 330, color: '#22d3ee' },
-    { id: 'MoA', x: 170, y: 330, color: '#ec4899' },
-    { id: 'LATS', x: 280, y: 330, color: '#4ade80' },
+    { id: 'CoT', x: 60, y: 30, color: '#999999' },
+    { id: 'ToT', x: 170, y: 30, color: '#999999' },
+    { id: 'GoT', x: 280, y: 30, color: '#999999' },
+    { id: 'MetaCoT', x: 60, y: 90, color: '#666666' },
+    { id: 'AoT', x: 280, y: 90, color: '#999999' },
+    { id: 'SoT', x: 390, y: 90, color: '#999999' },
+    { id: 'CoVe', x: 60, y: 150, color: '#888888' },
+    { id: 'Reflexion', x: 170, y: 150, color: '#888888' },
+    { id: 'SelfConsistency', x: 280, y: 150, color: '#888888' },
+    { id: 'SelfRefine', x: 390, y: 150, color: '#888888' },
+    { id: 'ReAct', x: 60, y: 210, color: '#777777' },
+    { id: 'ReWOO', x: 170, y: 210, color: '#777777' },
+    { id: 'PromptChaining', x: 280, y: 210, color: '#777777' },
+    { id: 'PlanAndSolve', x: 390, y: 210, color: '#777777' },
+    { id: 'PoT', x: 60, y: 270, color: '#666666' },
+    { id: 'StepBack', x: 170, y: 270, color: '#777777' },
+    { id: 'LeastToMost', x: 280, y: 270, color: '#777777' },
+    { id: 'DSPy', x: 60, y: 330, color: '#666666' },
+    { id: 'MoA', x: 170, y: 330, color: '#666666' },
+    { id: 'LATS', x: 280, y: 330, color: '#666666' },
   ]
 
   const edges = [
@@ -508,7 +508,7 @@ function FormulaFlowDiagram() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <Workflow className="w-3.5 h-3.5 text-amber-400" />
+        <Workflow className="w-3.5 h-3.5 text-cyan-400" />
         Formula Flow Diagram
       </h3>
       <svg
@@ -544,12 +544,12 @@ function FormulaFlowDiagram() {
                 y1={startY}
                 x2={endX}
                 y2={endY}
-                stroke="rgba(74, 144, 226, 0.15)"
+                stroke="rgba(6, 182, 212, 0.15)"
                 strokeWidth="1.5"
               />
               <polygon
                 points={`${endX},${endY} ${ax1},${ay1} ${ax2},${ay2}`}
-                fill="rgba(74, 144, 226, 0.3)"
+                fill="rgba(6, 182, 212, 0.3)"
               />
             </g>
           )
@@ -640,7 +640,7 @@ function ConnectionHeatmap() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <Grid3X3 className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        <Grid3X3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
         Connection Heatmap
       </h3>
       <div className="min-w-[520px]">
@@ -732,21 +732,21 @@ function ConnectionHeatmap() {
         <div className="flex items-center gap-1.5">
           <span
             className="rounded-full"
-            style={{ width: 6, height: 6, background: '#4A90E2', opacity: 0.5 }}
+            style={{ width: 6, height: 6, background: '#06B6D4', opacity: 0.5 }}
           />
           <span className="text-[8px] text-slate-500">1-2</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span
             className="rounded-full"
-            style={{ width: 10, height: 10, background: '#4A90E2', opacity: 0.7 }}
+            style={{ width: 10, height: 10, background: '#06B6D4', opacity: 0.7 }}
           />
           <span className="text-[8px] text-slate-500">3-5</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span
             className="rounded-full"
-            style={{ width: 14, height: 14, background: '#4A90E2', opacity: 0.9 }}
+            style={{ width: 14, height: 14, background: '#06B6D4', opacity: 0.9 }}
           />
           <span className="text-[8px] text-slate-500">6+</span>
         </div>
@@ -758,9 +758,9 @@ function ConnectionHeatmap() {
               width="6"
               height="6"
               rx="1"
-              fill="#4A90E2"
+              fill="#06B6D4"
               fillOpacity="0.7"
-              stroke="#4A90E2"
+              stroke="#06B6D4"
               strokeWidth="0.5"
               strokeOpacity="0.6"
               transform="rotate(45 5 5)"
@@ -824,8 +824,8 @@ function AgentPerformance() {
     >
       {/* Section header */}
       <h3 className="text-white font-semibold text-xs mb-5 flex items-center gap-2">
-        <div className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
-        <BarChart3 className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        <div className="w-1 h-4 rounded-full" style={{ background: '#06B6D4' }} />
+        <BarChart3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
         Agent Performance
       </h3>
 
@@ -1040,7 +1040,7 @@ function NetworkActivityChart() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <Activity className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        <Activity className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
         Network Activity
       </h3>
       <svg
@@ -1050,8 +1050,8 @@ function NetworkActivityChart() {
       >
         <defs>
           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(74,144,226,0.15)" />
-            <stop offset="100%" stopColor="rgba(74,144,226,0.02)" />
+            <stop offset="0%" stopColor="rgba(6,182,212,0.15)" />
+            <stop offset="100%" stopColor="rgba(6,182,212,0.02)" />
           </linearGradient>
         </defs>
 
@@ -1079,7 +1079,7 @@ function NetworkActivityChart() {
         <polyline
           points={linePoints}
           fill="none"
-          stroke="#4A90E2"
+          stroke="#06B6D4"
           strokeWidth="1.5"
         />
 
@@ -1107,7 +1107,7 @@ function NetworkActivityChart() {
               cy={toY(peak.v)}
               r="4"
               fill="none"
-              stroke="#4A90E2"
+              stroke="#06B6D4"
               strokeWidth="0.5"
               strokeOpacity="0.4"
             >
@@ -1119,7 +1119,7 @@ function NetworkActivityChart() {
               cx={toX(peak.i)}
               cy={toY(peak.v)}
               r="2.5"
-              fill="#4A90E2"
+              fill="#06B6D4"
               stroke="#FFFFFF"
               strokeWidth="0.5"
               strokeOpacity="0.5"
@@ -1147,19 +1147,19 @@ function NetworkActivityChart() {
       {/* Summary stats */}
       <div className="flex flex-wrap gap-4 mt-3">
         <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
-          <TrendingUp size={11} style={{ color: '#4A90E2' }} />
+          <TrendingUp size={11} style={{ color: '#06B6D4' }} />
           <span className="text-[9px] text-[#B0B0B0]">Peak</span>
-          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>55 at 11h</span>
+          <span className="text-[10px] font-bold" style={{ color: '#06B6D4' }}>55 at 11h</span>
         </div>
         <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
-          <BarChart3 size={11} style={{ color: '#4A90E2' }} />
+          <BarChart3 size={11} style={{ color: '#06B6D4' }} />
           <span className="text-[9px] text-[#B0B0B0]">Average</span>
-          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>36.5</span>
+          <span className="text-[10px] font-bold" style={{ color: '#06B6D4' }}>36.5</span>
         </div>
         <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
-          <Activity size={11} style={{ color: '#4A90E2' }} />
+          <Activity size={11} style={{ color: '#06B6D4' }} />
           <span className="text-[9px] text-[#B0B0B0]">Current</span>
-          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>15</span>
+          <span className="text-[10px] font-bold" style={{ color: '#06B6D4' }}>15</span>
         </div>
       </div>
     </div>
@@ -1230,7 +1230,7 @@ function QuickActionsPanel() {
       }}
     >
       <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
-        <div className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+        <div className="w-1 h-4 rounded-full" style={{ background: '#06B6D4' }} />
         Quick Actions
       </h3>
       <div className="flex flex-wrap gap-3">
@@ -1245,12 +1245,12 @@ function QuickActionsPanel() {
               style={{
                 background: 'rgba(45, 45, 45, 0.5)',
                 border: '1px solid rgba(51, 51, 51, 0.5)',
-                color: '#4A90E2',
+                color: '#06B6D4',
               }}
               onMouseEnter={(e) => {
                 if (!action.loading) {
-                  e.currentTarget.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.15)'
-                  e.currentTarget.style.borderColor = 'rgba(74, 144, 226, 0.4)'
+                  e.currentTarget.style.boxShadow = '0 0 15px rgba(6, 182, 212, 0.15)'
+                  e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)'
                 }
               }}
               onMouseLeave={(e) => {
@@ -1321,25 +1321,25 @@ const COLOR_PREVIEW_SCHEMES = [
   },
   {
     id: 'cyan',
-    name: 'C: Cyan',
+    name: 'C: Cyan (Active)',
     accent: '#06B6D4',
-    light: '#22D3EE',
+    light: '#67E8F9',
     dim: '#0891B2',
     muted: '#0E7490',
-    groups: ['#22D3EE', '#06B6D4', '#0891B2', '#0E7490', '#164E63', '#B0B0B0', '#888888', '#666666'],
+    groups: ['#67E8F9', '#22D3EE', '#06B6D4', '#06B6D4', '#0891B2', '#0E7490', '#155E75', '#164E63'],
     statuses: [
       { label: 'Active', color: '#06B6D4' },
-      { label: 'Idle', color: '#B0B0B0' },
+      { label: 'Idle', color: '#6B7280' },
       { label: 'Error', color: '#FFC107' },
-      { label: 'Paused', color: '#888888' },
-      { label: 'Standby', color: '#777777' },
-      { label: 'Offline', color: '#555555' },
+      { label: 'Paused', color: '#9CA3AF' },
+      { label: 'Standby', color: '#6B7280' },
+      { label: 'Offline', color: '#4B5563' },
     ],
     edges: [
       { label: 'Command', color: '#06B6D4' },
-      { label: 'Sync', color: '#777777' },
-      { label: 'Twin', color: '#888888' },
-      { label: 'Delegate', color: '#999999' },
+      { label: 'Sync', color: '#64748B' },
+      { label: 'Twin', color: '#22D3EE' },
+      { label: 'Delegate', color: '#0891B2' },
     ],
     recommended: true,
   },
@@ -1587,7 +1587,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       <header
         className="px-4 sm:px-6 py-4 border-b border-white/5 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(74,144,226,0.05), rgba(107,182,255,0.04), rgba(255,193,7,0.03))',
+          background: 'linear-gradient(135deg, rgba(103,232,249,0.05), rgba(6,182,212,0.04), rgba(14,116,144,0.03))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 12s ease infinite',
         }}
@@ -1595,8 +1595,8 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         <div className="flex items-center justify-between max-w-7xl mx-auto relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center relative"
-              style={{ background: 'rgba(74,144,226,0.15)', border: '1px solid rgba(74,144,226,0.3)' }}>
-              <Brain className="w-5 h-5" style={{ color: '#4A90E2' }} />
+              style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.3)' }}>
+              <Brain className="w-5 h-5" style={{ color: '#06B6D4' }} />
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
@@ -1605,11 +1605,11 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
                 <span className="relative flex h-2 w-2">
                   <span
                     className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    style={{ background: '#22c55e' }}
+                    style={{ background: '#06B6D4' }}
                   />
                   <span
                     className="relative inline-flex rounded-full h-2 w-2"
-                    style={{ background: '#22c55e' }}
+                    style={{ background: '#06B6D4' }}
                   />
                 </span>
               </div>
@@ -1633,10 +1633,10 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
               onClick={onOpenHierarchy}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105"
               style={{
-                background: 'rgba(74, 144, 226, 0.15)',
-                border: '1px solid rgba(74, 144, 226, 0.4)',
-                color: '#4A90E2',
-                boxShadow: '0 0 20px rgba(74, 144, 226, 0.1)',
+                background: 'rgba(6, 182, 212, 0.15)',
+                border: '1px solid rgba(6, 182, 212, 0.4)',
+                color: '#06B6D4',
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.1)',
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1682,7 +1682,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Role Groups Grid */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full bg-amber-500" />
+          <span className="w-1 h-4 rounded-full bg-cyan-500" />
           Role Groups (8)
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -1769,7 +1769,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Prompting Formulas Taxonomy */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full bg-purple-500" />
+          <span className="w-1 h-4 rounded-full bg-gray-500" />
           Prompting Formulas Taxonomy (20)
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -1806,7 +1806,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Formula Flow Diagram */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full bg-amber-400" />
+          <span className="w-1 h-4 rounded-full bg-cyan-400" />
           Formula Flow Diagram
         </h2>
         <div className="mb-8">
@@ -1815,7 +1815,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Edge Types */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full bg-emerald-500" />
+          <span className="w-1 h-4 rounded-full bg-cyan-500" />
           Edge Types (6)
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
@@ -1848,7 +1848,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Connection Heatmap */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          <span className="w-1 h-4 rounded-full" style={{ background: '#06B6D4' }} />
           Connection Heatmap
         </h2>
         <div className="mb-8">
@@ -1857,7 +1857,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Architecture Overview */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full bg-rose-500" />
+          <span className="w-1 h-4 rounded-full bg-cyan-500" />
           Architecture Overview
         </h2>
         <div
@@ -1885,11 +1885,11 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <div className="mt-4 flex flex-wrap gap-3">
             <span className="text-[9px] text-slate-500">Connections:</span>
             {[
-              { label: '--broadcast-->', color: '#f97316' },
-              { label: '--delegate-->', color: '#8b5cf6' },
-              { label: '<--supervise--', color: '#14b8a6' },
-              { label: '<---sync----', color: '#64748b' },
-              { label: '----delegate--->', color: '#8b5cf6' },
+              { label: '--broadcast-->', color: '#0E7490' },
+              { label: '--delegate-->', color: '#0891B2' },
+              { label: '<--supervise--', color: '#475569' },
+              { label: '<---sync----', color: '#64748B' },
+              { label: '----delegate--->', color: '#0891B2' },
             ].map((conn) => (
               <span key={conn.label} className="text-[9px] font-mono" style={{ color: conn.color }}>
                 {conn.label}
@@ -1909,7 +1909,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Agent Performance */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          <span className="w-1 h-4 rounded-full" style={{ background: '#06B6D4' }} />
           Agent Performance
         </h2>
         <div className="mb-6">
@@ -1918,7 +1918,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
         {/* Network Activity Chart */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
-          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          <span className="w-1 h-4 rounded-full" style={{ background: '#06B6D4' }} />
           Network Activity
         </h2>
         <div className="mb-6">
@@ -1942,9 +1942,9 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
             onClick={onOpenHierarchy}
             className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-medium transition-all hover:scale-[1.01]"
             style={{
-              background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.12), rgba(74, 144, 226, 0.04))',
-              border: '1px solid rgba(74, 144, 226, 0.3)',
-              color: '#4A90E2',
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(6, 182, 212, 0.04))',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              color: '#06B6D4',
             }}
           >
             <ChevronRight className="w-4 h-4" />
@@ -1961,16 +1961,16 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         {/* Gradient top border */}
         <div
           className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, #4A90E2, transparent)' }}
+          style={{ background: 'linear-gradient(90deg, #06B6D4, transparent)' }}
         />
         <div className="max-w-7xl mx-auto">
           {/* Desktop: 3 columns, Mobile: single column */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             {/* Left: Logo + version */}
             <div className="flex items-center gap-2 justify-center md:justify-start">
-              <Brain size={14} style={{ color: '#4A90E2' }} />
-              <span className="text-[11px] font-bold" style={{ color: '#FFFFFF' }}>P-MAS Dashboard v4.2</span>
-              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>-- Terrain Edition</span>
+              <Brain size={14} style={{ color: '#06B6D4' }} />
+              <span className="text-[11px] font-bold" style={{ color: '#FFFFFF' }}>P-MAS Dashboard v5.0</span>
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>-- Monochrome Cyan</span>
             </div>
 
             {/* Center: Key stats */}
@@ -1998,10 +1998,10 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
           style={{
-            background: 'rgba(74, 144, 226, 0.15)',
-            border: '1px solid rgba(74, 144, 226, 0.4)',
-            color: '#4A90E2',
-            boxShadow: '0 0 20px rgba(74, 144, 226, 0.15)',
+            background: 'rgba(6, 182, 212, 0.15)',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
+            color: '#06B6D4',
+            boxShadow: '0 0 20px rgba(6, 182, 212, 0.15)',
             backdropFilter: 'blur(12px)',
           }}
         >

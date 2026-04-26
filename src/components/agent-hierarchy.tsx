@@ -109,48 +109,52 @@ type ViewMode = 'radial' | 'grid'
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const ROLE_CONFIG: Record<string, { color: string; colorRgb: string; icon: LucideIcon; label: string }> = {
-  '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f': { color: '#f59e0b', colorRgb: '245,158,11', icon: Brain, label: 'Strategy' },
-  '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': { color: '#10b981', colorRgb: '16,185,129', icon: Target, label: 'Tactics' },
-  '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': { color: '#f43f5e', colorRgb: '244,63,94', icon: Shield, label: 'Control' },
-  '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': { color: '#06b6d4', colorRgb: '6,182,212', icon: Zap, label: 'Execution' },
-  '\u041f\u0430\u043c\u044f\u0442\u044c': { color: '#8b5cf6', colorRgb: '139,92,246', icon: Database, label: 'Memory' },
-  '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': { color: '#14b8a6', colorRgb: '20,184,166', icon: Activity, label: 'Monitoring' },
-  '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f': { color: '#ec4899', colorRgb: '236,72,153', icon: Network, label: 'Communication' },
-  '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435': { color: '#f97316', colorRgb: '249,115,22', icon: Sparkles, label: 'Learning' },
+  '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f': { color: '#67E8F9', colorRgb: '103,232,249', icon: Brain, label: 'Strategy' },
+  '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': { color: '#22D3EE', colorRgb: '34,211,238', icon: Target, label: 'Tactics' },
+  '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': { color: '#06B6D4', colorRgb: '6,182,212', icon: Shield, label: 'Control' },
+  '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': { color: '#06B6D4', colorRgb: '6,182,212', icon: Zap, label: 'Execution' },
+  '\u041f\u0430\u043c\u044f\u0442\u044c': { color: '#0891B2', colorRgb: '8,145,178', icon: Database, label: 'Memory' },
+  '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': { color: '#0E7490', colorRgb: '14,116,144', icon: Activity, label: 'Monitoring' },
+  '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f': { color: '#155E75', colorRgb: '21,94,117', icon: Network, label: 'Communication' },
+  '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435': { color: '#164E63', colorRgb: '22,78,99', icon: Sparkles, label: 'Learning' },
 }
 
 const ROLE_ORDER = ['\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f', '\u0422\u0430\u043a\u0442\u0438\u043a\u0430', '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c', '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435', '\u041f\u0430\u043c\u044f\u0442\u044c', '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433', '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f', '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435']
 
 const STATUS_COLORS: Record<string, string> = {
-  active: '#22c55e',
-  idle: '#eab308',
-  error: '#ef4444',
-  offline: '#6b7280',
-  paused: '#f97316',
-  standby: '#6366f1',
+  active: '#06B6D4',
+  idle: '#6B7280',
+  error: '#FFC107',
+  offline: '#4B5563',
+  paused: '#9CA3AF',
+  standby: '#6B7280',
 }
 
 const FORMULA_COLORS: Record<string, string> = {
-  CoT: '#B0B0B0',
-  ToT: '#f59e0b',
-  GoT: '#eab308',
-  AoT: '#a78bfa',
-  SoT: '#fb923c',
-  CoVe: '#8b5cf6',
-  ReWOO: '#10b981',
-  Reflexion: '#f43f5e',
-  ReAct: '#06b6d4',
-  MoA: '#ec4899',
-  SelfRefine: '#38bdf8',
-  LATS: '#4ade80',
-  SelfConsistency: '#c084fc',
-  PoT: '#f472b6',
-  DSPy: '#22d3ee',
-  PromptChaining: '#34d399',
-  LeastToMost: '#a3e635',
-  StepBack: '#e879f9',
-  PlanAndSolve: '#fbbf24',
-  MetaCoT: '#818cf8',
+  // Foundational (#999999)
+  CoT: '#999999',
+  ToT: '#999999',
+  GoT: '#999999',
+  AoT: '#999999',
+  SoT: '#999999',
+  // Verification (#888888)
+  CoVe: '#888888',
+  Reflexion: '#888888',
+  SelfConsistency: '#888888',
+  SelfRefine: '#888888',
+  // Planning (#777777)
+  ReWOO: '#777777',
+  ReAct: '#777777',
+  PromptChaining: '#777777',
+  PlanAndSolve: '#777777',
+  StepBack: '#777777',
+  LeastToMost: '#777777',
+  // Advanced (#666666)
+  MoA: '#666666',
+  LATS: '#666666',
+  PoT: '#666666',
+  DSPy: '#666666',
+  MetaCoT: '#666666',
 }
 
 const EDGE_CONFIG: Record<EdgeType, { strokeDasharray: string | undefined; label: string; icon: LucideIcon }> = {
@@ -291,7 +295,7 @@ function BackgroundParticles() {
             else ctx.lineTo(px, py)
           }
           ctx.closePath()
-          ctx.strokeStyle = `rgba(74, 144, 226, ${currentOpacity * (1 - ri * 0.12)})`
+          ctx.strokeStyle = `rgba(6, 182, 212, ${currentOpacity * (1 - ri * 0.12)})`
           ctx.lineWidth = 0.6
           ctx.stroke()
         }
@@ -470,10 +474,10 @@ function ConnectionLine({
     : type === 'supervise' ? 0.12
     : type === 'broadcast' ? 0.15
     : 0.15
-  const syncColor = '#64748b'
-  const delegateColor = '#8b5cf6'
-  const superviseColor = '#14b8a6'
-  const broadcastColor = '#f97316'
+  const syncColor = '#64748B'
+  const delegateColor = '#0891B2'
+  const superviseColor = '#475569'
+  const broadcastColor = '#0E7490'
 
   const strokeColor = type === 'sync' ? syncColor
     : type === 'delegate' ? delegateColor
@@ -1267,9 +1271,9 @@ function LegendPanel() {
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(74,144,226,0.08), transparent, rgba(107,182,255,0.08))',
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.08), transparent, rgba(6,182,212,0.08))',
           border: '1px solid transparent',
-          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(74,144,226,0.25), transparent, rgba(107,182,255,0.25))',
+          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(6,182,212,0.25), transparent, rgba(6,182,212,0.25))',
           backgroundOrigin: 'border-box',
           backgroundClip: 'padding-box, border-box',
           borderRadius: '12px',
@@ -1280,27 +1284,27 @@ function LegendPanel() {
       {/* Edge types */}
       <div className="space-y-1.5 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px solid #f59e0b' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px solid #67E8F9' }} />
           <span className="text-[9px] text-[#B0B0B0]">Command (solid)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #64748b' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #64748B' }} />
           <span className="text-[9px] text-[#B0B0B0]">Sync (dotted)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #06b6d4' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #06B6D4' }} />
           <span className="text-[9px] text-[#B0B0B0]">Twin (dashed)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #8b5cf6' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #0891B2' }} />
           <span className="text-[9px] text-[#B0B0B0]">Delegate (dash-dot)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #14b8a6' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dotted #475569' }} />
           <span className="text-[9px] text-[#B0B0B0]">Supervise (fine dot)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #f97316' }} />
+          <div className="w-6 h-0.5" style={{ borderTop: '2px dashed #0E7490' }} />
           <span className="text-[9px] text-[#B0B0B0]">Broadcast (long dash)</span>
         </div>
       </div>
@@ -1347,7 +1351,7 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          background: 'linear-gradient(135deg, rgba(74,144,226,0.04), rgba(107,182,255,0.04), rgba(74,144,226,0.04))',
+          background: 'linear-gradient(135deg, rgba(6,182,212,0.04), rgba(6,182,212,0.04), rgba(6,182,212,0.04))',
           backgroundSize: '200% 200%',
           animation: 'gradientShift 8s ease infinite',
         }}
@@ -1356,7 +1360,7 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
         style={{
-          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(74,144,226,0.25), transparent, rgba(107,182,255,0.25))',
+          backgroundImage: 'linear-gradient(rgba(26,26,26,0.92), rgba(26,26,26,0.92)), linear-gradient(135deg, rgba(6,182,212,0.25), transparent, rgba(6,182,212,0.25))',
           backgroundOrigin: 'border-box',
           backgroundClip: 'padding-box, border-box',
           border: '1px solid transparent',
@@ -1370,11 +1374,11 @@ function StatsDashboard({ stats }: { stats: { total: number; active: number; idl
           <p className="text-[9px] text-[#B0B0B0]">Total</p>
         </div>
         <div>
-          <span className="text-green-400 font-bold text-lg">{stats.active}</span>
+          <span className="text-cyan-400 font-bold text-lg">{stats.active}</span>
           <p className="text-[9px] text-[#B0B0B0]">Active</p>
         </div>
         <div>
-          <span className="text-yellow-400 font-bold text-lg">{stats.idle}</span>
+          <span className="text-gray-400 font-bold text-lg">{stats.idle}</span>
           <p className="text-[9px] text-[#B0B0B0]">Idle</p>
         </div>
         <div>
@@ -1473,7 +1477,7 @@ function MiniMap({
               y1={from.y * scale}
               x2={to.x * scale}
               y2={to.y * scale}
-              stroke={conn.type === 'sync' ? '#64748b' : conn.type === 'twin' ? '#06b6d4' : '#f59e0b'}
+              stroke={conn.type === 'sync' ? '#64748B' : conn.type === 'twin' ? '#06B6D4' : conn.type === 'delegate' ? '#0891B2' : conn.type === 'supervise' ? '#475569' : conn.type === 'broadcast' ? '#0E7490' : '#67E8F9'}
               strokeWidth={0.15}
               strokeOpacity={0.15}
               strokeDasharray={conn.type === 'sync' ? '1 2' : conn.type === 'twin' ? '2 1' : undefined}
@@ -1505,7 +1509,7 @@ function MiniMap({
           width={vpW + 2}
           height={vpH + 2}
           fill="none"
-          stroke="#4A90E2"
+          stroke="#06B6D4"
           strokeWidth={1}
           strokeOpacity={0.1}
           rx={2}
@@ -1518,7 +1522,7 @@ function MiniMap({
           width={vpW}
           height={vpH}
           fill="none"
-          stroke="#4A90E2"
+          stroke="#06B6D4"
           strokeWidth={0.3}
           strokeOpacity={0.35}
           rx={1}
@@ -1665,7 +1669,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
           <Button
             onClick={handleSubmit}
             disabled={submitting || !name.trim() || !role.trim()}
-            className="w-full bg-[#4A90E2] hover:bg-[#3A7BD5] text-white text-xs gap-2"
+            className="w-full bg-[#06B6D4] hover:bg-[#0891B2] text-white text-xs gap-2"
           >
             <Plus className="w-3.5 h-3.5" />
             {submitting ? 'Creating...' : 'Create Agent'}
@@ -1708,7 +1712,7 @@ function KeyboardShortcutsDialog({
       >
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
-            <Keyboard className="h-4 w-4 text-[#4A90E2]" />
+            <Keyboard className="h-4 w-4 text-[#06B6D4]" />
             Keyboard Shortcuts
           </DialogTitle>
         </DialogHeader>
@@ -1729,9 +1733,9 @@ function KeyboardShortcutsDialog({
                     <kbd
                       className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
                       style={{
-                        background: 'rgba(74, 144, 226, 0.1)',
-                        border: '1px solid rgba(74, 144, 226, 0.25)',
-                        color: '#4A90E2',
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        border: '1px solid rgba(6, 182, 212, 0.25)',
+                        color: '#06B6D4',
                       }}
                     >
                       {key}
@@ -1746,9 +1750,9 @@ function KeyboardShortcutsDialog({
                     <kbd
                       className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold min-w-[24px] text-center"
                       style={{
-                        background: 'rgba(74, 144, 226, 0.1)',
-                        border: '1px solid rgba(74, 144, 226, 0.25)',
-                        color: '#4A90E2',
+                        background: 'rgba(6, 182, 212, 0.1)',
+                        border: '1px solid rgba(6, 182, 212, 0.25)',
+                        color: '#06B6D4',
                       }}
                     >
                       {key}
@@ -2338,12 +2342,12 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         >
           <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
             style={{
-              background: 'rgba(74, 144, 226, 0.1)',
-              border: '1px solid rgba(74, 144, 226, 0.3)',
-              boxShadow: '0 0 40px rgba(74, 144, 226, 0.15)',
+              background: 'rgba(6, 182, 212, 0.1)',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              boxShadow: '0 0 40px rgba(6, 182, 212, 0.15)',
             }}
           >
-            <Database className="w-8 h-8 text-[#4A90E2]" />
+            <Database className="w-8 h-8 text-[#06B6D4]" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">No Agent Data</h2>
           <p className="text-[#B0B0B0] text-sm mb-6 max-w-xs">
@@ -2351,7 +2355,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </p>
           <Button
             onClick={handleSeed}
-            className="bg-[#4A90E2] hover:bg-[#3A7BD5] text-white gap-2"
+            className="bg-[#06B6D4] hover:bg-[#0891B2] text-white gap-2"
           >
             <Sparkles className="w-4 h-4" />
             Seed Data
@@ -2379,7 +2383,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         <defs>
           <filter id="orbGlow">
             <feGaussianBlur stdDeviation="6" result="blur" />
-            <feFlood floodColor="#4A90E2" floodOpacity="0.15" result="color" />
+            <feFlood floodColor="#06B6D4" floodOpacity="0.15" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
@@ -2395,13 +2399,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </filter>
           {/* Arrow markers */}
           <marker id="arrowCommand" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <polygon points="0 0, 8 3, 0 6" fill="#f59e0b" opacity="0.6" />
+            <polygon points="0 0, 8 3, 0 6" fill="#67E8F9" opacity="0.6" />
           </marker>
           <marker id="arrowSync" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill="#64748b" opacity="0.5" />
+            <polygon points="0 0, 6 3, 0 6" fill="#64748B" opacity="0.5" />
           </marker>
           <marker id="diamondTwin" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-            <polygon points="4 0, 8 4, 4 8, 0 4" fill="#06b6d4" opacity="0.6" />
+            <polygon points="4 0, 8 4, 4 8, 0 4" fill="#06B6D4" opacity="0.6" />
           </marker>
         </defs>
       </svg>
@@ -2414,14 +2418,14 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             background: 'rgba(26, 26, 26, 0.92)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(51,51,51,0.5)',
-            boxShadow: '0 4px 24px rgba(74, 144, 226, 0.06)',
+            boxShadow: '0 4px 24px rgba(6, 182, 212, 0.06)',
           }}
         >
           {/* Bottom border gradient (road primary blue->transparent) */}
           <div
             className="absolute bottom-0 left-2 right-2 h-px rounded-full"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.3), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent)',
             }}
           />
           {/* Logo + Back Button */}
@@ -2431,18 +2435,18 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 onClick={onBack}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105"
                 style={{
-                  background: 'rgba(74, 144, 226, 0.15)',
-                  border: '1px solid rgba(74, 144, 226, 0.4)',
-                  color: '#4A90E2',
-                  boxShadow: '0 0 12px rgba(74, 144, 226, 0.08)',
+                  background: 'rgba(6, 182, 212, 0.15)',
+                  border: '1px solid rgba(6, 182, 212, 0.4)',
+                  color: '#06B6D4',
+                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.08)',
                 }}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Dashboard</span>
               </button>
             )}
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#4A90E2]/20 border border-[#4A90E2]/30">
-              <Brain className="w-4 h-4 text-[#4A90E2]" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#06B6D4]/20 border border-[#06B6D4]/30">
+              <Brain className="w-4 h-4 text-[#06B6D4]" />
             </div>
             <div>
               <span className="text-white font-bold text-sm tracking-wide">P-MAS</span>
@@ -2924,7 +2928,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              className="w-12 h-12 rounded-full border-2 border-[#4A90E2] border-t-transparent mx-auto mb-3"
+              className="w-12 h-12 rounded-full border-2 border-[#06B6D4] border-t-transparent mx-auto mb-3"
             />
             <p className="text-[#B0B0B0] text-sm">Loading hierarchy...</p>
           </motion.div>

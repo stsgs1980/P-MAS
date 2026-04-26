@@ -46,33 +46,33 @@
 :root {
   --radius: 0.625rem;
 
-  /* Terrain Design System - Background Colors */
+  /* Monochrome Cyan Design System - Background Colors */
   --color-bg-primary: #000000;
   --color-bg-terrain-base: #1A1A1A;
   --color-bg-terrain-highlight: #2D2D2D;
   --color-bg-terrain-shadow: #0D0D0D;
 
-  /* Terrain Design System - Route Colors */
-  --color-road-primary: #4A90E2;
-  --color-road-secondary: #6BB6FF;
+  /* Monochrome Cyan Design System - Accent Colors */
+  --color-road-primary: #06B6D4;
+  --color-road-secondary: #22D3EE;
   --color-route-highlight: #FFC107;
 
-  /* Terrain Design System - Text Colors */
+  /* Monochrome Cyan Design System - Text Colors */
   --color-text-primary: #FFFFFF;
   --color-text-secondary: #B0B0B0;
-  --color-text-accent: #4A90E2;
+  --color-text-accent: #06B6D4;
 
-  /* Terrain Design System - Grid Colors */
+  /* Monochrome Cyan Design System - Grid Colors */
   --color-grid-line: #333333;
 
-  /* Terrain Design System - Spacing */
+  /* Monochrome Cyan Design System - Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
-  /* Terrain Design System - Typography */
+  /* Monochrome Cyan Design System - Typography */
   --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-size-sm: 12px;
   --font-size-md: 14px;
@@ -81,14 +81,14 @@
   --font-weight-medium: 500;
   --line-height: 1.5;
 
-  /* Shadcn overrides */
+  /* Shadcn overrides - Monochrome Cyan */
   --background: #000000;
   --foreground: #FFFFFF;
   --card: #1A1A1A;
   --card-foreground: #FFFFFF;
   --popover: #1A1A1A;
   --popover-foreground: #FFFFFF;
-  --primary: #4A90E2;
+  --primary: #06B6D4;
   --primary-foreground: #FFFFFF;
   --secondary: #2D2D2D;
   --secondary-foreground: #FFFFFF;
@@ -96,23 +96,23 @@
   --muted-foreground: #B0B0B0;
   --accent: #2D2D2D;
   --accent-foreground: #FFFFFF;
-  --destructive: #ef4444;
+  --destructive: #FFC107;
   --border: rgba(51, 51, 51, 0.5);
   --input: rgba(51, 51, 51, 0.5);
-  --ring: #4A90E2;
-  --chart-1: #4A90E2;
-  --chart-2: #6BB6FF;
+  --ring: #06B6D4;
+  --chart-1: #06B6D4;
+  --chart-2: #22D3EE;
   --chart-3: #FFC107;
-  --chart-4: #10b981;
-  --chart-5: #f43f5e;
+  --chart-4: #6B7280;
+  --chart-5: #4B5563;
   --sidebar: #1A1A1A;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #4A90E2;
+  --sidebar-primary: #06B6D4;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #2D2D2D;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(51, 51, 51, 0.5);
-  --sidebar-ring: #4A90E2;
+  --sidebar-ring: #06B6D4;
 }
 
 .dark {
@@ -122,7 +122,7 @@
   --card-foreground: #FFFFFF;
   --popover: #1A1A1A;
   --popover-foreground: #FFFFFF;
-  --primary: #4A90E2;
+  --primary: #06B6D4;
   --primary-foreground: #FFFFFF;
   --secondary: #2D2D2D;
   --secondary-foreground: #FFFFFF;
@@ -130,23 +130,23 @@
   --muted-foreground: #B0B0B0;
   --accent: #2D2D2D;
   --accent-foreground: #FFFFFF;
-  --destructive: #ef4444;
+  --destructive: #FFC107;
   --border: rgba(51, 51, 51, 0.5);
   --input: rgba(51, 51, 51, 0.5);
-  --ring: #4A90E2;
-  --chart-1: #4A90E2;
-  --chart-2: #6BB6FF;
+  --ring: #06B6D4;
+  --chart-1: #06B6D4;
+  --chart-2: #22D3EE;
   --chart-3: #FFC107;
-  --chart-4: #10b981;
-  --chart-5: #f43f5e;
+  --chart-4: #6B7280;
+  --chart-5: #4B5563;
   --sidebar: #1A1A1A;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #4A90E2;
+  --sidebar-primary: #06B6D4;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #2D2D2D;
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: rgba(51, 51, 51, 0.5);
-  --sidebar-ring: #4A90E2;
+  --sidebar-ring: #06B6D4;
 }
 
 @layer base {
@@ -186,7 +186,7 @@
   50% { stroke-opacity: 0.12; }
 }
 
-/* Custom Scrollbar for Terrain Theme */
+/* Custom Scrollbar for Monochrome Cyan Theme */
 .terrain-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -194,9 +194,9 @@
   background: var(--color-bg-terrain-shadow);
 }
 .terrain-scroll::-webkit-scrollbar-thumb {
-  background: rgba(74, 144, 226, 0.3);
+  background: rgba(6, 182, 212, 0.3);
   border-radius: 2px;
 }
 .terrain-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 144, 226, 0.5);
+  background: rgba(6, 182, 212, 0.5);
 }
