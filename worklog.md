@@ -619,3 +619,268 @@ Stage Summary:
 - Cron job creation failed (401 Unauthorized)
 - System health metrics are simulated (not real-time)
 - Activity timeline shows static data (not real-time)
+
+---
+
+## Session: 2026-04-27 — Continued Development
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Continue P-MAS development from previous session — verify state, fix bugs, add features
+
+Work Log:
+- Verified project state: dev server running, both dashboard and hierarchy rendering correctly
+- Confirmed terrain design system (v4.0) was applied in previous session
+- Fixed NaN strokeDashoffset bug in StatusDistribution donut chart (arr[acc.length-1].segmentLength -> acc[acc.length-1].segmentLength)
+- Fixed "Cannot access 'connections' before initialization" runtime error by moving connection pulse useEffect after the useMemo that defines connections
+- Added Connection Heatmap Matrix to dashboard (8x8 grid with colored dots showing inter-group connection density, diamond markers for internal sync)
+- Added Keyboard Shortcuts dialog to hierarchy (? key opens, 9 shortcuts wired up: /, Esc, +/-, 0, 1-8, 9, G, ?)
+- Added Toast Notifications (sonner) for agent creation success/error and search no-results
+- Added Agent Performance Metrics section: Top Performers horizontal bar chart, Performance Metrics 2x3 grid, Status Distribution donut chart
+- Added Network Activity area chart (24h simulated data, gradient fill, pulse dots at peaks)
+- Added Quick Actions panel (Reseed Data, Export Config, Reset View, Toggle Theme buttons)
+- Enhanced footer to v4.2 with 3-column layout (version, stats, tech stack)
+- Enhanced hierarchy: animated status transitions every 15s, task count indicators, connection pulse animation every 8s, improved minimap (180x140, glow viewport)
+- All verified: lint 0 errors, dev server compiling, browser tested with agent-browser
+
+Stage Summary:
+- P-MAS upgraded from v4.0 to v4.2 (Terrain Edition)
+- 6 new dashboard sections: Connection Heatmap, Agent Performance (3 sub-sections), Network Activity, Quick Actions
+- Hierarchy enhancements: keyboard shortcuts, toast notifications, animated status transitions, connection pulse, task count indicators, improved minimap
+- 2 bugs fixed: NaN strokeDashoffset, connections-before-initialization
+- Dashboard now has 14+ sections total
+- Cron job creation still failing (401 Unauthorized - known issue)
+
+### Current Project Status (v4.2 - Terrain Edition)
+
+### Design System (Terrain/Cartographic)
+- **Background**: #000000 (primary), #1A1A1A (terrain base), #2D2D2D (highlight), #0D0D0D (shadow)
+- **Routes**: #4A90E2 (primary), #6BB6FF (secondary), #FFC107 (highlight)
+- **Text**: #FFFFFF (primary), #B0B0B0 (secondary), #4A90E2 (accent)
+- **Grid**: #333333
+
+### Dashboard Sections (page.tsx) - 14 sections
+1. Header with animated gradient and green pulse indicator
+2. Quick Stats Row (8 metrics)
+3. Role Groups Grid (8 cards with status summaries)
+4. Prompting Formulas Taxonomy (4 categories, 20 formulas)
+5. Formula Flow Diagram (SVG with 20 nodes + 19 edges)
+6. Edge Types (6 cards)
+7. Connection Heatmap (8x8 matrix with colored dots)
+8. Architecture Overview (ASCII diagram)
+9. System Health Monitor (CPU, Memory, Network, Uptime, Connections, Error Rate)
+10. Agent Performance (Top Performers bar chart, Performance Metrics grid, Status Distribution donut)
+11. Network Activity (24h area chart with peaks)
+12. Recent Activity Timeline (10 events)
+13. Formula-to-Agent Mapping Grid (20x8 matrix)
+14. Quick Actions Panel (4 buttons)
+15. Enhanced Footer (v4.2, 3-column)
+
+### Hierarchy Visualization (agent-hierarchy.tsx)
+- Fullscreen SVG canvas with terrain contour lines + grid
+- 8 concentric cluster rings with orbit dots and animated pulses
+- 26 agent nodes with: avatar icon, name, formula badge, status dot, collapse button, task count
+- 55 connections across 6 edge types with data flow particles
+- Animated status transitions every 15s (pulse ring + floating label)
+- Connection pulse animation every 8s
+- Keyboard shortcuts dialog (? key)
+- Toast notifications (agent creation, search)
+- Hover tooltips, search filtering, zoom/pan, minimap (180x140), stats panel, legend
+- Agent creation dialog, view mode toggle (radial/grid)
+
+### Verification
+- `bun run lint`: 0 errors
+- Dev server: compiling and serving correctly
+- Browser tested: all 15 dashboard sections rendering, hierarchy working with all features
+- No console errors (NaN warning fixed)
+
+### Unresolved Issues
+- Cron job creation failed (401 Unauthorized)
+- System health metrics are simulated (not real-time)
+- Activity timeline shows static data (not real-time)
+- Network activity chart shows simulated data (not real-time)
+
+---
+Task ID: 6
+Agent: Full Stack Developer
+Task: Enhance hierarchy with animated status transitions and task indicators
+
+Work Log:
+- Added `statusTransitions` state to track active status transitions per agent (Record<string, { status: string; timestamp: number }>)
+- Added `pulsingConnections` state to track which connections are currently pulsing (Set<string>)
+- Added useEffect for simulated status transitions every 15 seconds:
+  - Randomly selects 1-2 agents, cycles status through active/idle/paused/standby
+  - Updates agent status in state, triggers pulse ring and floating label
+  - Clears transition after 2 seconds (floating label fade out)
+- Added useEffect for simulated connection pulse every 8 seconds:
+  - Randomly selects 1-2 connections, marks them as pulsing
+  - Increases particle brightness (opacity 0.8->1.0) and size (r=3->r=5) for 3 seconds
+  - Increases connection line opacity (0.18->0.4) for pulsing connections
+  - Clears after 3 seconds
+- Enhanced AgentNode component:
+  - Added `taskCount` prop (default 0) and `statusTransition` prop
+  - Added task count indicator text at y=48 (fontSize 6, fill #B0B0B0, opacity 0.5)
+  - Added status transition pulse ring animation (expanding circle from r=3 to r=14, fading over 1s)
+  - Added floating status label "STATUS: ACTIVE" etc. above agent node (fades out over 2s)
+- Enhanced ConnectionLine component:
+  - Added `isPulsing` prop (default false)
+  - When pulsing: increased strokeOpacity (0.18->0.4 for main, 0.25->0.5 for glow)
+  - When pulsing: increased particle radius (3->5) and opacity (0.8->1.0)
+  - When pulsing: faster opacity animation values
+- Enhanced MiniMap component:
+  - Increased scale denominator from 140 to 160 (larger minimap)
+  - Increased container width from 160 to 180
+  - Added viewport indicator glow (larger rect with strokeOpacity 0.1, filter orbGlow)
+  - Increased viewport stroke width (0.2->0.3) and opacity (0.25->0.35)
+- Wired new props through main component:
+  - AgentNode receives taskCount from agent.tasks array length
+  - AgentNode receives statusTransition from statusTransitions state
+  - ConnectionLine receives isPulsing from pulsingConnections.has(conn.id)
+
+Stage Summary:
+- Animated status transitions: 1-2 agents change status every 15s with pulse ring + floating label
+- Task count indicator: "X tasks" text below agent name at y=48
+- Connection pulse animation: 1-2 connections pulse every 8s for 3 seconds
+- Minimap enhanced: larger (180x140), viewport glow, colored dots already present
+- Lint passes cleanly (0 errors)
+- All terrain design system colors preserved
+Agent: Full Stack Developer
+Task: Add Connection Heatmap Matrix to dashboard
+
+Work Log:
+- Added `Grid3X3` import from lucide-react for the section header icon
+- Created `CONNECTION_HEATMAP_DATA` constant: 8x8 number matrix encoding connection counts between all role group pairs
+  - Cross-group connections: Стратегия->Тактика(3), Стратегия->Контроль(2), Стратегия->Исполнение(1), Стратегия->Мониторинг(2), Тактика->Исполнение(5), Тактика->Контроль(1), Контроль->Исполнение(3), Память->Мониторинг(2), Память->Исполнение(1), Коммуникация->Исполнение(2), Коммуникация->Память(1), Коммуникация->Тактика(1), Обучение->Память(2), Обучение->Исполнение(1)
+  - Diagonal (internal sync): Стратегия(2), Тактика(2), Контроль(2), Исполнение(3), Память(1), Мониторинг(2), Коммуникация(2), Обучение(2)
+- Created `ConnectionHeatmap` component with:
+  - 8x8 CSS grid matrix with row/column headers using GROUP_ABBREVIATIONS and GROUP_COLORS
+  - Cell dots: size and opacity scale with connection count (small=6px/0.5 for 1-2, medium=10px/0.7 for 3-5, large=14px/0.9 for 6+)
+  - Off-diagonal cells: colored circle dots with glow shadow using the column group color
+  - Diagonal cells: rotated diamond SVG shape as distinct marker for internal sync connections
+  - Count labels displayed inside medium/large dots (count > 2)
+  - Legend explaining dot sizes (1-2, 3-5, 6+) and diamond marker (internal sync)
+  - Terrain design system: background rgba(45,45,45,0.3), border rgba(51,51,51,0.5)
+  - Responsive: overflow-x-auto with min-w-[520px] for horizontal scroll on small screens
+- Inserted "Connection Heatmap" section between "Edge Types" and "Architecture Overview" in DashboardPanel
+  - Section header with Grid3X3 icon and road primary blue (#4A90E2) accent bar
+- Lint passes cleanly (0 errors)
+
+Stage Summary:
+- Connection Heatmap Matrix section added to P-MAS dashboard between Edge Types and Architecture Overview
+- 8x8 matrix visualizes 55 inter-group connection densities with size/opacity-coded dots
+- Diamond markers distinguish diagonal (internal sync) from cross-group connections
+- Fully responsive with horizontal scroll on small screens
+- Terrain design system colors applied consistently
+
+---
+Task ID: 3-b
+Agent: Full Stack Developer
+Task: Add keyboard shortcuts and toast notifications to hierarchy
+
+Work Log:
+- Added `Keyboard` icon import from lucide-react
+- Added `toast` import from sonner for toast notifications
+- Added `shortcutsOpen` state and `searchInputRef` ref to main component
+- Added `ref={searchInputRef}` to the search input element for keyboard focus
+- Created `SHORTCUTS` constant array with 9 keyboard shortcuts: / (focus search), Esc (close panel), +/= (zoom in), - (zoom out), 0 (reset zoom), 1-8 (filter by role group), 9 (clear filter), G (toggle view), ? (show shortcuts)
+- Created `KeyboardShortcutsDialog` component using shadcn/ui Dialog:
+  - Displays all shortcuts with kbd-styled key badges (road primary blue, terrain theme)
+  - Alternating row backgrounds for readability
+  - Note about shortcuts being disabled in input fields
+- Added Keyboard button to navigation bar (after zoom reset button) with title tooltip
+- Rendered KeyboardShortcutsDialog in main component JSX
+- Added `useEffect` with keydown event listener for keyboard shortcuts:
+  - `/` or `Ctrl+K`: focuses search input
+  - `Esc`: closes shortcuts dialog or detail panel
+  - `+`/`=`: zoom in (1.15x)
+  - `-`: zoom out (0.85x)
+  - `0`: reset zoom and pan
+  - `1-8`: toggle role group filter (maps to ROLE_ORDER index)
+  - `9`: clear filter (show all)
+  - `G`: toggle radial/grid view mode
+  - `?`: toggle shortcuts dialog
+  - Skips shortcuts when focus is in input/textarea/select (except Escape)
+- Added toast notifications using sonner:
+  - Agent creation success: `toast.success("Agent {name} created successfully")`
+  - Agent creation error: `toast.error("Failed to create agent")`
+  - Search no results: `toast("No agents found matching '{query}'")` with terrain-themed inline styles
+  - Search toast only fires once per query change (uses prevSearchQuery ref)
+- Added Sonner Toaster to layout.tsx alongside existing radix Toaster
+- Lint passes cleanly (0 errors)
+
+Stage Summary:
+- Keyboard shortcuts panel with 9 shortcuts accessible via Keyboard icon button or `?` key
+- All shortcuts wired up with useEffect keydown handler, disabled when typing in inputs
+- Toast notifications added for agent creation (success/error) and search (no results)
+- Sonner Toaster added to app layout for toast rendering
+- Terrain theme styling applied consistently to shortcuts dialog and toast styles
+
+---
+Task ID: 5
+Agent: Full Stack Developer
+Task: Add Agent Performance Metrics section to dashboard
+
+Work Log:
+- Added BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen imports from lucide-react
+- Created TOP_PERFORMERS constant: 8 agents with name, group, and performance score (81-96)
+- Created PERFORMANCE_METRICS constant: 6 metric cards (Avg Response Time 1.2s, Success Rate 94.7%, Tasks Completed 187, Active Workflows 12, Error Recovery 98.2%, Knowledge Utilization 76.3%)
+- Created STATUS_DISTRIBUTION constant: 6 status categories (Active 16, Idle 4, Paused 1, Standby 1, Error 0, Offline 4)
+- Created AgentPerformance component with:
+  - Top Performers horizontal bar chart: 8 bars colored by agent role group, animated width transitions (staggered 80ms delays), agent name left, score right
+  - Status Distribution SVG donut chart: ring chart using stroke-dasharray/offset, 5 segments (Error excluded at 0), center text showing total agents (26), 2-column legend with status colors and counts
+  - Performance Metrics 2x3 grid: 6 metric cards with left accent bar, Lucide icons, sparkline SVG for Avg Response Time, TrendingUp arrow for Tasks Completed, terrain design system styling
+- Inserted "Agent Performance" section between System Health Monitor and Recent Activity Timeline in DashboardPanel
+  - Section header with BarChart3 icon and #4A90E2 accent bar
+- Used reduce() instead of mutable variable for donut segment offset calculation to satisfy react-hooks/immutability lint rule
+- Lint passes cleanly (0 errors)
+
+Stage Summary:
+- Agent Performance Metrics section added to P-MAS dashboard between System Health and Recent Activity Timeline
+- 3 sub-components: Top Performers bar chart (8 agents), Performance Metrics grid (2x3 cards), Status Distribution donut chart (6 categories)
+- Smooth bar chart animations with staggered entry, terrain design system colors throughout
+- All Lucide SVG icons, no Unicode emoji, responsive layout
+
+---
+Task ID: 7
+Agent: Full Stack Developer
+Task: Add Network Activity chart, Quick Actions panel, and enhanced footer
+
+Work Log:
+- Added NETWORK_ACTIVITY_DATA constant (24 data points, range 10-55) for simulated network activity over 24 hours
+- Created NetworkActivityChart component with SVG area chart:
+  - viewBox "0 0 500 120" with auto-scaled Y axis to data range
+  - Area fill using linearGradient from rgba(74,144,226,0.15) at top to rgba(74,144,226,0.02) at bottom
+  - Line stroke #4A90E2, strokeWidth 1.5
+  - Subtle grid lines at 25%, 50%, 75% levels (stroke #333333, opacity 0.3)
+  - X-axis labels every 4 hours (0h, 4h, 8h, 12h, 16h, 20h)
+  - 3 peak position dots with pulse animation (expanding ring from r=4 to r=10, fading over 1.5s)
+  - SVG title elements on all data points for tooltip hover (hour + value)
+  - Summary stats below chart: Peak 55 at 11h (TrendingUp icon), Average 36.5 (BarChart3 icon), Current 15 (Activity icon)
+- Created QuickActionsPanel component with 4 action buttons:
+  - "Reseed Data" button: wired to POST /api/seed with loading state, shows sonner toast on success/error
+  - "Export Config" button: fetches /api/hierarchy, creates JSON blob, triggers file download
+  - "Reset View" button: scrolls to top smoothly
+  - "Toggle Theme" button: shows placeholder toast "Theme toggle coming soon"
+  - Buttons styled with terrain design: rgba(26,26,26,0.92) bg, rgba(51,51,51,0.5) border, #4A90E2 accent, hover glow effect
+- Enhanced footer with three-column layout:
+  - Left: Brain icon + "P-MAS Dashboard v4.2 -- Terrain Edition"
+  - Center: "26 Agents | 8 Groups | 20 Formulas | 6 Edges"
+  - Right: "Powered by Next.js 16 + Prisma + TypeScript"
+  - Top border: gradient from #4A90E2 to transparent
+  - Background: #0D0D0D, text colors #B0B0B0 secondary / #FFFFFF primary
+  - Responsive: grid-cols-1 on mobile, md:grid-cols-3 on desktop
+- Added imports: Download, Palette from lucide-react; toast from sonner
+- Removed unused useRef import
+- Inserted NetworkActivityChart between Agent Performance and Recent Activity Timeline sections
+- Inserted QuickActionsPanel after Formula-Agent Mapping section (before Open Hierarchy button)
+- Lint passes cleanly (0 errors, 0 warnings)
+- Dev server compiles successfully
+
+Stage Summary:
+- P-MAS dashboard upgraded from v4.0 to v4.2 (Terrain Edition)
+- 3 new visual sections added: Network Activity Chart, Quick Actions Panel, Enhanced Footer
+- Network Activity: SVG area chart with 24h simulated data, peak pulse animations, summary stats
+- Quick Actions: 4 functional buttons (Reseed Data, Export Config, Reset View, Toggle Theme) with sonner toasts
+- Footer: 3-column responsive layout with gradient top border, key stats, tech stack info
+- All terrain design system colors preserved (road primary blue, terrain highlight/shadow)

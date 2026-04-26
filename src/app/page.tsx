@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp } from 'lucide-react'
+import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, Palette } from 'lucide-react'
+import { toast } from 'sonner'
 
 const AgentHierarchy = dynamic(
   () => import('@/components/agent-hierarchy'),
@@ -137,6 +138,57 @@ const FORMULA_AGENT_MAP: { formula: string; groups: number[] }[] = [
   { formula: 'PlanAndSolve', groups: [6] },
   { formula: 'MetaCoT', groups: [7] },
 ]
+
+// ─── Connection Heatmap Data ────────────────────────────────────────────────────
+
+// 8x8 matrix: heatmap[row][col] = number of connections from row group to col group
+// 0 = no direct connection, diagonal = internal sync connections
+const CONNECTION_HEATMAP_DATA: number[][] = [
+  // Стр  Ткт  Кнт  Исп  Пмт  Мнц  Кмн  Обч
+  [  2,   3,   2,   1,   0,   2,   0,   0], // Стратегия
+  [  0,   2,   1,   5,   0,   0,   0,   0], // Тактика
+  [  0,   0,   2,   3,   0,   0,   0,   0], // Контроль
+  [  0,   0,   0,   3,   0,   0,   0,   0], // Исполнение
+  [  0,   0,   0,   1,   1,   2,   0,   0], // Память
+  [  0,   0,   0,   0,   0,   2,   0,   0], // Мониторинг
+  [  0,   1,   0,   2,   1,   0,   2,   0], // Коммуникация
+  [  0,   0,   0,   1,   2,   0,   0,   2], // Обучение
+]
+
+// ─── Agent Performance Data ────────────────────────────────────────────────────
+
+const TOP_PERFORMERS = [
+  { name: 'Arkhitektor', group: 'Стратегия', score: 96 },
+  { name: 'Koordinator', group: 'Тактика', score: 94 },
+  { name: 'Revizor', group: 'Контроль', score: 91 },
+  { name: 'Koder', group: 'Исполнение', score: 89 },
+  { name: 'RAG-Specialist', group: 'Память', score: 87 },
+  { name: 'Nablyudatel', group: 'Мониторинг', score: 85 },
+  { name: 'Shlyuz', group: 'Коммуникация', score: 83 },
+  { name: 'Trener', group: 'Обучение', score: 81 },
+]
+
+const PERFORMANCE_METRICS = [
+  { label: 'Avg Response Time', value: '1.2s', color: '#4A90E2', icon: Clock, sparkline: true },
+  { label: 'Success Rate', value: '94.7%', color: '#22c55e', icon: CheckCircle2 },
+  { label: 'Tasks Completed', value: '187', color: '#22c55e', icon: ListChecks, trendUp: true },
+  { label: 'Active Workflows', value: '12', color: '#4A90E2', icon: Workflow },
+  { label: 'Error Recovery', value: '98.2%', color: '#f59e0b', icon: RotateCcw },
+  { label: 'Knowledge Utilization', value: '76.3%', color: '#a855f7', icon: BookOpen },
+]
+
+const STATUS_DISTRIBUTION = [
+  { label: 'Active', count: 16, color: '#22c55e' },
+  { label: 'Idle', count: 4, color: '#eab308' },
+  { label: 'Paused', count: 1, color: '#f97316' },
+  { label: 'Standby', count: 1, color: '#6366f1' },
+  { label: 'Error', count: 0, color: '#ef4444' },
+  { label: 'Offline', count: 4, color: '#6b7280' },
+]
+
+// ─── Network Activity Data ──────────────────────────────────────────────────
+
+const NETWORK_ACTIVITY_DATA = [12, 18, 15, 22, 28, 35, 42, 38, 45, 52, 48, 55, 50, 47, 42, 38, 44, 50, 53, 48, 35, 28, 20, 15]
 
 // ─── System Health Monitor ─────────────────────────────────────────────────────
 
@@ -562,6 +614,660 @@ function FormulaFlowDiagram() {
   )
 }
 
+// ─── Connection Heatmap ────────────────────────────────────────────────────────
+
+function ConnectionHeatmap() {
+  const getDotSize = (count: number): number => {
+    if (count === 0) return 0
+    if (count <= 2) return 6
+    if (count <= 5) return 10
+    return 14
+  }
+
+  const getDotOpacity = (count: number): number => {
+    if (count === 0) return 0
+    if (count <= 2) return 0.5
+    if (count <= 5) return 0.7
+    return 0.9
+  }
+
+  return (
+    <div
+      className="rounded-xl p-4 sm:p-6 overflow-x-auto"
+      style={{
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
+      }}
+    >
+      <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
+        <Grid3X3 className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        Connection Heatmap
+      </h3>
+      <div className="min-w-[520px]">
+        {/* Column headers */}
+        <div className="grid gap-0" style={{ gridTemplateColumns: '64px repeat(8, 1fr)' }}>
+          <div />
+          {GROUP_ABBREVIATIONS.map((abbr, i) => (
+            <div key={abbr} className="text-center py-2">
+              <span className="text-[8px] font-bold" style={{ color: GROUP_COLORS[i] }}>{abbr}</span>
+            </div>
+          ))}
+        </div>
+        {/* Rows */}
+        {CONNECTION_HEATMAP_DATA.map((row, rowIdx) => (
+          <div
+            key={rowIdx}
+            className="grid gap-0 border-b border-white/[0.03]"
+            style={{ gridTemplateColumns: '64px repeat(8, 1fr)' }}
+          >
+            {/* Row header */}
+            <div className="flex items-center pr-2 py-2">
+              <span className="text-[8px] font-bold truncate" style={{ color: GROUP_COLORS[rowIdx] }}>
+                {GROUP_ABBREVIATIONS[rowIdx]}
+              </span>
+            </div>
+            {/* Cells */}
+            {row.map((count, colIdx) => {
+              const isDiagonal = rowIdx === colIdx
+              const dotSize = getDotSize(count)
+              const dotOpacity = getDotOpacity(count)
+              const cellColor = GROUP_COLORS[colIdx]
+
+              return (
+                <div key={colIdx} className="flex items-center justify-center py-2">
+                  {count > 0 && (
+                    <div className="relative flex items-center justify-center">
+                      {isDiagonal ? (
+                        // Diagonal: diamond shape for internal sync
+                        <svg width={dotSize + 4} height={dotSize + 4} viewBox={`0 0 ${dotSize + 4} ${dotSize + 4}`}>
+                          <rect
+                            x={(dotSize + 4) / 2 - dotSize / 2}
+                            y={(dotSize + 4) / 2 - dotSize / 2}
+                            width={dotSize}
+                            height={dotSize}
+                            rx={1}
+                            fill={cellColor}
+                            fillOpacity={dotOpacity}
+                            stroke={cellColor}
+                            strokeWidth={0.5}
+                            strokeOpacity={0.6}
+                            transform={`rotate(45 ${(dotSize + 4) / 2} ${(dotSize + 4) / 2})`}
+                          />
+                        </svg>
+                      ) : (
+                        // Off-diagonal: circle dot
+                        <span
+                          className="rounded-full"
+                          style={{
+                            width: dotSize,
+                            height: dotSize,
+                            background: cellColor,
+                            opacity: dotOpacity,
+                            boxShadow: `0 0 ${dotSize}px ${cellColor}44`,
+                          }}
+                        />
+                      )}
+                      {/* Count label inside larger dots */}
+                      {count > 2 && (
+                        <span
+                          className="absolute text-[6px] font-bold"
+                          style={{ color: '#FFFFFF' }}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-[8px] text-slate-500">Connection density:</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="rounded-full"
+            style={{ width: 6, height: 6, background: '#4A90E2', opacity: 0.5 }}
+          />
+          <span className="text-[8px] text-slate-500">1-2</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="rounded-full"
+            style={{ width: 10, height: 10, background: '#4A90E2', opacity: 0.7 }}
+          />
+          <span className="text-[8px] text-slate-500">3-5</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="rounded-full"
+            style={{ width: 14, height: 14, background: '#4A90E2', opacity: 0.9 }}
+          />
+          <span className="text-[8px] text-slate-500">6+</span>
+        </div>
+        <div className="flex items-center gap-1.5 ml-2">
+          <svg width="10" height="10" viewBox="0 0 10 10">
+            <rect
+              x="2"
+              y="2"
+              width="6"
+              height="6"
+              rx="1"
+              fill="#4A90E2"
+              fillOpacity="0.7"
+              stroke="#4A90E2"
+              strokeWidth="0.5"
+              strokeOpacity="0.6"
+              transform="rotate(45 5 5)"
+            />
+          </svg>
+          <span className="text-[8px] text-slate-500">Internal sync</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Agent Performance ────────────────────────────────────────────────────────
+
+function AgentPerformance() {
+  const [barWidths, setBarWidths] = useState<number[]>(TOP_PERFORMERS.map(() => 0))
+
+  useEffect(() => {
+    const timers = TOP_PERFORMERS.map((_, i) =>
+      setTimeout(() => {
+        setBarWidths(prev => {
+          const next = [...prev]
+          next[i] = TOP_PERFORMERS[i].score
+          return next
+        })
+      }, 100 + i * 80)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  // Map group name to color from ROLE_GROUPS
+  const getGroupColor = (groupName: string): string => {
+    const group = ROLE_GROUPS.find(g => g.name === groupName)
+    return group?.color || '#94a3b8'
+  }
+
+  // Donut chart calculations
+  const donutRadius = 50
+  const donutStroke = 10
+  const donutCircumference = 2 * Math.PI * donutRadius
+  const totalAgents = STATUS_DISTRIBUTION.reduce((sum, s) => sum + s.count, 0)
+
+  const donutSegments = STATUS_DISTRIBUTION.filter(s => s.count > 0).reduce<Array<{
+    label: string; count: number; color: string; segmentLength: number; offset: number
+  }>>((acc, status, _i, arr) => {
+    const segmentLength = (status.count / totalAgents) * donutCircumference
+    const offset = acc.length > 0
+      ? acc[acc.length - 1].offset + acc[acc.length - 1].segmentLength
+      : 0
+    acc.push({ ...status, segmentLength, offset })
+    return acc
+  }, [])
+
+  return (
+    <div
+      className="rounded-xl p-4 sm:p-6"
+      style={{
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
+      }}
+    >
+      {/* Section header */}
+      <h3 className="text-white font-semibold text-xs mb-5 flex items-center gap-2">
+        <div className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+        <BarChart3 className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        Agent Performance
+      </h3>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Top Performers Bar Chart */}
+        <div className="lg:col-span-2">
+          <p className="text-[10px] text-[#B0B0B0] mb-3 font-medium uppercase tracking-wider">Top Performers</p>
+          <div className="space-y-2.5">
+            {TOP_PERFORMERS.map((agent, i) => {
+              const barColor = getGroupColor(agent.group)
+              const width = barWidths[i]
+              return (
+                <div key={agent.name} className="flex items-center gap-3">
+                  <span
+                    className="text-[10px] font-medium w-24 sm:w-28 truncate text-right flex-shrink-0"
+                    style={{ color: barColor }}
+                  >
+                    {agent.name}
+                  </span>
+                  <div className="flex-1 h-5 rounded-sm relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    <div
+                      className="h-full rounded-sm transition-all duration-700 ease-out"
+                      style={{
+                        width: `${width}%`,
+                        background: `linear-gradient(90deg, ${barColor}44, ${barColor}aa)`,
+                        boxShadow: `0 0 8px ${barColor}22`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold w-8 text-right flex-shrink-0" style={{ color: barColor }}>
+                    {width > 0 ? agent.score : ''}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Right: Donut Chart */}
+        <div className="flex flex-col items-center">
+          <p className="text-[10px] text-[#B0B0B0] mb-3 font-medium uppercase tracking-wider">Status Distribution</p>
+          <div className="relative">
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              {/* Background ring */}
+              <circle
+                cx="70"
+                cy="70"
+                r={donutRadius}
+                fill="none"
+                stroke="rgba(255,255,255,0.04)"
+                strokeWidth={donutStroke}
+              />
+              {/* Segments */}
+              {donutSegments.map((segment, i) => (
+                <circle
+                  key={i}
+                  cx="70"
+                  cy="70"
+                  r={donutRadius}
+                  fill="none"
+                  stroke={segment.color}
+                  strokeWidth={donutStroke}
+                  strokeDasharray={`${segment.segmentLength} ${donutCircumference - segment.segmentLength}`}
+                  strokeDashoffset={-segment.offset}
+                  strokeLinecap="butt"
+                  transform="rotate(-90 70 70)"
+                  style={{ opacity: 0.8 }}
+                />
+              ))}
+              {/* Center text */}
+              <text
+                x="70"
+                y="65"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="#FFFFFF"
+                fontSize="18"
+                fontWeight="700"
+              >
+                {totalAgents}
+              </text>
+              <text
+                x="70"
+                y="80"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="#B0B0B0"
+                fontSize="7"
+              >
+                agents
+              </text>
+            </svg>
+          </div>
+          {/* Legend */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 w-full">
+            {STATUS_DISTRIBUTION.map((status) => (
+              <div key={status.label} className="flex items-center gap-1.5">
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    background: status.color,
+                    opacity: status.count > 0 ? 1 : 0.3,
+                  }}
+                />
+                <span className="text-[9px] text-[#B0B0B0] truncate">{status.label}</span>
+                <span className="text-[9px] font-bold" style={{ color: status.count > 0 ? status.color : '#555' }}>
+                  {status.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics Grid */}
+      <div className="mt-5">
+        <p className="text-[10px] text-[#B0B0B0] mb-3 font-medium uppercase tracking-wider">Performance Metrics</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {PERFORMANCE_METRICS.map((metric) => {
+            const MetricIcon = metric.icon
+            return (
+              <div
+                key={metric.label}
+                className="rounded-lg p-3 relative overflow-hidden"
+                style={{
+                  background: 'rgba(13, 13, 13, 0.8)',
+                  border: `1px solid rgba(51, 51, 51, 0.4)`,
+                }}
+              >
+                {/* Colored left accent */}
+                <div
+                  className="absolute left-0 top-0 bottom-0 rounded-l-lg"
+                  style={{ width: 2, background: metric.color, opacity: 0.6 }}
+                />
+                <div className="flex items-center gap-2 ml-2 mb-1.5">
+                  <MetricIcon size={11} style={{ color: metric.color }} />
+                  <span className="text-[9px] text-[#B0B0B0] leading-tight">{metric.label}</span>
+                </div>
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-sm font-bold" style={{ color: metric.color }}>{metric.value}</span>
+                  {/* Sparkline for Avg Response Time */}
+                  {metric.sparkline && (
+                    <svg width="40" height="14" className="flex-shrink-0">
+                      <polyline
+                        points="0,10 5,8 10,11 15,6 20,9 25,4 30,7 35,3 40,5"
+                        fill="none"
+                        stroke={metric.color}
+                        strokeWidth="1"
+                        opacity="0.6"
+                      />
+                    </svg>
+                  )}
+                  {/* Trend up arrow for Tasks Completed */}
+                  {metric.trendUp && (
+                    <TrendingUp size={12} style={{ color: metric.color }} />
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Network Activity Chart ───────────────────────────────────────────────────
+
+function NetworkActivityChart() {
+  const data = NETWORK_ACTIVITY_DATA
+  const minVal = Math.min(...data)
+  const maxVal = Math.max(...data)
+  const range = maxVal - minVal || 1
+
+  // Chart dimensions
+  const chartW = 500
+  const chartH = 120
+  const padX = 30
+  const padY = 10
+  const plotW = chartW - padX - 10
+  const plotH = chartH - padY * 2
+
+  // Convert data point to SVG coordinates
+  const toX = (i: number) => padX + (i / (data.length - 1)) * plotW
+  const toY = (v: number) => padY + plotH - ((v - minVal) / range) * plotH
+
+  // Build area path
+  const linePoints = data.map((v, i) => `${toX(i)},${toY(v)}`).join(' ')
+  const areaPath = `M${toX(0)},${chartH - padY} ` +
+    data.map((v, i) => `L${toX(i)},${toY(v)}`).join(' ') +
+    ` L${toX(data.length - 1)},${chartH - padY} Z`
+
+  // Find peak positions (top 3 values)
+  const indexed = data.map((v, i) => ({ v, i }))
+  const peaks = indexed.sort((a, b) => b.v - a.v).slice(0, 3)
+
+  // Average (used for display in summary stats: 36.5)
+  const _average = data.reduce((sum, v) => sum + v, 0) / data.length
+
+  // Grid lines at 25%, 50%, 75%
+  const gridLevels = [0.25, 0.5, 0.75]
+
+  // X-axis labels every 4 hours
+  const xLabels = [0, 4, 8, 12, 16, 20]
+
+  return (
+    <div
+      className="rounded-xl p-4 sm:p-6"
+      style={{
+        background: 'rgba(45, 45, 45, 0.3)',
+        border: '1px solid rgba(51, 51, 51, 0.5)',
+      }}
+    >
+      <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
+        <Activity className="w-3.5 h-3.5" style={{ color: '#4A90E2' }} />
+        Network Activity
+      </h3>
+      <svg
+        viewBox="0 0 500 120"
+        className="w-full"
+        style={{ minHeight: '100px' }}
+      >
+        <defs>
+          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(74,144,226,0.15)" />
+            <stop offset="100%" stopColor="rgba(74,144,226,0.02)" />
+          </linearGradient>
+        </defs>
+
+        {/* Grid lines */}
+        {gridLevels.map((level, i) => {
+          const y = padY + plotH * (1 - level)
+          return (
+            <line
+              key={i}
+              x1={padX}
+              y1={y}
+              x2={chartW - 10}
+              y2={y}
+              stroke="#333333"
+              strokeWidth="0.5"
+              strokeOpacity="0.3"
+            />
+          )
+        })}
+
+        {/* Area fill */}
+        <path d={areaPath} fill="url(#areaGradient)" />
+
+        {/* Line stroke */}
+        <polyline
+          points={linePoints}
+          fill="none"
+          stroke="#4A90E2"
+          strokeWidth="1.5"
+        />
+
+        {/* X-axis labels */}
+        {xLabels.map((hour) => (
+          <text
+            key={hour}
+            x={toX(hour)}
+            y={chartH - 1}
+            textAnchor="middle"
+            fill="#B0B0B0"
+            fontSize="7"
+            opacity="0.6"
+          >
+            {hour}h
+          </text>
+        ))}
+
+        {/* Peak dots with pulse animation */}
+        {peaks.map((peak, i) => (
+          <g key={i}>
+            {/* Pulse ring */}
+            <circle
+              cx={toX(peak.i)}
+              cy={toY(peak.v)}
+              r="4"
+              fill="none"
+              stroke="#4A90E2"
+              strokeWidth="0.5"
+              strokeOpacity="0.4"
+            >
+              <animate attributeName="r" from="4" to="10" dur="1.5s" repeatCount="indefinite" />
+              <animate attributeName="strokeOpacity" from="0.4" to="0" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Dot */}
+            <circle
+              cx={toX(peak.i)}
+              cy={toY(peak.v)}
+              r="2.5"
+              fill="#4A90E2"
+              stroke="#FFFFFF"
+              strokeWidth="0.5"
+              strokeOpacity="0.5"
+            >
+              <title>{`${peak.i}h: ${peak.v} activities`}</title>
+            </circle>
+          </g>
+        ))}
+
+        {/* Hover areas with tooltip for all points */}
+        {data.map((v, i) => (
+          <circle
+            key={i}
+            cx={toX(i)}
+            cy={toY(v)}
+            r="8"
+            fill="transparent"
+            stroke="none"
+          >
+            <title>{`${i}h: ${v} activities`}</title>
+          </circle>
+        ))}
+      </svg>
+
+      {/* Summary stats */}
+      <div className="flex flex-wrap gap-4 mt-3">
+        <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
+          <TrendingUp size={11} style={{ color: '#4A90E2' }} />
+          <span className="text-[9px] text-[#B0B0B0]">Peak</span>
+          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>55 at 11h</span>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
+          <BarChart3 size={11} style={{ color: '#4A90E2' }} />
+          <span className="text-[9px] text-[#B0B0B0]">Average</span>
+          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>36.5</span>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5" style={{ background: 'rgba(13, 13, 13, 0.8)' }}>
+          <Activity size={11} style={{ color: '#4A90E2' }} />
+          <span className="text-[9px] text-[#B0B0B0]">Current</span>
+          <span className="text-[10px] font-bold" style={{ color: '#4A90E2' }}>15</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Quick Actions Panel ──────────────────────────────────────────────────────
+
+function QuickActionsPanel() {
+  const [reseeding, setReseeding] = useState(false)
+
+  const handleReseed = async () => {
+    setReseeding(true)
+    try {
+      const res = await fetch('/api/seed', { method: 'POST' })
+      if (res.ok) {
+        toast.success('Database reseeded successfully')
+      } else {
+        toast.error('Failed to reseed database')
+      }
+    } catch {
+      toast.error('Failed to reseed database')
+    } finally {
+      setReseeding(false)
+    }
+  }
+
+  const handleExportConfig = async () => {
+    try {
+      const res = await fetch('/api/hierarchy')
+      const data = await res.json()
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'p-mas-hierarchy.json'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Config exported successfully')
+    } catch {
+      toast.error('Failed to export config')
+    }
+  }
+
+  const handleResetView = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleToggleTheme = () => {
+    toast.info('Theme toggle coming soon')
+  }
+
+  const actions = [
+    { label: 'Reseed Data', icon: Database, onClick: handleReseed, loading: reseeding },
+    { label: 'Export Config', icon: Download, onClick: handleExportConfig },
+    { label: 'Reset View', icon: ArrowUp, onClick: handleResetView },
+    { label: 'Toggle Theme', icon: Palette, onClick: handleToggleTheme },
+  ]
+
+  return (
+    <div
+      className="rounded-xl p-4 sm:p-6"
+      style={{
+        background: 'rgba(26,26,26,0.92)',
+        border: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <h3 className="text-white font-semibold text-xs mb-4 flex items-center gap-2">
+        <div className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+        Quick Actions
+      </h3>
+      <div className="flex flex-wrap gap-3">
+        {actions.map((action) => {
+          const ActionIcon = action.icon
+          return (
+            <button
+              key={action.label}
+              onClick={action.onClick}
+              disabled={action.loading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.03] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: 'rgba(45, 45, 45, 0.5)',
+                border: '1px solid rgba(51, 51, 51, 0.5)',
+                color: '#4A90E2',
+              }}
+              onMouseEnter={(e) => {
+                if (!action.loading) {
+                  e.currentTarget.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.15)'
+                  e.currentTarget.style.borderColor = 'rgba(74, 144, 226, 0.4)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.borderColor = 'rgba(51, 51, 51, 0.5)'
+              }}
+            >
+              <ActionIcon size={14} />
+              <span>{action.loading ? 'Seeding...' : action.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Dashboard Panel ──────────────────────────────────────────────────────────
 
 function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
@@ -828,6 +1534,15 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           })}
         </div>
 
+        {/* Connection Heatmap */}
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
+          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          Connection Heatmap
+        </h2>
+        <div className="mb-8">
+          <ConnectionHeatmap />
+        </div>
+
         {/* Architecture Overview */}
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
           <span className="w-1 h-4 rounded-full bg-rose-500" />
@@ -880,13 +1595,36 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           <SystemHealthMonitor />
         </div>
 
+        {/* Agent Performance */}
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
+          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          Agent Performance
+        </h2>
+        <div className="mb-6">
+          <AgentPerformance />
+        </div>
+
+        {/* Network Activity Chart */}
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
+          <span className="w-1 h-4 rounded-full" style={{ background: '#4A90E2' }} />
+          Network Activity
+        </h2>
+        <div className="mb-6">
+          <NetworkActivityChart />
+        </div>
+
         {/* Recent Activity Timeline + Formula-Agent Mapping side by side on large screens */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
           <RecentActivityTimeline />
           <FormulaAgentMappingGrid />
         </div>
 
-        {/* Quick actions */}
+        {/* Quick Actions */}
+        <div className="mb-6">
+          <QuickActionsPanel />
+        </div>
+
+        {/* Open Hierarchy button */}
         <div className="flex gap-3">
           <button
             onClick={onOpenHierarchy}
@@ -904,8 +1642,42 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto px-4 sm:px-6 py-4" style={{ background: '#0D0D0D', borderTop: '1px solid rgba(51,51,51,0.5)' }}>
-        <p className="text-center text-slate-600 text-xs">P-MAS Dashboard v4.0 -- Terrain Edition -- 8 Groups / 20 Formulas / 6 Edge Types / 26 Agents</p>
+      <footer
+        className="mt-auto px-4 sm:px-6 py-6 relative"
+        style={{ background: '#0D0D0D' }}
+      >
+        {/* Gradient top border */}
+        <div
+          className="absolute top-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(90deg, #4A90E2, transparent)' }}
+        />
+        <div className="max-w-7xl mx-auto">
+          {/* Desktop: 3 columns, Mobile: single column */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            {/* Left: Logo + version */}
+            <div className="flex items-center gap-2 justify-center md:justify-start">
+              <Brain size={14} style={{ color: '#4A90E2' }} />
+              <span className="text-[11px] font-bold" style={{ color: '#FFFFFF' }}>P-MAS Dashboard v4.2</span>
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>-- Terrain Edition</span>
+            </div>
+
+            {/* Center: Key stats */}
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>26 Agents</span>
+              <span style={{ color: '#333333' }}>|</span>
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>8 Groups</span>
+              <span style={{ color: '#333333' }}>|</span>
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>20 Formulas</span>
+              <span style={{ color: '#333333' }}>|</span>
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>6 Edges</span>
+            </div>
+
+            {/* Right: Tech stack */}
+            <div className="text-center md:text-right">
+              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>Powered by Next.js 16 + Prisma + TypeScript</span>
+            </div>
+          </div>
+        </div>
       </footer>
 
       {/* Scroll to top button */}

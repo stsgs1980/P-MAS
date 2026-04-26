@@ -71,8 +71,10 @@ import {
   GitBranch,
   RefreshCcw,
   Binary,
+  Keyboard,
   type LucideIcon,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -354,11 +356,12 @@ interface FlowParticle {
 }
 
 function ConnectionLine({
-  x1, y1, x2, y2, color, colorRgb, type, strength = 1, hoveredEdge, fromName, toName,
+  x1, y1, x2, y2, color, colorRgb, type, strength = 1, hoveredEdge, fromName, toName, isPulsing = false,
 }: {
   x1: number; y1: number; x2: number; y2: number
   color: string; colorRgb: string; type: EdgeType; strength?: number
   hoveredEdge: string | null; fromName: string; toName: string
+  isPulsing?: boolean
 }) {
   const particlesRef = useRef<FlowParticle[]>([])
   const animationRef = useRef<number>(0)
@@ -445,13 +448,13 @@ function ConnectionLine({
             key={i}
             cx={pt.x}
             cy={pt.y}
-            r={3}
+            r={isPulsing ? 5 : 3}
             fill={color}
-            opacity={0.8}
+            opacity={isPulsing ? 1.0 : 0.8}
           >
             <animate
               attributeName="opacity"
-              values="0.4;1;0.4"
+              values={isPulsing ? "0.6;1;0.6" : "0.4;1;0.4"}
               dur="1.5s"
               repeatCount="indefinite"
             />
@@ -497,7 +500,7 @@ function ConnectionLine({
         fill="none"
         stroke={strokeColor}
         strokeWidth={strokeWidth}
-        strokeOpacity={isHovered ? 0.4 : 0.18}
+        strokeOpacity={isPulsing ? 0.4 : isHovered ? 0.4 : 0.18}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
       {/* Glow path */}
@@ -506,7 +509,7 @@ function ConnectionLine({
         fill="none"
         stroke={strokeColor}
         strokeWidth={strokeWidth * 0.5}
-        strokeOpacity={isHovered ? 0.5 : 0.25}
+        strokeOpacity={isPulsing ? 0.5 : isHovered ? 0.5 : 0.25}
         strokeDasharray={EDGE_CONFIG[type].strokeDasharray}
       />
 
@@ -651,6 +654,8 @@ function AgentNode({
   isDimmed,
   isCollapsed,
   skillCount,
+  taskCount = 0,
+  statusTransition = null,
   onClick,
   onToggleCollapse,
   onHover,
@@ -663,6 +668,8 @@ function AgentNode({
   isDimmed: boolean
   isCollapsed: boolean
   skillCount: number
+  taskCount?: number
+  statusTransition: { status: string; timestamp: number } | null
   onClick: () => void
   onToggleCollapse: () => void
   onHover: (id: string | null) => void
@@ -802,6 +809,49 @@ function AgentNode({
       >
         {agent.name}
       </text>
+
+      {/* Task count indicator */}
+      <text
+        y={48}
+        textAnchor="middle"
+        fill="#B0B0B0"
+        fontSize="6"
+        opacity={0.5}
+        style={{ pointerEvents: 'none' }}
+      >
+        {taskCount} tasks
+      </text>
+
+      {/* Status transition pulse ring */}
+      {statusTransition && (
+        <circle
+          r={3}
+          fill="none"
+          stroke={STATUS_COLORS[statusTransition.status] || STATUS_COLORS.offline}
+          strokeWidth={0.8}
+          transform="translate(18, -20)"
+        >
+          <animate attributeName="r" from="3" to="14" dur="1s" fill="freeze" />
+          <animate attributeName="strokeOpacity" from="0.8" to="0" dur="1s" fill="freeze" />
+          <animate attributeName="strokeWidth" from="0.8" to="0" dur="1s" fill="freeze" />
+        </circle>
+      )}
+
+      {/* Status transition floating label */}
+      {statusTransition && (
+        <g transform="translate(18, -32)">
+          <text
+            textAnchor="middle"
+            fill={STATUS_COLORS[statusTransition.status] || STATUS_COLORS.offline}
+            fontSize="6"
+            fontWeight="700"
+            style={{ pointerEvents: 'none' }}
+          >
+            STATUS: {statusTransition.status.toUpperCase()}
+            <animate attributeName="opacity" from="1" to="0" dur="2s" fill="freeze" />
+          </text>
+        </g>
+      )}
 
       {/* Formula badge */}
       <g transform="translate(-15, -19)">
@@ -1355,7 +1405,7 @@ function MiniMap({
   zoom: number
   onClickMap: (ratioX: number, ratioY: number) => void
 }) {
-  const scale = 140 / Math.max(dimensions.width, dimensions.height)
+  const scale = 160 / Math.max(dimensions.width, dimensions.height)
   const mapW = dimensions.width * scale
   const mapH = dimensions.height * scale
 
@@ -1372,7 +1422,7 @@ function MiniMap({
         background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
         border: '1px solid rgba(51,51,51,0.5)',
-        width: 160,
+        width: 180,
         padding: 10,
       }}
     >
@@ -1448,6 +1498,19 @@ function MiniMap({
           )
         })}
 
+        {/* Viewport indicator glow */}
+        <rect
+          x={vpX - 1}
+          y={vpY - 1}
+          width={vpW + 2}
+          height={vpH + 2}
+          fill="none"
+          stroke="#4A90E2"
+          strokeWidth={1}
+          strokeOpacity={0.1}
+          rx={2}
+          filter="url(#orbGlow)"
+        />
         {/* Viewport indicator */}
         <rect
           x={vpX}
@@ -1456,8 +1519,8 @@ function MiniMap({
           height={vpH}
           fill="none"
           stroke="#4A90E2"
-          strokeWidth={0.2}
-          strokeOpacity={0.25}
+          strokeWidth={0.3}
+          strokeOpacity={0.35}
           rx={1}
         />
       </svg>
@@ -1481,7 +1544,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
     if (!name.trim() || !role.trim()) return
     setSubmitting(true)
     try {
-      await fetch('/api/agents', {
+      const res = await fetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1495,13 +1558,15 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
           avatar: 'brain',
         }),
       })
+      if (!res.ok) throw new Error('Failed to create agent')
+      toast.success(`Agent ${name.trim()} created successfully`)
       setName('')
       setRole('')
       setSkillsStr('')
       setOpen(false)
       onCreated()
     } catch {
-      // ignore
+      toast.error('Failed to create agent')
     } finally {
       setSubmitting(false)
     }
@@ -1611,6 +1676,97 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
   )
 }
 
+// ─── Keyboard Shortcuts Dialog ────────────────────────────────────────────────
+
+const SHORTCUTS = [
+  { keys: ['/'], altKeys: ['Ctrl+K'], description: 'Focus search' },
+  { keys: ['Esc'], description: 'Close detail panel / Close shortcuts' },
+  { keys: ['+', '='], description: 'Zoom in' },
+  { keys: ['-'], description: 'Zoom out' },
+  { keys: ['0'], description: 'Reset zoom' },
+  { keys: ['1-8'], description: 'Filter by role group (1=Стратегия, 2=Тактика, ...)' },
+  { keys: ['9'], description: 'Clear role group filter (show all)' },
+  { keys: ['G'], description: 'Toggle grid / radial view' },
+  { keys: ['?'], description: 'Show keyboard shortcuts' },
+]
+
+function KeyboardShortcutsDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="max-w-sm"
+        style={{
+          background: 'rgba(26, 26, 26, 0.95)',
+          border: '1px solid rgba(51,51,51,0.5)',
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <Keyboard className="h-4 w-4 text-[#4A90E2]" />
+            Keyboard Shortcuts
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-1 pt-2">
+          {SHORTCUTS.map((shortcut, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between py-1.5 px-2 rounded-md"
+              style={{
+                background: i % 2 === 0 ? 'rgba(45, 45, 45, 0.3)' : 'transparent',
+              }}
+            >
+              <span className="text-[#B0B0B0] text-xs">{shortcut.description}</span>
+              <div className="flex items-center gap-1">
+                {(shortcut.altKeys || []).map((key, j) => (
+                  <React.Fragment key={j}>
+                    {j > 0 && <span className="text-[#555] text-[10px]">or</span>}
+                    <kbd
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
+                      style={{
+                        background: 'rgba(74, 144, 226, 0.1)',
+                        border: '1px solid rgba(74, 144, 226, 0.25)',
+                        color: '#4A90E2',
+                      }}
+                    >
+                      {key}
+                    </kbd>
+                  </React.Fragment>
+                ))}
+                {shortcut.keys.map((key, j) => (
+                  <React.Fragment key={`k-${j}`}>
+                    {(shortcut.altKeys && shortcut.altKeys.length > 0 || j > 0) && (
+                      <span className="text-[#555] text-[10px]">or</span>
+                    )}
+                    <kbd
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold min-w-[24px] text-center"
+                      style={{
+                        background: 'rgba(74, 144, 226, 0.1)',
+                        border: '1px solid rgba(74, 144, 226, 0.25)',
+                        color: '#4A90E2',
+                      }}
+                    >
+                      {key}
+                    </kbd>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-[#555] pt-1 text-center">
+          Shortcuts are disabled when typing in input fields
+        </p>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
@@ -1628,8 +1784,12 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [viewMode, setViewMode] = useState<ViewMode>('radial')
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set())
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [statusTransitions, setStatusTransitions] = useState<Record<string, { status: string; timestamp: number }>>({})
+  const [pulsingConnections, setPulsingConnections] = useState<Set<string>>(new Set())
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 })
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -1668,6 +1828,90 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     return () => window.removeEventListener('resize', update)
   }, [])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input/textarea/select
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        // Only allow Escape from input fields
+        if (e.key === 'Escape') {
+          ;(target as HTMLInputElement).blur()
+          if (selectedAgent) setSelectedAgent(null)
+          if (shortcutsOpen) setShortcutsOpen(false)
+        }
+        return
+      }
+
+      // Escape: close detail panel or shortcuts
+      if (e.key === 'Escape') {
+        if (shortcutsOpen) {
+          setShortcutsOpen(false)
+        } else if (selectedAgent) {
+          setSelectedAgent(null)
+        }
+        return
+      }
+
+      // / or Ctrl+K: focus search
+      if (e.key === '/' || (e.key === 'k' && (e.ctrlKey || e.metaKey))) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+
+      // + or =: zoom in
+      if (e.key === '+' || e.key === '=') {
+        setZoom(z => Math.min(3, z * 1.15))
+        return
+      }
+
+      // -: zoom out
+      if (e.key === '-') {
+        setZoom(z => Math.max(0.3, z * 0.85))
+        return
+      }
+
+      // 0: reset zoom
+      if (e.key === '0') {
+        setZoom(1)
+        setPan({ x: 0, y: 0 })
+        return
+      }
+
+      // 1-8: filter by role group
+      if (e.key >= '1' && e.key <= '8') {
+        const index = parseInt(e.key) - 1
+        if (index < ROLE_ORDER.length) {
+          const group = ROLE_ORDER[index]
+          setActiveFilter(prev => prev === group ? null : group)
+        }
+        return
+      }
+
+      // 9: clear filter (show all)
+      if (e.key === '9') {
+        setActiveFilter(null)
+        return
+      }
+
+      // G: toggle grid/radial view
+      if (e.key === 'g' || e.key === 'G') {
+        setViewMode(prev => prev === 'radial' ? 'grid' : 'radial')
+        return
+      }
+
+      // ?: show keyboard shortcuts
+      if (e.key === '?') {
+        setShortcutsOpen(prev => !prev)
+        return
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedAgent, shortcutsOpen])
+
   // Search matching
   const searchMatches = useMemo(() => {
     if (!searchQuery.trim()) return new Set<string>()
@@ -1685,6 +1929,62 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     }
     return matches
   }, [agents, searchQuery])
+
+  // Toast for search with no results
+  const prevSearchQuery = useRef('')
+  useEffect(() => {
+    if (
+      searchQuery.trim() &&
+      searchQuery !== prevSearchQuery.current &&
+      searchMatches.size === 0 &&
+      agents.length > 0
+    ) {
+      toast(`No agents found matching '${searchQuery.trim()}'`, {
+        style: {
+          background: 'rgba(26, 26, 26, 0.95)',
+          border: '1px solid rgba(51,51,51,0.5)',
+          color: '#B0B0B0',
+        },
+      })
+    }
+    prevSearchQuery.current = searchQuery
+  }, [searchQuery, searchMatches, agents.length])
+
+  // ─── Simulated Status Transitions (every 15s) ─────────────────────────────────
+  useEffect(() => {
+    if (agents.length === 0) return
+    const statusCycle = ['active', 'idle', 'paused', 'standby'] as const
+    const interval = setInterval(() => {
+      const count = 1 + Math.floor(Math.random() * 2) // 1-2 agents
+      const newTransitions: Record<string, { status: string; timestamp: number }> = {}
+      for (let i = 0; i < count; i++) {
+        const idx = Math.floor(Math.random() * agents.length)
+        const agent = agents[idx]
+        const currentIdx = statusCycle.indexOf(agent.status as typeof statusCycle[number])
+        const nextIdx = (currentIdx + 1 + Math.floor(Math.random() * (statusCycle.length - 1))) % statusCycle.length
+        const newStatus = statusCycle[nextIdx]
+        newTransitions[agent.id] = { status: newStatus, timestamp: Date.now() }
+      }
+      // Update agent statuses
+      setAgents(prev => prev.map(a => {
+        const transition = newTransitions[a.id]
+        if (transition) return { ...a, status: transition.status }
+        return a
+      }))
+      setStatusTransitions(prev => ({ ...prev, ...newTransitions }))
+      // Clear transitions after 2 seconds (floating label fades out)
+      setTimeout(() => {
+        setStatusTransitions(prev => {
+          const next = { ...prev }
+          for (const id of Object.keys(newTransitions)) {
+            delete next[id]
+          }
+          return next
+        })
+      }, 2000)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [agents])
 
   const { positions, connections, groupCentroids } = useMemo(() => {
     const cx = dimensions.width / 2
@@ -1883,6 +2183,25 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
     return { positions: pos, connections: conns, groupCentroids: centroids }
   }, [agents, dimensions, viewMode])
+
+  // ─── Simulated Connection Pulse (every 8s) ────────────────────────────────────
+  useEffect(() => {
+    if (connections.length === 0) return
+    const interval = setInterval(() => {
+      const count = 1 + Math.floor(Math.random() * 2) // 1-2 connections
+      const selected = new Set<string>()
+      for (let i = 0; i < count; i++) {
+        const idx = Math.floor(Math.random() * connections.length)
+        selected.add(connections[idx].id)
+      }
+      setPulsingConnections(selected)
+      // Clear after 3 seconds
+      setTimeout(() => {
+        setPulsingConnections(new Set())
+      }, 3000)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [connections])
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault()
@@ -2135,6 +2454,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           <div className="hidden md:flex items-center relative">
             <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#B0B0B0]" />
             <input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -2257,6 +2577,15 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 onClick={resetView}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-[#B0B0B0] hover:text-white"
+                onClick={() => setShortcutsOpen(true)}
+                title="Keyboard shortcuts (?)"
+              >
+                <Keyboard className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -2509,6 +2838,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                 hoveredEdge={hoveredEdge}
                 fromName={fromAgent?.name || ''}
                 toName={toAgent?.name || ''}
+                isPulsing={pulsingConnections.has(conn.id)}
               />
             )
           })}
@@ -2531,6 +2861,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
                   isDimmed={isAgentDimmed(agent)}
                   isCollapsed={isCollapsed}
                   skillCount={metrics.skillCount}
+                  taskCount={Array.isArray(agent.tasks) ? agent.tasks.length : 0}
+                  statusTransition={statusTransitions[agent.id] || null}
                   onClick={() => setSelectedAgent(selectedAgent?.id === agent.id ? null : agent)}
                   onToggleCollapse={() => toggleCollapseNode(agent.id)}
                   onHover={setHoveredAgent}
@@ -2574,6 +2906,12 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Keyboard shortcuts dialog */}
+      <KeyboardShortcutsDialog
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+      />
 
       {/* Loading overlay */}
       {loading && (
