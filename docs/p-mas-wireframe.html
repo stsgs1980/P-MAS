@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #000000;
+    --surface: #0D0D0D;
+    --surface2: #1A1A1A;
+    --border: rgba(51,51,51,0.5);
+    --border2: rgba(51,51,51,0.3);
+    --cyan: #06B6D4;
+    --cyan-dim: #0891B2;
+    --text: #FFFFFF;
+    --text-sub: #B0B0B0;
+    --text-muted: #64748B;
+    --accent: #22D3EE;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  #root { width: 1440px; margin: 0 auto; padding: 0; }
+  
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(6,182,212,0.4), transparent);
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-box {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--cyan);
+  }
+  .header-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .header-subtitle { font-size: 10px; color: var(--text-muted); }
+  .header-center { display: flex; align-items: center; gap: 16px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .header-btn {
+    padding: 6px 12px; border-radius: 6px; font-size: 11px;
+    background: rgba(30,30,30,0.8); border: 1px solid rgba(51,51,51,0.4);
+    color: var(--text-muted); cursor: pointer;
+  }
+  .header-btn.primary {
+    background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3);
+    color: var(--cyan);
+  }
+  .online-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px;
+    background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.2);
+    font-size: 8px; font-weight: 700; color: var(--cyan);
+  }
+  .online-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 6px var(--cyan);
+  }
+  
+  /* Sidebar + Main layout */
+  .layout { display: flex; height: 900px; }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 260px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 16px;
+    overflow: hidden;
+  }
+  .sidebar-section { }
+  .sidebar-title {
+    font-size: 9px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 8px; padding-left: 4px;
+  }
+  
+  /* Agent list in sidebar */
+  .agent-list { display: flex; flex-direction: column; gap: 4px; }
+  .agent-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .agent-item:hover { background: rgba(255,255,255,0.03); }
+  .agent-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .agent-name { font-size: 11px; color: var(--text-sub); flex: 1; }
+  .agent-status { font-size: 8px; color: var(--text-muted); }
+  .agent-group-label {
+    font-size: 10px; font-weight: 600; padding: 4px 8px;
+    border-radius: 4px; margin-top: 8px; margin-bottom: 2px;
+  }
+  
+  /* Main content */
+  .main {
+    flex: 1; padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 16px;
+    overflow: hidden;
+  }
+  
+  /* Cards */
+  .card {
+    background: rgba(26,26,26,0.6);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+  }
+  .card-title {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .card-icon {
+    width: 14px; height: 14px; display: flex; align-items: center; justify-content: center;
+  }
+  
+  /* KPI cards row */
+  .kpi-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .kpi-card {
+    background: rgba(26,26,26,0.4);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .kpi-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+  .kpi-value { font-size: 24px; font-weight: 700; }
+  .kpi-change { font-size: 10px; margin-top: 4px; }
+  .kpi-sparkline { position: absolute; right: 12px; bottom: 12px; }
+  
+  /* Donut placeholder */
+  .donut-container {
+    display: flex; align-items: center; justify-content: center;
+    height: 160px;
+  }
+  .donut-svg { }
+  
+  /* Mini bar chart */
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .bar-label { font-size: 10px; color: var(--text-sub); width: 80px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.04); }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .bar-value { font-size: 9px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
+  
+  /* Heatmap placeholder */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: 40px repeat(8, 1fr);
+    gap: 2px;
+  }
+  .heatmap-header { font-size: 7px; color: var(--text-muted); text-align: center; padding: 2px; }
+  .heatmap-label { font-size: 7px; color: var(--text-muted); text-align: right; padding: 2px 4px 2px 0; }
+  .heatmap-cell {
+    width: 100%; aspect-ratio: 1; border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .heatmap-cell.empty { background: rgba(255,255,255,0.02); }
+  .heatmap-cell.low { background: rgba(6,182,212,0.2); }
+  .heatmap-cell.mid { background: rgba(6,182,212,0.45); }
+  .heatmap-cell.high { background: rgba(6,182,212,0.7); }
+  
+  /* Activity feed */
+  .activity-feed { display: flex; flex-direction: column; gap: 6px; }
+  .activity-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 6px 8px; border-radius: 6px;
+    border-left: 2px solid transparent;
+  }
+  .activity-item:hover { background: rgba(255,255,255,0.02); }
+  .activity-time { font-size: 8px; color: var(--text-muted); font-family: monospace; flex-shrink: 0; margin-top: 1px; }
+  .activity-agent { font-size: 9px; font-weight: 700; }
+  .activity-desc { font-size: 9px; color: var(--text-sub); }
+  
+  /* Network chart placeholder */
+  .chart-placeholder {
+    height: 140px; position: relative;
+    border-bottom: 1px solid var(--border2);
+    margin: 8px 0;
+  }
+  .chart-line {
+    position: absolute; bottom: 0; left: 0; right: 0;
+  }
+  
+  /* Footer row */
+  .footer-row {
+    grid-column: 1 / -1;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+  }
+  .footer-text { font-size: 9px; color: var(--text-muted); }
+  
+  /* Section labels on wireframe */
+  .wire-label {
+    position: absolute; top: 6px; right: 8px;
+    font-size: 8px; color: rgba(6,182,212,0.4);
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+  
+  /* Status dots */
+  .status-active { background: #22D3EE; box-shadow: 0 0 4px #22D3EE; }
+  .status-idle { background: #64748B; }
+  .status-paused { background: #EAB308; }
+  .status-standby { background: #818CF8; }
+  .status-offline { background: #3F3F46; }
+  
+  /* Section: span utilities */
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-full { grid-column: 1 / -1; }
+  
+  /* Animated elements */
+  @keyframes pulseGlow { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+</style>
+</head>
+<body>
+<div id="root">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-box">B</div>
+      <div>
+        <div class="header-title">P-MAS</div>
+        <div class="header-subtitle">Multi-Agent System</div>
+      </div>
+      <div class="online-badge">
+        <span class="online-dot" style="animation: pulseGlow 2s ease-in-out infinite"></span>
+        ONLINE
+      </div>
+    </div>
+    <div class="header-center">
+      <div style="position: relative; width: 280px;">
+        <div style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;">S</div>
+        <div style="width: 100%; padding: 6px 12px 6px 28px; border-radius: 6px; background: rgba(30,30,30,0.8); border: 1px solid rgba(51,51,51,0.4); font-size: 11px; color: var(--text-muted);">Search agents, formulas, tasks...</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div style="font-size: 9px; color: var(--text-muted); font-family: monospace; margin-right: 8px;">14:23:45</div>
+      <div class="header-btn">Refresh</div>
+      <div class="header-btn" style="position: relative;">Alerts <span style="position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; border-radius: 50%; background: #EAB308; color: #000; font-size: 7px; display: flex; align-items: center; justify-content: center; font-weight: 700;">3</span></div>
+      <div class="header-btn primary">Hierarchy View</div>
+    </div>
+  </div>
+  
+  <!-- LAYOUT: SIDEBAR + MAIN -->
+  <div class="layout">
+    <!-- SIDEBAR: Agent Navigation -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Agent Navigation</div>
+        <div class="agent-list">
+          <!-- Strategy group -->
+          <div class="agent-group-label" style="color: #67E8F9; background: rgba(103,232,249,0.08);">Стратегия (3)</div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Arkhitektor</span>
+            <span class="agent-status">lead</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Strateg</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Vizioner</span>
+            <span class="agent-status">active</span>
+          </div>
+          
+          <!-- Tactics group -->
+          <div class="agent-group-label" style="color: #22D3EE; background: rgba(34,211,238,0.08);">Тактика (3)</div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Koordinator</span>
+            <span class="agent-status">lead</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Planirorshchik</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-idle"></span>
+            <span class="agent-name">Dispetcher</span>
+            <span class="agent-status">idle</span>
+          </div>
+          
+          <!-- Control group -->
+          <div class="agent-group-label" style="color: #06B6D4; background: rgba(6,182,212,0.08);">Контроль (3)</div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Revizor</span>
+            <span class="agent-status">lead</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Tsenzor</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Advokat</span>
+            <span class="agent-status">active</span>
+          </div>
+          
+          <!-- Execution group -->
+          <div class="agent-group-label" style="color: #0891B2; background: rgba(8,145,178,0.08);">Исполнение (5)</div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Ispolnitel-A</span>
+            <span class="agent-status">lead</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Koder</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Otladchik</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Testirovshchik</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-idle"></span>
+            <span class="agent-name">Dokumentator</span>
+            <span class="agent-status">idle</span>
+          </div>
+          
+          <!-- Memory group -->
+          <div class="agent-group-label" style="color: #0E7490; background: rgba(14,116,144,0.08);">Память (3)</div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">Arkhivarius</span>
+            <span class="agent-status">lead</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-active"></span>
+            <span class="agent-name">RAG-Specialist</span>
+            <span class="agent-status">active</span>
+          </div>
+          <div class="agent-item">
+            <span class="agent-dot status-standby"></span>
+            <span class="agent-name">Indekser</span>
+            <span class="agent-status">standby</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MAIN CONTENT: Grid Dashboard -->
+    <div class="main">
+      
+      <!-- ROW 1: KPI Strip -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Agents</div>
+          <div class="kpi-value" style="color: var(--cyan);">26</div>
+          <div class="kpi-change" style="color: #22D3EE;">+2 this week</div>
+          <div class="kpi-sparkline">
+            <svg width="48" height="16"><polyline points="0,12 8,10 16,8 24,9 32,6 40,4 48,3" fill="none" stroke="#06B6D4" stroke-width="1.5" opacity="0.5"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Now</div>
+          <div class="kpi-value" style="color: #22D3EE;">16</div>
+          <div class="kpi-change" style="color: #64748B;">4 idle / 1 paused</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tasks Running</div>
+          <div class="kpi-value" style="color: var(--cyan-dim);">12</div>
+          <div class="kpi-change" style="color: #22D3EE;">187 completed</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Success Rate</div>
+          <div class="kpi-value" style="color: #22D3EE;">94.7%</div>
+          <div class="kpi-change" style="color: #22D3EE;">+0.3%</div>
+          <div class="kpi-sparkline">
+            <svg width="48" height="16"><polyline points="0,10 8,8 16,7 24,6 32,5 40,4 48,3" fill="none" stroke="#22D3EE" stroke-width="1.5" opacity="0.5"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Response</div>
+          <div class="kpi-value" style="color: var(--text-sub);">1.2s</div>
+          <div class="kpi-change" style="color: #22D3EE;">-0.3s</div>
+        </div>
+      </div>
+      
+      <!-- ROW 2: Main panels -->
+      <!-- Agent Status Distribution -->
+      <div class="card span-1" style="grid-column: 1;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--cyan); opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: var(--cyan);">D</span>
+          Status Distribution
+        </div>
+        <div class="donut-container">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <!-- Donut chart -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"/>
+            <!-- Active: 16/26 = ~221deg -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="#22D3EE" stroke-width="12" stroke-dasharray="221 94" stroke-dashoffset="0" transform="rotate(-90 80 80)" opacity="0.8"/>
+            <!-- Idle: 4/26 = ~55deg -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="#64748B" stroke-width="12" stroke-dasharray="55 260" stroke-dashoffset="-221" transform="rotate(-90 80 80)" opacity="0.8"/>
+            <!-- Paused: 1/26 = ~14deg -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="#EAB308" stroke-width="12" stroke-dasharray="14 301" stroke-dashoffset="-276" transform="rotate(-90 80 80)" opacity="0.8"/>
+            <!-- Standby: 1/26 -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="#818CF8" stroke-width="12" stroke-dasharray="14 301" stroke-dashoffset="-290" transform="rotate(-90 80 80)" opacity="0.8"/>
+            <!-- Offline: 4/26 = ~55deg -->
+            <circle cx="80" cy="80" r="50" fill="none" stroke="#3F3F46" stroke-width="12" stroke-dasharray="55 260" stroke-dashoffset="-304" transform="rotate(-90 80 80)" opacity="0.8"/>
+            <text x="80" y="75" text-anchor="middle" fill="white" font-size="22" font-weight="700">26</text>
+            <text x="80" y="90" text-anchor="middle" fill="#B0B0B0" font-size="8">agents</text>
+          </svg>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #22D3EE;"></span><span style="font-size: 9px; color: var(--text-sub);">Active 16</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #64748B;"></span><span style="font-size: 9px; color: var(--text-sub);">Idle 4</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #EAB308;"></span><span style="font-size: 9px; color: var(--text-sub);">Paused 1</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #818CF8;"></span><span style="font-size: 9px; color: var(--text-sub);">Standby 1</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3F3F46;"></span><span style="font-size: 9px; color: var(--text-sub);">Offline 4</span></div>
+        </div>
+      </div>
+      
+      <!-- Top Performers -->
+      <div class="card span-1" style="grid-column: 2;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--cyan-dim); opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: var(--cyan-dim);">B</span>
+          Top Performers
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="bar-row"><span class="bar-label" style="color: #67E8F9;">Arkhitektor</span><div class="bar-track"><div class="bar-fill" style="width: 96%; background: linear-gradient(90deg, #67E8F944, #67E8F9aa);"></div></div><span class="bar-value" style="color: #67E8F9;">96</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #22D3EE;">Koordinator</span><div class="bar-track"><div class="bar-fill" style="width: 94%; background: linear-gradient(90deg, #22D3EE44, #22D3EEaa);"></div></div><span class="bar-value" style="color: #22D3EE;">94</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #06B6D4;">Revizor</span><div class="bar-track"><div class="bar-fill" style="width: 91%; background: linear-gradient(90deg, #06B6D444, #06B6D4aa);"></div></div><span class="bar-value" style="color: #06B6D4;">91</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #0891B2;">Koder</span><div class="bar-track"><div class="bar-fill" style="width: 89%; background: linear-gradient(90deg, #0891B244, #0891B2aa);"></div></div><span class="bar-value" style="color: #0891B2;">89</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #0E7490;">RAG-Spec.</span><div class="bar-track"><div class="bar-fill" style="width: 87%; background: linear-gradient(90deg, #0E749044, #0E7490aa);"></div></div><span class="bar-value" style="color: #0E7490;">87</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #155E75;">Nablyudatel</span><div class="bar-track"><div class="bar-fill" style="width: 85%; background: linear-gradient(90deg, #155E7544, #155E75aa);"></div></div><span class="bar-value" style="color: #155E75;">85</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #164E63;">Shlyuz</span><div class="bar-track"><div class="bar-fill" style="width: 83%; background: linear-gradient(90deg, #164E6344, #164E63aa);"></div></div><span class="bar-value" style="color: #164E63;">83</span></div>
+          <div class="bar-row"><span class="bar-label" style="color: #0E7490;">Trener</span><div class="bar-track"><div class="bar-fill" style="width: 81%; background: linear-gradient(90deg, #0E749044, #0E7490aa);"></div></div><span class="bar-value" style="color: #0E7490;">81</span></div>
+        </div>
+      </div>
+      
+      <!-- System Health -->
+      <div class="card span-1" style="grid-column: 3;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: #0891B2; opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: #0891B2;">H</span>
+          System Health
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- CPU -->
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 10px; color: var(--text-sub);">CPU Usage</span>
+              <span style="font-size: 10px; font-weight: 700; color: var(--cyan);">34%</span>
+            </div>
+            <div style="width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.04);">
+              <div style="width: 34%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #06B6D488, #06B6D4);"></div>
+            </div>
+          </div>
+          <!-- Memory -->
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 10px; color: var(--text-sub);">Memory</span>
+              <span style="font-size: 10px; font-weight: 700; color: #0891B2;">67%</span>
+            </div>
+            <div style="width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.04);">
+              <div style="width: 67%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #0891B288, #0891B2);"></div>
+            </div>
+          </div>
+          <!-- Network -->
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 10px; color: var(--text-sub);">Network I/O</span>
+              <span style="font-size: 10px; font-weight: 700; color: #0E7490;">23%</span>
+            </div>
+            <div style="width: 100%; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.04);">
+              <div style="width: 23%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #0E749088, #0E7490);"></div>
+            </div>
+          </div>
+          <!-- Quick stats -->
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(13,13,13,0.8);">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #22D3EE; box-shadow: 0 0 4px #22D3EE; animation: pulseGlow 2s ease-in-out infinite;"></span>
+              <span style="font-size: 9px; color: var(--text-muted);">Uptime</span>
+              <span style="font-size: 9px; font-weight: 700; color: #22D3EE;">99.7%</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(13,13,13,0.8);">
+              <span style="font-size: 9px; color: var(--text-muted);">Connections</span>
+              <span style="font-size: 9px; font-weight: 700; color: var(--cyan);">55</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 4px; background: rgba(13,13,13,0.8);">
+              <span style="font-size: 9px; color: var(--text-muted);">Error Rate</span>
+              <span style="font-size: 9px; font-weight: 700; color: #22D3EE;">0.3%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ROW 3: Wider panels -->
+      <!-- Network Activity Chart -->
+      <div class="card span-2" style="grid-column: 1 / 3;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--cyan); opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: var(--cyan);">N</span>
+          Network Activity (24h)
+        </div>
+        <div class="chart-placeholder">
+          <svg width="100%" height="140" viewBox="0 0 600 140" preserveAspectRatio="none">
+            <!-- Grid -->
+            <line x1="30" y1="10" x2="590" y2="10" stroke="#333" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.3"/>
+            <line x1="30" y1="45" x2="590" y2="45" stroke="#333" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.3"/>
+            <line x1="30" y1="80" x2="590" y2="80" stroke="#333" stroke-width="0.5" stroke-dasharray="2,3" opacity="0.3"/>
+            <line x1="30" y1="115" x2="590" y2="115" stroke="#333" stroke-width="0.5"/>
+            <!-- Area -->
+            <path d="M30,115 L30,90 55,82 80,86 105,75 130,65 155,55 180,48 205,52 230,42 255,35 280,40 305,30 330,36 355,42 380,48 405,44 430,40 455,48 480,36 505,30 530,38 555,48 580,58 590,115 Z" fill="url(#netGrad)" opacity="0.6"/>
+            <!-- Line -->
+            <polyline points="30,90 55,82 80,86 105,75 130,65 155,55 180,48 205,52 230,42 255,35 280,40 305,30 330,36 355,42 380,48 405,44 430,40 455,48 480,36 505,30 530,38 555,48 580,58" fill="none" stroke="#06B6D4" stroke-width="2" opacity="0.8"/>
+            <defs>
+              <linearGradient id="netGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.02"/>
+              </linearGradient>
+            </defs>
+            <!-- X labels -->
+            <text x="30" y="130" fill="#64748B" font-size="7">00</text>
+            <text x="130" y="130" fill="#64748B" font-size="7">04</text>
+            <text x="230" y="130" fill="#64748B" font-size="7">08</text>
+            <text x="330" y="130" fill="#64748B" font-size="7">12</text>
+            <text x="430" y="130" fill="#64748B" font-size="7">16</text>
+            <text x="530" y="130" fill="#64748B" font-size="7">20</text>
+            <text x="580" y="130" fill="#64748B" font-size="7">23</text>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- Activity Feed -->
+      <div class="card span-1" style="grid-column: 3;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--cyan-dim); opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: var(--cyan-dim);">A</span>
+          Recent Activity
+        </div>
+        <div class="activity-feed">
+          <div class="activity-item" style="border-left-color: #155E75;">
+            <span class="activity-time">2s</span>
+            <div>
+              <div class="activity-agent" style="color: #155E75;">Shlyuz</div>
+              <div class="activity-desc">routed task to Ispolnitel-A</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #06B6D4;">
+            <span class="activity-time">5s</span>
+            <div>
+              <div class="activity-agent" style="color: #06B6D4;">Revizor</div>
+              <div class="activity-desc">completed quality check</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #67E8F9;">
+            <span class="activity-time">12s</span>
+            <div>
+              <div class="activity-agent" style="color: #67E8F9;">Arkhitektor</div>
+              <div class="activity-desc">broadcast strategy update</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #164E63;">
+            <span class="activity-time">18s</span>
+            <div>
+              <div class="activity-agent" style="color: #164E63;">Trener</div>
+              <div class="activity-desc">updated DSPy parameters</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #0E7490;">
+            <span class="activity-time">25s</span>
+            <div>
+              <div class="activity-agent" style="color: #0E7490;">Nablyudatel</div>
+              <div class="activity-desc">memory threshold warning</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #22D3EE;">
+            <span class="activity-time">31s</span>
+            <div>
+              <div class="activity-agent" style="color: #22D3EE;">Koordinator</div>
+              <div class="activity-desc">delegated 3 tasks</div>
+            </div>
+          </div>
+          <div class="activity-item" style="border-left-color: #0891B2;">
+            <span class="activity-time">45s</span>
+            <div>
+              <div class="activity-agent" style="color: #0891B2;">RAG-Specialist</div>
+              <div class="activity-desc">retrieved context #847</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ROW 4: Bottom panels -->
+      <!-- Connection Heatmap -->
+      <div class="card span-1" style="grid-column: 1;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: var(--cyan); opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: var(--cyan);">M</span>
+          Connection Heatmap
+        </div>
+        <div class="heatmap-grid">
+          <div class="heatmap-header"></div>
+          <div class="heatmap-header" style="color: #67E8F9;">Стр</div>
+          <div class="heatmap-header" style="color: #22D3EE;">Ткт</div>
+          <div class="heatmap-header" style="color: #06B6D4;">Кнт</div>
+          <div class="heatmap-header" style="color: #0891B2;">Исп</div>
+          <div class="heatmap-header" style="color: #0E7490;">Пмт</div>
+          <div class="heatmap-header" style="color: #155E75;">Мнц</div>
+          <div class="heatmap-header" style="color: #164E63;">Кмн</div>
+          <div class="heatmap-header" style="color: #0E7490;">Обч</div>
+          
+          <div class="heatmap-label" style="color: #67E8F9;">Стр</div>
+          <div class="heatmap-cell mid"></div><div class="heatmap-cell mid"></div><div class="heatmap-cell low"></div><div class="heatmap-cell low"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell low"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div>
+          
+          <div class="heatmap-label" style="color: #22D3EE;">Ткт</div>
+          <div class="heatmap-cell empty"></div><div class="heatmap-cell low"></div><div class="heatmap-cell low"></div><div class="heatmap-cell high"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div>
+          
+          <div class="heatmap-label" style="color: #06B6D4;">Кнт</div>
+          <div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell low"></div><div class="heatmap-cell mid"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div>
+          
+          <div class="heatmap-label" style="color: #0891B2;">Исп</div>
+          <div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell mid"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div><div class="heatmap-cell empty"></div>
+        </div>
+      </div>
+      
+      <!-- Formula-Agent Mapping -->
+      <div class="card span-2" style="grid-column: 2 / 4;">
+        <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; border-radius: 12px 0 0 12px; background: #6B7280; opacity: 0.5;"></div>
+        <div class="card-title">
+          <span class="card-icon" style="color: #6B7280;">F</span>
+          Formula-Agent Mapping
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+          <!-- Foundational -->
+          <div style="padding: 8px; border-radius: 6px; background: rgba(153,153,153,0.05); border: 1px solid rgba(153,153,153,0.15);">
+            <div style="font-size: 8px; font-weight: 700; color: #999; text-transform: uppercase; margin-bottom: 6px;">Foundational</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(153,153,153,0.1); color: #999; border: 1px solid rgba(153,153,153,0.15);">CoT</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(153,153,153,0.1); color: #999; border: 1px solid rgba(153,153,153,0.15);">ToT</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(153,153,153,0.1); color: #999; border: 1px solid rgba(153,153,153,0.15);">GoT</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(153,153,153,0.1); color: #999; border: 1px solid rgba(153,153,153,0.15);">AoT</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(153,153,153,0.1); color: #999; border: 1px solid rgba(153,153,153,0.15);">SoT</span>
+            </div>
+          </div>
+          <!-- Verification -->
+          <div style="padding: 8px; border-radius: 6px; background: rgba(136,136,136,0.05); border: 1px solid rgba(136,136,136,0.15);">
+            <div style="font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 6px;">Verification</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(136,136,136,0.1); color: #888; border: 1px solid rgba(136,136,136,0.15);">CoVe</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(136,136,136,0.1); color: #888; border: 1px solid rgba(136,136,136,0.15);">Reflexion</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(136,136,136,0.1); color: #888; border: 1px solid rgba(136,136,136,0.15);">SelfCon.</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(136,136,136,0.1); color: #888; border: 1px solid rgba(136,136,136,0.15);">SelfRef.</span>
+            </div>
+          </div>
+          <!-- Planning -->
+          <div style="padding: 8px; border-radius: 6px; background: rgba(119,119,119,0.05); border: 1px solid rgba(119,119,119,0.15);">
+            <div style="font-size: 8px; font-weight: 700; color: #777; text-transform: uppercase; margin-bottom: 6px;">Planning</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">ReWOO</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">ReAct</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">PChain</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">P&S</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">StepB.</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(119,119,119,0.1); color: #777; border: 1px solid rgba(119,119,119,0.15);">L->M</span>
+            </div>
+          </div>
+          <!-- Advanced -->
+          <div style="padding: 8px; border-radius: 6px; background: rgba(102,102,102,0.05); border: 1px solid rgba(102,102,102,0.15);">
+            <div style="font-size: 8px; font-weight: 700; color: #666; text-transform: uppercase; margin-bottom: 6px;">Advanced</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 3px;">
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(102,102,102,0.1); color: #666; border: 1px solid rgba(102,102,102,0.15);">MoA</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(102,102,102,0.1); color: #666; border: 1px solid rgba(102,102,102,0.15);">LATS</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(102,102,102,0.1); color: #666; border: 1px solid rgba(102,102,102,0.15);">PoT</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(102,102,102,0.1); color: #666; border: 1px solid rgba(102,102,102,0.15);">DSPy</span>
+              <span style="font-size: 8px; padding: 2px 5px; border-radius: 3px; background: rgba(102,102,102,0.1); color: #666; border: 1px solid rgba(102,102,102,0.15);">MetaCoT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer strip -->
+      <div class="footer-row">
+        <span class="footer-text">P-MAS Dashboard v6.0 -- Monochrome Cyan</span>
+        <span class="footer-text">26 Agents | 8 Groups | 20 Formulas | 6 Edge Types</span>
+        <span class="footer-text">Next.js 16 + Prisma + TypeScript</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

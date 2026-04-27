@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search } from 'lucide-react'
+import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search, Menu } from 'lucide-react'
 import { toast } from 'sonner'
 import { fetchWithRetry } from '@/lib/client-fetch'
 
 const AgentHierarchy = dynamic(
-  () => import('@/components/agent-hierarchy'),
+  () => import('@/components/hierarchy/agent-hierarchy-v2'),
   { ssr: false }
 )
 
@@ -196,6 +196,45 @@ const STATUS_DISTRIBUTION = [
 // ─── Network Activity Data ──────────────────────────────────────────────────
 
 const NETWORK_ACTIVITY_DATA = [12, 18, 15, 22, 28, 35, 42, 38, 45, 52, 48, 55, 50, 47, 42, 38, 44, 50, 53, 48, 35, 28, 20, 15]
+
+// ─── Agent List for Sidebar ──────────────────────────────────────────────────
+
+const AGENT_LIST = [
+  { name: 'Arkhitektor', group: 'Стратегия', status: 'active' as const, role: 'lead' as const },
+  { name: 'Strateg', group: 'Стратегия', status: 'active' as const, role: 'active' as const },
+  { name: 'Vizioner', group: 'Стратегия', status: 'active' as const, role: 'active' as const },
+  { name: 'Koordinator', group: 'Тактика', status: 'active' as const, role: 'lead' as const },
+  { name: 'Planirorshchik', group: 'Тактика', status: 'active' as const, role: 'active' as const },
+  { name: 'Dispetcher', group: 'Тактика', status: 'idle' as const, role: 'idle' as const },
+  { name: 'Revizor', group: 'Контроль', status: 'active' as const, role: 'lead' as const },
+  { name: 'Tsenzor', group: 'Контроль', status: 'active' as const, role: 'active' as const },
+  { name: 'Advokat', group: 'Контроль', status: 'active' as const, role: 'active' as const },
+  { name: 'Ispolnitel-A', group: 'Исполнение', status: 'active' as const, role: 'lead' as const },
+  { name: 'Koder', group: 'Исполнение', status: 'active' as const, role: 'active' as const },
+  { name: 'Otladchik', group: 'Исполнение', status: 'active' as const, role: 'active' as const },
+  { name: 'Testirovshchik', group: 'Исполнение', status: 'active' as const, role: 'active' as const },
+  { name: 'Dokumentator', group: 'Исполнение', status: 'idle' as const, role: 'idle' as const },
+  { name: 'Arkhivarius', group: 'Память', status: 'active' as const, role: 'lead' as const },
+  { name: 'RAG-Specialist', group: 'Память', status: 'active' as const, role: 'active' as const },
+  { name: 'Indekser', group: 'Память', status: 'standby' as const, role: 'standby' as const },
+  { name: 'Nablyudatel', group: 'Мониторинг', status: 'active' as const, role: 'lead' as const },
+  { name: 'Diagnost', group: 'Мониторинг', status: 'active' as const, role: 'active' as const },
+  { name: 'Alert-Operator', group: 'Мониторинг', status: 'paused' as const, role: 'paused' as const },
+  { name: 'Shlyuz', group: 'Коммуникация', status: 'active' as const, role: 'lead' as const },
+  { name: 'Protokol', group: 'Коммуникация', status: 'active' as const, role: 'active' as const },
+  { name: 'Perevodchik', group: 'Коммуникация', status: 'idle' as const, role: 'idle' as const },
+  { name: 'Trener', group: 'Обучение', status: 'active' as const, role: 'lead' as const },
+  { name: 'Kritik', group: 'Обучение', status: 'active' as const, role: 'active' as const },
+  { name: 'Analitik', group: 'Обучение', status: 'idle' as const, role: 'idle' as const },
+]
+
+const STATUS_DOT_COLORS: Record<string, string> = {
+  active: '#22D3EE',
+  idle: '#64748B',
+  paused: '#EAB308',
+  standby: '#818CF8',
+  offline: '#3F3F46',
+}
 
 // ─── Animated Counter ────────────────────────────────────────────────────────
 
@@ -1388,16 +1427,245 @@ function ArchitectureDiagram() {
   )
 }
 
-// ─── Dashboard Panel ──────────────────────────────────────────────────────────
+// ─── Status Distribution Card ─────────────────────────────────────────────────
 
-function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
-  const [showScrollTop, setShowScrollTop] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+function StatusDistributionCard() {
+  const donutRadius = 50
+  const donutStroke = 12
+  const donutCircumference = 2 * Math.PI * donutRadius
+  const totalAgents = STATUS_DISTRIBUTION.reduce((sum, s) => sum + s.count, 0)
+
+  const donutSegments = STATUS_DISTRIBUTION.filter(s => s.count > 0).reduce<Array<{
+    label: string; count: number; color: string; segmentLength: number; offset: number
+  }>>((acc, status) => {
+    const segmentLength = (status.count / totalAgents) * donutCircumference
+    const offset = acc.length > 0
+      ? acc[acc.length - 1].offset + acc[acc.length - 1].segmentLength
+      : 0
+    acc.push({ ...status, segmentLength, offset })
+    return acc
+  }, [])
+
+  return (
+    <div
+      className="rounded-xl p-4 relative overflow-hidden"
+      style={{
+        background: 'rgba(26,26,26,0.6)',
+        border: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <div className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: '#06B6D4', opacity: 0.5 }} />
+      <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-3 flex items-center gap-1.5">
+        <BarChart3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />
+        Status Distribution
+      </h3>
+      <div className="flex items-center justify-center h-[160px]">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r={donutRadius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={donutStroke} />
+          {donutSegments.map((segment, i) => (
+            <circle
+              key={i}
+              cx="80"
+              cy="80"
+              r={donutRadius}
+              fill="none"
+              stroke={segment.color}
+              strokeWidth={donutStroke}
+              strokeDasharray={`${segment.segmentLength} ${donutCircumference - segment.segmentLength}`}
+              strokeDashoffset={-segment.offset}
+              strokeLinecap="butt"
+              transform="rotate(-90 80 80)"
+              style={{ opacity: 0.8 }}
+            />
+          ))}
+          <text x="80" y="75" textAnchor="middle" dominantBaseline="middle" fill="#FFFFFF" fontSize="22" fontWeight="700">{totalAgents}</text>
+          <text x="80" y="90" textAnchor="middle" dominantBaseline="middle" fill="#B0B0B0" fontSize="8">agents</text>
+        </svg>
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
+        {STATUS_DISTRIBUTION.map((status) => (
+          <div key={status.label} className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: status.color, opacity: status.count > 0 ? 1 : 0.3 }} />
+            <span className="text-[9px] text-[#B0B0B0]">{status.label}</span>
+            <span className="text-[9px] font-bold" style={{ color: status.count > 0 ? status.color : '#555' }}>{status.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Top Performers Card ─────────────────────────────────────────────────────
+
+function TopPerformersCard() {
+  const [barWidths, setBarWidths] = useState<number[]>(TOP_PERFORMERS.map(() => 0))
+  useEffect(() => {
+    const timers = TOP_PERFORMERS.map((_, i) =>
+      setTimeout(() => {
+        setBarWidths(prev => {
+          const next = [...prev]
+          next[i] = TOP_PERFORMERS[i].score
+          return next
+        })
+      }, 100 + i * 80)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  const getGroupColor = (groupName: string): string => {
+    const group = ROLE_GROUPS.find(g => g.name === groupName)
+    return group?.color || '#94a3b8'
+  }
+
+  return (
+    <div
+      className="rounded-xl p-4 relative overflow-hidden"
+      style={{
+        background: 'rgba(26,26,26,0.6)',
+        border: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <div className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: '#0891B2', opacity: 0.5 }} />
+      <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-3 flex items-center gap-1.5">
+        <BarChart3 className="w-3.5 h-3.5" style={{ color: '#0891B2' }} />
+        Top Performers
+      </h3>
+      <div className="flex flex-col gap-2">
+        {TOP_PERFORMERS.map((agent, i) => {
+          const barColor = getGroupColor(agent.group)
+          const width = barWidths[i]
+          return (
+            <div key={agent.name} className="flex items-center gap-2">
+              <span className="text-[10px] font-medium w-[80px] truncate text-right flex-shrink-0" style={{ color: barColor }}>{agent.name}</span>
+              <div className="flex-1 h-[6px] rounded-sm relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+                <div
+                  className="h-full rounded-sm transition-all duration-700 ease-out"
+                  style={{ width: `${width}%`, background: `linear-gradient(90deg, ${barColor}44, ${barColor}aa)` }}
+                />
+              </div>
+              <span className="text-[9px] font-bold w-7 text-right flex-shrink-0" style={{ color: barColor }}>{width > 0 ? agent.score : ''}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── System Health Card ──────────────────────────────────────────────────────
+
+function SystemHealthCard() {
+  const [cpuWidth, setCpuWidth] = useState(0)
+  const [memWidth, setMemWidth] = useState(0)
+  const [netWidth, setNetWidth] = useState(0)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setCpuWidth(34), 100)
+    const t2 = setTimeout(() => setMemWidth(67), 200)
+    const t3 = setTimeout(() => setNetWidth(23), 300)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
+
+  const bars = [
+    { label: 'CPU Usage', value: 34, color: '#06B6D4', width: cpuWidth },
+    { label: 'Memory', value: 67, color: '#0891B2', width: memWidth },
+    { label: 'Network I/O', value: 23, color: '#0E7490', width: netWidth },
+  ]
+
+  return (
+    <div
+      className="rounded-xl p-4 relative overflow-hidden"
+      style={{
+        background: 'rgba(26,26,26,0.6)',
+        border: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <div className="absolute top-0 left-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: '#0891B2', opacity: 0.5 }} />
+      <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B] mb-3 flex items-center gap-1.5">
+        <Activity className="w-3.5 h-3.5" style={{ color: '#0891B2' }} />
+        System Health
+      </h3>
+      <div className="flex flex-col gap-3">
+        {bars.map((bar) => (
+          <div key={bar.label}>
+            <div className="flex justify-between mb-1">
+              <span className="text-[10px] text-[#B0B0B0]">{bar.label}</span>
+              <span className="text-[10px] font-bold" style={{ color: bar.color }}>{bar.value}%</span>
+            </div>
+            <div className="w-full h-1.5 rounded-full relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${bar.width}%`, background: `linear-gradient(90deg, ${bar.color}88, ${bar.color})` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: 'rgba(13,13,13,0.8)' }}>
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#22D3EE' }} />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#22D3EE' }} />
+          </span>
+          <span className="text-[9px] text-[#64748B]">Uptime</span>
+          <span className="text-[9px] font-bold" style={{ color: '#22D3EE' }}>99.7%</span>
+        </div>
+        <div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: 'rgba(13,13,13,0.8)' }}>
+          <span className="text-[9px] text-[#64748B]">Connections</span>
+          <span className="text-[9px] font-bold" style={{ color: '#06B6D4' }}>55</span>
+        </div>
+        <div className="flex items-center gap-1 px-2 py-1 rounded" style={{ background: 'rgba(13,13,13,0.8)' }}>
+          <span className="text-[9px] text-[#64748B]">Error Rate</span>
+          <span className="text-[9px] font-bold" style={{ color: '#22D3EE' }}>0.3%</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── KPI Strip ───────────────────────────────────────────────────────────────
+
+function KPIStrip() {
+  const kpis = [
+    { label: 'Total Agents', value: '26', color: '#06B6D4', change: '+2 this week', changeColor: '#22D3EE', sparkData: [22, 23, 24, 24, 25, 26] },
+    { label: 'Active Now', value: '16', color: '#22D3EE', change: '4 idle / 1 paused', changeColor: '#64748B' },
+    { label: 'Tasks Running', value: '12', color: '#0891B2', change: '187 completed', changeColor: '#22D3EE' },
+    { label: 'Success Rate', value: '94.7%', color: '#22D3EE', change: '+0.3%', changeColor: '#22D3EE', sparkData: [90, 92, 91, 93, 94, 95] },
+    { label: 'Avg Response', value: '1.2s', color: '#B0B0B0', change: '-0.3s', changeColor: '#22D3EE' },
+  ]
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {kpis.map((kpi) => (
+        <div
+          key={kpi.label}
+          className="rounded-lg p-3.5 relative overflow-hidden"
+          style={{
+            background: 'rgba(26,26,26,0.4)',
+            border: '1px solid rgba(51,51,51,0.3)',
+          }}
+        >
+          <div className="text-[10px] text-[#64748B] mb-1">{kpi.label}</div>
+          <div className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</div>
+          <div className="text-[10px] mt-1" style={{ color: kpi.changeColor }}>{kpi.change}</div>
+          {kpi.sparkData && (
+            <div className="absolute right-2.5 bottom-2.5">
+              <MiniSparkline data={kpi.sparkData} color={kpi.color} width={48} height={16} />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Dashboard Header ────────────────────────────────────────────────────────
+
+function DashboardHeader({ onOpenHierarchy, onToggleSidebar }: { onOpenHierarchy: () => void; onToggleSidebar: () => void }) {
   const [lastUpdated, setLastUpdated] = useState<string>('')
+  const [refreshing, setRefreshing] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
 
-  // Live clock - only on client to avoid hydration mismatch
   const formatTime = useCallback((date: Date) => {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }, [])
@@ -1409,17 +1677,6 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
     return () => clearInterval(interval)
   }, [formatTime])
 
-  // Scroll listener
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
-      setShowScrollTop(window.scrollY > scrollHeight * 0.5)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Refresh handler
   const handleRefresh = useCallback(() => {
     setRefreshing(true)
     setTimeout(() => {
@@ -1429,30 +1686,176 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
     }, 1200)
   }, [formatTime])
 
-  // Filter function for search
-  const matchesSearch = (text: string): boolean => {
-    if (!searchQuery.trim()) return true
-    return text.toLowerCase().includes(searchQuery.toLowerCase())
-  }
+  return (
+    <header
+      className="px-4 sm:px-6 py-2.5 border-b relative flex-shrink-0"
+      style={{
+        background: '#0D0D0D',
+        borderBottom: '1px solid rgba(51,51,51,0.5)',
+      }}
+    >
+      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.4), transparent)' }} />
+      <div className="flex items-center justify-between gap-3">
+        {/* Left: Menu + Logo + Title + Status */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <button onClick={onToggleSidebar} className="p-1.5 rounded-md transition-colors hover:bg-white/5 lg:hidden" style={{ color: '#64748B' }}>
+            <Menu className="w-4 h-4" />
+          </button>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)' }}>
+            <Brain className="w-4 h-4" style={{ color: '#06B6D4' }} />
+          </div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-white font-bold text-sm tracking-wide">P-MAS</h1>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#06B6D4' }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#06B6D4' }} />
+              </span>
+              <span className="text-[8px] font-bold tracking-wider" style={{ color: '#06B6D4' }}>ONLINE</span>
+            </div>
+            <span className="text-slate-600 text-[10px] hidden md:inline">Multi-Agent System</span>
+          </div>
+        </div>
 
-  // Filtered role groups
-  const filteredRoleGroups = ROLE_GROUPS.filter(g =>
-    matchesSearch(g.name) || matchesSearch(g.label) || matchesSearch(g.desc) || matchesSearch(g.formulas)
+        {/* Center: Search */}
+        <div className="relative flex-1 max-w-[280px] hidden sm:block">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#64748B' }} />
+          <div className="w-full pl-7 pr-3 py-1.5 rounded-md text-[11px]" style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}>
+            Search agents, formulas, tasks...
+          </div>
+        </div>
+
+        {/* Right: Clock + Actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-[9px] text-[#64748B] font-mono hidden sm:inline" suppressHydrationWarning>{lastUpdated || '--:--:--'}</span>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-2.5 py-1 rounded-md text-[11px] transition-all duration-200 hover:scale-105 disabled:opacity-50"
+            style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
+          >
+            <RefreshCw className={`w-3 h-3 inline mr-1 ${refreshing ? 'animate-spin' : ''}`} />Refresh
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="px-2.5 py-1 rounded-md text-[11px] transition-all duration-200 hover:scale-105 relative"
+              style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
+            >
+              <Bell className="w-3 h-3 inline mr-1" />Alerts
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold" style={{ background: '#EAB308', color: '#000' }}>3</span>
+            </button>
+            {showNotifications && (
+              <div
+                className="absolute right-0 top-9 w-56 rounded-lg p-2.5 z-50"
+                style={{ background: 'rgba(20,20,20,0.98)', border: '1px solid rgba(51,51,51,0.5)', boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white text-[10px] font-semibold uppercase tracking-wider">Alerts</span>
+                  <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-3 h-3" /></button>
+                </div>
+                {[
+                  { text: 'Memory threshold warning', time: '25s ago', color: '#EAB308' },
+                  { text: 'Escalation protocol triggered', time: '1m ago', color: '#06B6D4' },
+                  { text: 'Agent latency spike traced', time: '2m ago', color: '#0891B2' },
+                ].map((alert, i) => (
+                  <div key={i} className="flex items-start gap-2 p-1.5 rounded-md mb-1" style={{ background: 'rgba(13,13,13,0.6)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0" style={{ background: alert.color }} />
+                    <div>
+                      <p className="text-[9px] text-[#B0B0B0]">{alert.text}</p>
+                      <p className="text-[7px] text-slate-600">{alert.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onOpenHierarchy}
+            className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
+            style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.3)', color: '#06B6D4' }}
+          >
+            Hierarchy View
+          </button>
+        </div>
+      </div>
+    </header>
   )
+}
 
-  // Filtered formulas
-  const filteredFormulaTaxonomy = FORMULA_TAXONOMY.map(cat => ({
-    ...cat,
-    formulas: cat.formulas.filter(f => matchesSearch(f.name) || matchesSearch(f.full) || matchesSearch(cat.category)),
-  })).filter(cat => cat.formulas.length > 0)
+// ─── Dashboard Sidebar ───────────────────────────────────────────────────────
 
-  // Filtered edge types
-  const filteredEdgeTypes = EDGE_TYPES.filter(e => matchesSearch(e.name) || matchesSearch(e.desc))
+function DashboardSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const agentsByGroup = ROLE_GROUPS.map(group => ({
+    ...group,
+    agents: AGENT_LIST.filter(a => a.group === group.name),
+  }))
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#000000', scrollBehavior: 'smooth' }}>
+    <>
+      {/* Overlay for mobile */}
+      {open && (
+        <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={onClose} />
+      )}
+      <aside
+        className={`
+          fixed lg:relative z-40 top-0 left-0 h-full
+          w-[260px] flex-shrink-0
+          transition-transform duration-300 ease-in-out
+          ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+        style={{
+          background: '#0D0D0D',
+          borderRight: '1px solid rgba(51,51,51,0.5)',
+        }}
+      >
+        <div className="p-4 h-full overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+          <div className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3 px-2">Agent Navigation</div>
+          <div className="flex flex-col gap-1">
+            {agentsByGroup.map((group) => (
+              <div key={group.name}>
+                <div
+                  className="text-[10px] font-semibold px-2 py-1.5 rounded mt-2 mb-0.5"
+                  style={{ color: group.color, background: `${group.color}12` }}
+                >
+                  {group.name} ({group.agents.length})
+                </div>
+                {group.agents.map((agent) => {
+                  const dotColor = STATUS_DOT_COLORS[agent.status] || '#3F3F46'
+                  return (
+                    <div
+                      key={agent.name}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-white/[0.03]"
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{
+                          background: dotColor,
+                          boxShadow: agent.status === 'active' ? `0 0 4px ${dotColor}` : 'none',
+                        }}
+                      />
+                      <span className="text-[11px] text-[#B0B0B0] flex-1 truncate">{agent.name}</span>
+                      <span className="text-[8px] text-[#64748B]">{agent.role}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
+    </>
+  )
+}
+
+// ─── Dashboard Panel ──────────────────────────────────────────────────────────
+
+function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  return (
+    <div className="flex flex-col h-screen" style={{ background: '#000000' }}>
       <style>{`
-        html { scroll-behavior: smooth; }
         .activity-scroll::-webkit-scrollbar { width: 4px; }
         .activity-scroll::-webkit-scrollbar-track { background: transparent; }
         .activity-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -1466,9 +1869,6 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
         }
-        @keyframes flowDash {
-          to { stroke-dashoffset: -20; }
-        }
         @keyframes shimmer {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
@@ -1478,604 +1878,44 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           70% { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0); }
           100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
         }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.4s ease forwards;
-        }
-        .animate-spin-slow {
-          animation: spin 1s linear infinite;
-        }
-        .pulse-ring {
-          animation: pulseRing 2s ease-out infinite;
-        }
       `}</style>
 
-      {/* Header — Compact single-row */}
-      <header
-        className="px-4 sm:px-6 py-2.5 border-b border-white/5 relative"
-        style={{
-          background: 'rgba(13, 13, 13, 0.95)',
-          backdropFilter: 'blur(12px)',
-        }}
-      >
-        {/* Subtle top accent line */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.4), transparent)' }} />
-        
-        <div className="max-w-[1280px] mx-auto flex items-center justify-between gap-4">
-          {/* Left: Logo + Title + Status */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)' }}>
-              <Brain className="w-4 h-4" style={{ color: '#06B6D4' }} />
-            </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-white font-bold text-sm tracking-wide">P-MAS</h1>
-              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#06B6D4' }} />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#06B6D4' }} />
-                </span>
-                <span className="text-[8px] font-bold tracking-wider" style={{ color: '#06B6D4' }}>ONLINE</span>
-              </div>
-              <span className="text-slate-600 text-[10px] hidden md:inline">Multi-Agent System</span>
-            </div>
-          </div>
+      <DashboardHeader
+        onOpenHierarchy={onOpenHierarchy}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
 
-          {/* Center: Search */}
-          <div className="relative flex-1 max-w-xs hidden sm:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#64748B' }} />
-            <input
-              type="text"
-              placeholder="Filter dashboard..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-7 pr-3 py-1.5 rounded-md text-[11px] focus:outline-none transition-all duration-200"
-              style={{
-                background: 'rgba(30, 30, 30, 0.8)',
-                border: '1px solid rgba(51, 51, 51, 0.4)',
-                color: '#FFFFFF',
-              }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.4)'; e.currentTarget.style.boxShadow = '0 0 8px rgba(6,182,212,0.08)' }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)'; e.currentTarget.style.boxShadow = 'none' }}
-            />
-          </div>
-
-          {/* Right: Actions + Clock */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex items-center gap-1.5 mr-1">
-              <Clock className="w-3 h-3" style={{ color: '#475569' }} />
-              <span className="text-[9px] text-slate-600 font-mono hidden sm:inline" suppressHydrationWarning>{lastUpdated || '--:--:--'}</span>
-            </div>
-            {/* Refresh */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 disabled:opacity-50"
-              style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
-              title="Refresh"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin-slow' : ''}`} />
-            </button>
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 relative"
-                style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
-                title="Alerts"
-              >
-                <Bell className="w-3.5 h-3.5" />
-                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold" style={{ background: '#EAB308', color: '#000000' }}>3</span>
-              </button>
-              {showNotifications && (
-                <div
-                  className="absolute right-0 top-9 w-60 rounded-lg p-2.5 z-50 animate-fade-in-up"
-                  style={{
-                    background: 'rgba(20,20,20,0.98)',
-                    border: '1px solid rgba(51,51,51,0.5)',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white text-[10px] font-semibold uppercase tracking-wider">Alerts</span>
-                    <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-3 h-3" /></button>
-                  </div>
-                  <div className="space-y-1.5">
-                    {[
-                      { text: 'Memory threshold warning detected', time: '25s ago', color: '#EAB308' },
-                      { text: 'Escalation protocol triggered', time: '1m ago', color: '#06B6D4' },
-                      { text: 'Agent latency spike traced', time: '2m ago', color: '#0891B2' },
-                    ].map((alert, i) => (
-                      <div key={i} className="flex items-start gap-2 p-1.5 rounded-md transition-colors duration-150 hover:bg-white/[0.03]" style={{ background: 'rgba(13,13,13,0.6)' }}>
-                        <span className="w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0" style={{ background: alert.color }} />
-                        <div>
-                          <p className="text-[9px] text-[#B0B0B0]">{alert.text}</p>
-                          <p className="text-[7px] text-slate-600 mt-0.5">{alert.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Open Hierarchy */}
-            <button
-              onClick={onOpenHierarchy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
-              style={{
-                background: 'rgba(6, 182, 212, 0.12)',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-                color: '#06B6D4',
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="4"/>
-                <line x1="12" y1="2" x2="12" y2="6"/>
-                <line x1="12" y1="18" x2="12" y2="22"/>
-                <line x1="2" y1="12" x2="6" y2="12"/>
-                <line x1="18" y1="12" x2="22" y2="12"/>
-              </svg>
-              <span className="hidden sm:inline">Hierarchy</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile search row */}
-        <div className="sm:hidden mt-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#64748B' }} />
-            <input
-              type="text"
-              placeholder="Filter..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-7 pr-3 py-1.5 rounded-md text-[10px] focus:outline-none transition-all duration-200"
-              style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#FFFFFF' }}
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-[1280px] mx-auto w-full">
-        {/* Quick Stats Row — collapsible */}
-        <CollapsibleSection
-          title="Quick Stats"
-          icon={<BarChart3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          count={QUICK_STATS.length}
-          accentColor="#06B6D4"
-          defaultOpen={false}
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          {QUICK_STATS.map((stat, index) => {
-            const isActiveAgents = stat.label === 'Active Agents'
-            return (
-              <div
-                key={stat.label}
-                className={`rounded-xl p-3 sm:p-4 transition-all duration-300 relative overflow-hidden animate-fade-in-up ${isActiveAgents ? 'pulse-ring' : ''}`}
-                style={{
-                  background: `rgba(${stat.colorRgb}, 0.06)`,
-                  border: `1px solid rgba(${stat.colorRgb}, 0.15)`,
-                  boxShadow: `0 0 0 rgba(${stat.colorRgb}, 0)`,
-                  animationDelay: `${index * 60}ms`,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = `0 0 20px rgba(${stat.colorRgb}, 0.15)`; e.currentTarget.style.transform = 'scale(1.02)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = isActiveAgents ? '' : `0 0 0 rgba(${stat.colorRgb}, 0)`; e.currentTarget.style.transform = 'scale(1)' }}
-              >
-                {/* Pulsing glow for Active Agents */}
-                {isActiveAgents && (
-                  <div
-                    className="absolute inset-0 rounded-xl pointer-events-none"
-                    style={{
-                      background: `radial-gradient(circle at center, rgba(${stat.colorRgb}, 0.08), transparent 70%)`,
-                      animation: 'pulseGlow 2s ease-in-out infinite',
-                    }}
-                  />
-                )}
-                <div
-                  className="absolute left-0 top-0 bottom-0 rounded-l-xl"
-                  style={{ width: 3, background: stat.color, opacity: 0.6 }}
-                />
-                <div className="relative z-10">
-                  <p className="text-xl sm:text-2xl font-bold ml-2" style={{ color: stat.color }}>
-                    <AnimatedCounter target={stat.numericValue} suffix={stat.value.includes('%') ? '%' : ''} />
-                  </p>
-                  <p className="text-slate-400 text-[10px] sm:text-xs mt-1 ml-2">{stat.label}</p>
-                </div>
-              </div>
-            )
-          })}
-          </div>
-        </CollapsibleSection>
-
-        {/* Role Groups Grid */}
-        <CollapsibleSection
-          title="Role Groups"
-          icon={<Grid3X3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          count={filteredRoleGroups.length}
-          accentColor="#06B6D4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredRoleGroups.map((group) => {
-              const GroupIcon = group.icon
-              const activeRatio = group.activeAgents / group.agents
-              return (
-                <div
-                  key={group.name}
-                  className="rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03]"
-                  style={{
-                    background: `rgba(${group.colorRgb}, 0.04)`,
-                    border: `1px solid rgba(${group.colorRgb}, 0.18)`,
-                    transform: 'translateY(0px)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-3px)'
-                    e.currentTarget.style.boxShadow = `0 8px 25px rgba(${group.colorRgb}, 0.15), 0 0 0 1px rgba(${group.colorRgb}, 0.3)`
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0px)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                >
-                  <div
-                    className="h-1"
-                    style={{
-                      background: `linear-gradient(90deg, ${group.color}, transparent)`,
-                      opacity: 0.7,
-                    }}
-                  />
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-7 h-7 rounded-lg flex items-center justify-center"
-                          style={{
-                            background: `rgba(${group.colorRgb}, 0.15)`,
-                            border: `1px solid rgba(${group.colorRgb}, 0.25)`,
-                            boxShadow: `inset 0 0 8px rgba(${group.colorRgb}, 0.1)`,
-                          }}
-                        >
-                          <GroupIcon size={14} style={{ color: group.color }} />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-xs" style={{ color: group.color }}>{group.name}</h3>
-                          <p className="text-[9px] text-slate-500">{group.label}</p>
-                        </div>
-                      </div>
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-md font-semibold"
-                        style={{
-                          background: `rgba(${group.colorRgb}, 0.15)`,
-                          color: group.color,
-                        }}
-                      >
-                        {group.agents}
-                      </span>
-                    </div>
-                    <p className="text-slate-400 text-[10px] mb-2 leading-relaxed">{group.desc}</p>
-                    {/* Active agents progress bar */}
-                    <div className="mb-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[8px] text-slate-500">Active / Total</span>
-                        <span className="text-[8px] font-bold" style={{ color: group.color }}>{group.activeAgents}/{group.agents}</span>
-                      </div>
-                      <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div
-                          className="h-full rounded-full transition-all duration-700 ease-out"
-                          style={{
-                            width: `${activeRatio * 100}%`,
-                            background: `linear-gradient(90deg, ${group.color}66, ${group.color})`,
-                            boxShadow: `0 0 6px ${group.color}33`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {/* Status summary */}
-                    <div className="flex items-center gap-3 mb-2">
-                      {group.statusSummary.map((s, si) => (
-                        <div key={si} className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
-                          <span className="text-[9px] text-slate-400">{s.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {group.formulas.split(', ').map((f) => (
-                        <span
-                          key={f}
-                          className="text-[8px] px-1.5 py-0.5 rounded transition-colors duration-200 hover:bg-white/[0.05]"
-                          style={{
-                            background: `rgba(${group.colorRgb}, 0.1)`,
-                            color: group.color,
-                            border: `1px solid rgba(${group.colorRgb}, 0.15)`,
-                          }}
-                        >
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </CollapsibleSection>
-
-        {/* Prompting Formulas Taxonomy */}
-        <CollapsibleSection
-          title="Prompting Formulas Taxonomy"
-          icon={<BookOpen className="w-3.5 h-3.5" style={{ color: '#6B7280' }} />}
-          count={filteredFormulaTaxonomy.reduce((sum, cat) => sum + cat.formulas.length, 0)}
-          accentColor="#6B7280"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredFormulaTaxonomy.map((category) => (
-              <div
-                key={category.category}
-                className="rounded-xl p-4"
-                style={{
-                  background: 'rgba(45, 45, 45, 0.3)',
-                  border: '1px solid rgba(51, 51, 51, 0.5)',
-                }}
-              >
-                <h3 className="text-slate-300 text-xs font-bold mb-3 uppercase tracking-wider">{category.category}</h3>
-                <div className="space-y-2">
-                  {category.formulas.map((formula) => (
-                    <div
-                      key={formula.name}
-                      className="rounded-lg p-2 flex items-center gap-2 transition-colors duration-200 hover:bg-white/[0.03]"
-                      style={{
-                        background: `${formula.color}08`,
-                        borderLeft: `3px solid ${formula.color}`,
-                      }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[10px]" style={{ color: formula.color }}>{formula.name}</p>
-                        <p className="text-slate-500 text-[8px] leading-tight truncate">{formula.full}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-
-        {/* Formula Flow Diagram */}
-        <CollapsibleSection
-          title="Formula Flow Diagram"
-          icon={<Workflow className="w-3.5 h-3.5 text-cyan-400" />}
-          accentColor="#22D3EE"
-          defaultOpen={false}
-        >
-          <FormulaFlowDiagram />
-        </CollapsibleSection>
-
-        {/* Edge Types */}
-        <CollapsibleSection
-          title="Edge Types"
-          icon={<ArrowLeftRight className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          count={filteredEdgeTypes.length}
-          accentColor="#06B6D4"
-          defaultOpen={false}
-        >
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {filteredEdgeTypes.map((edge) => {
-              const EdgeIcon = edge.icon
-              return (
-                <div
-                  key={edge.name}
-                  className="rounded-xl p-4 text-center transition-all duration-200 hover:scale-[1.03] hover:bg-white/[0.02]"
-                  style={{
-                    background: `rgba(${hexToRgb(edge.color)}, 0.06)`,
-                    border: `1px solid rgba(${hexToRgb(edge.color)}, 0.18)`,
-                  }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-lg mx-auto mb-2 flex items-center justify-center"
-                    style={{ background: `rgba(${hexToRgb(edge.color)}, 0.12)` }}
-                  >
-                    <EdgeIcon size={14} style={{ color: edge.color }} />
-                  </div>
-                  <div className="w-full mb-2" style={{ borderTop: `2px ${edge.style === 'solid' ? 'solid' : edge.style === 'dotted' ? 'dotted' : 'dashed'} ${edge.color}` }} />
-                  <p className="font-bold text-[10px]" style={{ color: edge.color }}>{edge.name}</p>
-                  <p className="text-slate-500 text-[8px] mt-0.5">{edge.desc}</p>
-                </div>
-              )
-            })}
-          </div>
-        </CollapsibleSection>
-
-        {/* Connection Heatmap */}
-        <CollapsibleSection
-          title="Connection Heatmap"
-          icon={<Grid3X3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-          defaultOpen={false}
-        >
-          <ConnectionHeatmap />
-        </CollapsibleSection>
-
-        {/* Architecture Overview */}
-        <CollapsibleSection
-          title="Architecture Overview"
-          icon={<Network className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-          defaultOpen={false}
-        >
-          <ArchitectureDiagram />
-        </CollapsibleSection>
-
-        {/* System Health Monitor */}
-        <CollapsibleSection
-          title="System Health"
-          icon={<Activity className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-        >
-          <SystemHealthMonitor />
-        </CollapsibleSection>
-
-        {/* Agent Performance */}
-        <CollapsibleSection
-          title="Agent Performance"
-          icon={<BarChart3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-        >
-          <AgentPerformance />
-        </CollapsibleSection>
-
-        {/* Network Activity Chart */}
-        <CollapsibleSection
-          title="Network Activity"
-          icon={<Activity className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-        >
-          <NetworkActivityChart />
-        </CollapsibleSection>
-
-        {/* Recent Activity Timeline + Formula-Agent Mapping side by side */}
-        <CollapsibleSection
-          title="Activity & Mapping"
-          icon={<Clock className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
-          accentColor="#06B6D4"
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ minHeight: '420px' }}>
-            <RecentActivityTimeline />
-            <FormulaAgentMappingGrid />
-          </div>
-        </CollapsibleSection>
-
-        {/* Active Alerts Panel */}
-        <CollapsibleSection
-          title="Active Alerts"
-          icon={<Bell className="w-3.5 h-3.5" style={{ color: '#EAB308' }} />}
-          count={3}
-          accentColor="#EAB308"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { severity: 'warning', title: 'Memory Threshold Warning', desc: 'Nablyudatel detected memory usage approaching 85% threshold in Memory / Knowledge group', time: '25s ago', color: '#EAB308', agent: 'Nablyudatel' },
-              { severity: 'info', title: 'Escalation Protocol Triggered', desc: 'Alert-Operator initiated escalation workflow for unhandled task queue buildup', time: '1m ago', color: '#06B6D4', agent: 'Alert-Operator' },
-              { severity: 'info', title: 'Agent Latency Spike', desc: 'Diagnost traced latency root cause to network I/O bottleneck in Communication group', time: '2m ago', color: '#0891B2', agent: 'Diagnost' },
-            ].map((alert, i) => (
-              <div
-                key={i}
-                className="rounded-xl p-4 transition-all duration-200 hover:scale-[1.01] cursor-pointer"
-                style={{
-                  background: `rgba(${hexToRgb(alert.color)}, 0.05)`,
-                  border: `1px solid rgba(${hexToRgb(alert.color)}, 0.2)`,
-                  borderLeft: `3px solid ${alert.color}`,
-                }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full" style={{ background: alert.color, boxShadow: `0 0 6px ${alert.color}66` }} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: alert.color }}>{alert.severity}</span>
-                  </div>
-                  <span className="text-[9px] font-mono text-slate-600">{alert.time}</span>
-                </div>
-                <p className="text-white text-xs font-semibold mb-1">{alert.title}</p>
-                <p className="text-slate-400 text-[10px] leading-relaxed mb-2">{alert.desc}</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] px-1.5 py-0.5 rounded" style={{ background: `${alert.color}15`, color: alert.color }}>{alert.agent}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-
-        {/* Quick Actions */}
-        <div className="mb-6">
-          <QuickActionsPanel />
-        </div>
-
-        {/* Open Hierarchy button */}
-        <div className="flex gap-3">
-          <button
-            onClick={onOpenHierarchy}
-            className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-[1.01]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(6, 182, 212, 0.04))',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              color: '#06B6D4',
-            }}
-          >
-            <ChevronRight className="w-4 h-4" />
-            Open Hierarchy Visualization
-          </button>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer
-        className="mt-auto px-4 sm:px-6 py-6 relative"
-        style={{ background: '#0D0D0D' }}
-      >
-        {/* Gradient top border */}
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{ background: 'linear-gradient(90deg, #06B6D4, transparent)' }}
+      <div className="flex flex-1 overflow-hidden">
+        <DashboardSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
         />
-        <div className="max-w-[1280px] mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            {/* Left: Logo + version + status */}
-            <div className="flex items-center gap-2 justify-center md:justify-start">
-              <Brain size={14} style={{ color: '#06B6D4' }} />
-              <span className="text-[11px] font-bold" style={{ color: '#FFFFFF' }}>P-MAS Dashboard v5.1</span>
-              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>-- Monochrome Cyan</span>
-              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#06B6D4', animation: 'pulseGlow 2s ease-in-out infinite' }} />
-                <span className="text-[8px] font-bold" style={{ color: '#06B6D4' }}>ONLINE</span>
-              </span>
-            </div>
 
-            {/* Center: Key stats + timestamp */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center justify-center gap-3 flex-wrap">
-                <span className="text-[10px]" style={{ color: '#B0B0B0' }}>26 Agents</span>
-                <span style={{ color: '#333333' }}>|</span>
-                <span className="text-[10px]" style={{ color: '#B0B0B0' }}>8 Groups</span>
-                <span style={{ color: '#333333' }}>|</span>
-                <span className="text-[10px]" style={{ color: '#B0B0B0' }}>20 Formulas</span>
-                <span style={{ color: '#333333' }}>|</span>
-                <span className="text-[10px]" style={{ color: '#B0B0B0' }}>6 Edges</span>
-              </div>
-              <span className="text-[9px] text-slate-600" suppressHydrationWarning>Last refreshed: {lastUpdated || '--:--:--'}</span>
-            </div>
+        <main className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+          {/* Row 1: KPI Strip */}
+          <KPIStrip />
 
-            {/* Right: Tech stack */}
-            <div className="text-center md:text-right">
-              <span className="text-[10px]" style={{ color: '#B0B0B0' }}>Powered by Next.js 16 + Prisma + TypeScript</span>
-              <br />
-              <span className="text-[9px] text-slate-600">Build 2024.03.07 -- Task #6</span>
+          {/* Row 2-4: Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+            {/* Row 2 */}
+            <StatusDistributionCard />
+            <TopPerformersCard />
+            <SystemHealthCard />
+
+            {/* Row 3 */}
+            <div className="lg:col-span-2">
+              <NetworkActivityChart />
+            </div>
+            <RecentActivityTimeline />
+
+            {/* Row 4 */}
+            <ConnectionHeatmap />
+            <div className="lg:col-span-2">
+              <FormulaAgentMappingGrid />
             </div>
           </div>
-        </div>
-      </footer>
-
-      {/* Scroll to top button */}
-      {showScrollTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
-          style={{
-            background: 'rgba(6, 182, 212, 0.15)',
-            border: '1px solid rgba(6, 182, 212, 0.4)',
-            color: '#06B6D4',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.15)',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <ArrowUp className="w-4 h-4" />
-        </button>
-      )}
+        </main>
+      </div>
     </div>
   )
 }
