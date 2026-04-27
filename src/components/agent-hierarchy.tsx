@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dagre from 'dagre'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -74,6 +75,7 @@ import {
   Keyboard,
   Maximize2,
   Filter,
+  Layers,
   Home,
   Crosshair,
   Link2,
@@ -113,7 +115,7 @@ interface Connection {
   strength?: number
 }
 
-type ViewMode = 'radial' | 'grid'
+type ViewMode = 'hierarchy' | 'radial' | 'grid'
 
 interface ContextMenuState {
   visible: boolean
@@ -1706,7 +1708,9 @@ const SHORTCUTS = [
   { keys: ['F'], description: 'Fit to screen' },
   { keys: ['1-8'], description: 'Filter by role group (1=Strategy, 2=Tactics, ...)' },
   { keys: ['9'], description: 'Clear role group filter (show all)' },
-  { keys: ['G'], description: 'Toggle grid / radial view' },
+  { keys: ['H'], description: 'Hierarchy view' },
+  { keys: ['R'], description: 'Radial view' },
+  { keys: ['G'], description: 'Grid view' },
   { keys: ['?'], description: 'Show keyboard shortcuts' },
 ]
 
@@ -2242,8 +2246,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         return
       }
 
+      if (e.key === 'h' || e.key === 'H') {
+        setViewMode('hierarchy')
+        return
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        setViewMode('radial')
+        return
+      }
       if (e.key === 'g' || e.key === 'G') {
-        setViewMode(prev => prev === 'radial' ? 'grid' : 'radial')
+        setViewMode('grid')
         return
       }
 
@@ -2342,25 +2354,60 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     const cx = dimensions.width / 2
     const cy = dimensions.height / 2
     const minDim = Math.min(dimensions.width, dimensions.height)
-    // ─── Improved spacing: wider rings for less overlap ───
     const baseRadius = minDim * 0.14
     const ringSpacing = minDim * 0.14
 
     const groupRadii: Record<string, number> = {
-      '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f': baseRadius,
-      '\u0422\u0430\u043a\u0442\u0438\u043a\u0430': baseRadius + ringSpacing,
-      '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c': baseRadius + ringSpacing * 2,
-      '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435': baseRadius + ringSpacing * 3,
-      '\u041f\u0430\u043c\u044f\u0442\u044c': baseRadius + ringSpacing * 4,
-      '\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433': baseRadius + ringSpacing * 5,
-      '\u041a\u043e\u043c\u043c\u0443\u043d\u0438\u043a\u0430\u0446\u0438\u044f': baseRadius + ringSpacing * 6,
-      '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435': baseRadius + ringSpacing * 7,
+      'Стратегия': baseRadius,
+      'Тактика': baseRadius + ringSpacing,
+      'Контроль': baseRadius + ringSpacing * 2,
+      'Исполнение': baseRadius + ringSpacing * 3,
+      'Память': baseRadius + ringSpacing * 4,
+      'Мониторинг': baseRadius + ringSpacing * 5,
+      'Коммуникация': baseRadius + ringSpacing * 6,
+      'Обучение': baseRadius + ringSpacing * 7,
     }
 
     const pos: Record<string, { x: number; y: number }> = {}
     const centroids: Record<string, { x: number; y: number }> = {}
 
-    if (viewMode === 'radial') {
+    if (viewMode === 'hierarchy') {
+      // Dagre TB layout — hierarchical tree top-to-bottom
+      const g = new dagre.graphlib.Graph()
+      g.setDefaultEdgeLabel(() => '')
+      g.setGraph({ rankdir: 'TB', nodesep: 60, ranksep: 80, marginx: 40, marginy: 40 })
+
+      for (const agent of agents) {
+        g.setNode(agent.id, { width: 80, height: 80 })
+      }
+      for (const agent of agents) {
+        if (agent.parentId) {
+          g.setEdge(agent.parentId, agent.id)
+        }
+      }
+      dagre.layout(g)
+
+      for (const agent of agents) {
+        const node = g.node(agent.id)
+        if (node) {
+          pos[agent.id] = { x: node.x, y: node.y }
+        }
+      }
+
+      // Compute centroids for cluster backgrounds
+      for (const group of ROLE_ORDER) {
+        const groupAgents = agents.filter(a => a.roleGroup === group)
+        let sumX = 0, sumY = 0
+        for (const a of groupAgents) {
+          const p = pos[a.id]
+          if (p) { sumX += p.x; sumY += p.y }
+        }
+        centroids[group] = groupAgents.length > 0
+          ? { x: sumX / groupAgents.length, y: sumY / groupAgents.length }
+          : { x: cx, y: cy }
+      }
+    } else if (viewMode === 'radial') {
+      // Concentric rings by roleGroup — strategy in center
       for (const group of ROLE_ORDER) {
         const groupAgents = agents.filter(a => a.roleGroup === group)
         const radius = groupRadii[group] || baseRadius
@@ -2371,7 +2418,6 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
         groupAgents.forEach((agent, i) => {
           const angle = (2 * Math.PI * i) / count - Math.PI / 2
-          // Add slight jitter to reduce overlap between groups with same angle
           const jitter = count > 1 ? (i % 2 === 0 ? 8 : -8) : 0
           const ax = cx + Math.cos(angle) * (radius + jitter)
           const ay = cy + Math.sin(angle) * (radius + jitter)
@@ -2386,6 +2432,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         }
       }
     } else {
+      // Grid layout — uniform grid grouped by roleGroup
       const cols = 4
       const cellW = minDim * 0.2
       const cellH = minDim * 0.18
@@ -2810,10 +2857,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
             {/* View mode toggle */}
             <div className="hidden sm:flex items-center gap-0.5">
-              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'radial' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('radial')}>
+              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'hierarchy' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('hierarchy')} title="Hierarchy (H)">
+                <Layers className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'radial' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('radial')} title="Radial (R)">
                 <Circle className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'grid' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('grid')}>
+              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'grid' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('grid')} title="Grid (G)">
                 <LayoutGrid className="h-3 w-3" />
               </Button>
             </div>
