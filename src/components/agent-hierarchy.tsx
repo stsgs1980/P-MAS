@@ -1018,8 +1018,9 @@ function AgentDetailPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 400, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed right-4 top-16 bottom-4 w-[340px] z-50 rounded-2xl overflow-hidden"
+      className="fixed right-4 bottom-4 w-[340px] z-50 rounded-2xl overflow-hidden"
       style={{
+        top: '48px',
         background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(24px)',
         border: `1px solid rgba(${config.colorRgb}, 0.3)`,
@@ -2006,6 +2007,67 @@ function BreadcrumbTrail({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
+// ─── Sidebar Section Component ────────────────────────────────────────────────
+
+function SidebarSection({
+  icon: Icon,
+  title,
+  count,
+  isOpen,
+  onToggle,
+  sidebarOpen,
+  children,
+}: {
+  icon: LucideIcon
+  title: string
+  count: number
+  isOpen: boolean
+  onToggle: () => void
+  sidebarOpen: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className="mb-1 relative">
+      {/* Left accent line */}
+      <div
+        className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full"
+        style={{
+          background: isOpen ? 'rgba(6, 182, 212, 0.4)' : 'rgba(6, 182, 212, 0.1)',
+          transition: 'background 0.2s ease',
+        }}
+      />
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-1.5 py-1.5 px-2 rounded-md transition-colors hover:bg-white/5"
+      >
+        <Icon className="w-3 h-3 flex-shrink-0" style={{ color: isOpen ? '#06B6D4' : '#555' }} />
+        {sidebarOpen && (
+          <>
+            <span className="text-[10px] font-semibold uppercase tracking-wider flex-1 text-left" style={{ color: isOpen ? '#FFFFFF' : '#888' }}>
+              {title}
+            </span>
+            <span
+              className="text-[8px] px-1 py-0.5 rounded font-medium"
+              style={{ background: 'rgba(6, 182, 212, 0.1)', color: '#06B6D4', border: '1px solid rgba(6, 182, 212, 0.15)' }}
+            >
+              {count}
+            </span>
+            <ChevronRight
+              className="w-2.5 h-2.5 text-[#555] transition-transform"
+              style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+            />
+          </>
+        )}
+      </button>
+      {isOpen && sidebarOpen && (
+        <div className="px-2 pb-2 pl-3" style={{ overflow: 'hidden' }}>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [agents, setAgents] = useState<Agent[]>([])
   const [loading, setLoading] = useState(true)
@@ -2027,6 +2089,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [hiddenEdgeTypes, setHiddenEdgeTypes] = useState<Set<EdgeType>>(new Set())
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, agentId: null })
   const [highlightedConnections, setHighlightedConnections] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [statsSectionOpen, setStatsSectionOpen] = useState(true)
+  const [detailedStatsOpen, setDetailedStatsOpen] = useState(false)
+  const [legendSectionOpen, setLegendSectionOpen] = useState(true)
+  const [connectionsSectionOpen, setConnectionsSectionOpen] = useState(true)
+  const [minimapSectionOpen, setMinimapSectionOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -2062,6 +2131,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   useEffect(() => {
     const update = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight })
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false)
+      }
     }
     update()
     window.addEventListener('resize', update)
@@ -2714,275 +2787,193 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </defs>
       </svg>
 
-      {/* ─── Improved Navigation bar ─── */}
-      <div className="fixed top-0 left-0 right-0 z-40 px-4 py-3">
+      {/* ─── Compact Header (48px) ─── */}
+      <div className="fixed top-0 left-0 right-0 z-40" style={{ height: '48px' }}>
+        {/* Top cyan accent line */}
         <div
-          className="flex items-center justify-between rounded-xl px-4 py-2.5 relative"
+          className="absolute top-0 left-0 right-0 h-[2px]"
           style={{
-            background: 'rgba(26, 26, 26, 0.92)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(51,51,51,0.5)',
-            boxShadow: '0 4px 24px rgba(6, 182, 212, 0.06)',
+            background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent)',
+          }}
+        />
+        <div
+          className="flex items-center justify-between h-full px-3"
+          style={{
+            background: 'rgba(13, 13, 13, 0.92)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(51,51,51,0.3)',
           }}
         >
-          {/* Enhanced bottom gradient border */}
-          <div
-            className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.25), rgba(6, 182, 212, 0.4), rgba(6, 182, 212, 0.25), transparent)',
-            }}
-          />
-          {/* Logo + Back Button */}
-          <div className="flex items-center gap-3">
+          {/* Left: Back button + Logo */}
+          <div className="flex items-center gap-2">
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all hover:scale-105 active:scale-95"
                 style={{
                   background: 'rgba(6, 182, 212, 0.15)',
-                  border: '1px solid rgba(6, 182, 212, 0.4)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
                   color: '#06B6D4',
-                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.08)',
                 }}
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-3 h-3" />
                 <span className="hidden sm:inline">Dashboard</span>
               </button>
             )}
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#06B6D4]/20 border border-[#06B6D4]/30">
-              <Brain className="w-4 h-4 text-[#06B6D4]" />
-            </div>
-            <div>
-              <span className="text-white font-bold text-sm tracking-wide">P-MAS</span>
-              <span className="text-[#B0B0B0] text-[10px] ml-2">Agent Hierarchy</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(6, 182, 212, 0.2)', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                <Brain className="w-3.5 h-3.5 text-[#06B6D4]" />
+              </div>
+              <span className="text-white font-bold text-xs tracking-wide">P-MAS</span>
+              <span className="text-[#555] text-[9px] hidden md:inline">Hierarchy</span>
             </div>
           </div>
 
-          {/* Search bar */}
-          <div className="hidden md:flex items-center relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#B0B0B0]" />
+          {/* Center: Search */}
+          <div className="flex-1 max-w-md mx-4 hidden md:flex items-center relative">
+            <Search className="w-3 h-3 absolute left-2.5 text-[#555]" />
             <input
               ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search agents... (/)"
-              className="w-52 pl-8 pr-8 py-1.5 rounded-lg text-xs text-white placeholder:text-[#555] outline-none transition-all focus:ring-1 focus:ring-[#06B6D4]/40"
+              className="w-full pl-7 pr-7 py-1 rounded-md text-[11px] text-white placeholder:text-[#444] outline-none transition-all focus:ring-1 focus:ring-[#06B6D4]/30"
               style={{
-                background: 'rgba(45, 45, 45, 0.5)',
-                border: '1px solid rgba(51,51,51,0.5)',
+                background: 'rgba(30, 30, 30, 0.8)',
+                border: '1px solid rgba(51,51,51,0.4)',
               }}
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 text-[#B0B0B0] hover:text-white transition-colors"
-              >
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 text-[#555] hover:text-white transition-colors">
                 <X className="w-3 h-3" />
               </button>
             )}
             {searchQuery && searchMatches.size > 0 && (
-              <span className="absolute right-8 text-[9px] text-[#06B6D4] font-medium">
-                {searchMatches.size}
-              </span>
+              <span className="absolute right-7 text-[9px] text-[#06B6D4] font-medium">{searchMatches.size}</span>
             )}
           </div>
 
-          {/* Role group filters */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {ROLE_ORDER.map(group => {
-              const cfg = ROLE_CONFIG[group]
-              const Icon = cfg.icon
-              const count = stats.byGroup[group] || 0
-              const isActive = activeFilter === group
-              return (
-                <button
-                  key={group}
-                  onClick={() => setActiveFilter(isActive ? null : group)}
-                  onMouseEnter={() => setHoveredGroup(group)}
-                  onMouseLeave={() => setHoveredGroup(null)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    background: isActive
-                      ? `rgba(${cfg.colorRgb}, 0.2)`
-                      : 'rgba(45, 45, 45, 0.5)',
-                    color: isActive ? cfg.color : '#B0B0B0',
-                    border: `1px solid ${isActive ? `rgba(${cfg.colorRgb}, 0.4)` : 'rgba(51,51,51,0.5)'}`,
-                    boxShadow: isActive ? `0 0 12px rgba(${cfg.colorRgb}, 0.1)` : 'none',
-                  }}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline">{group}</span>
-                  <span
-                    className="text-[10px] px-1 py-0.5 rounded-md"
-                    style={{
-                      background: `rgba(${cfg.colorRgb}, 0.15)`,
-                      color: cfg.color,
-                    }}
-                  >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Stats & Controls */}
-          <div className="flex items-center gap-2">
-            {/* View mode toggle */}
-            <div className="hidden md:flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-7 w-7 transition-all hover:scale-110 ${viewMode === 'radial' ? 'text-white' : 'text-[#B0B0B0]'}`}
-                onClick={() => setViewMode('radial')}
-              >
-                <Circle className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-7 w-7 transition-all hover:scale-110 ${viewMode === 'grid' ? 'text-white' : 'text-[#B0B0B0]'}`}
-                onClick={() => setViewMode('grid')}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-
-            {/* Status counts */}
-            <div className="hidden lg:flex items-center gap-2 text-[10px]">
-              {Object.entries(stats.byStatus).map(([status, count]) => (
-                <div key={status} className="flex items-center gap-1">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: STATUS_COLORS[status] }}
-                  />
-                  <span className="text-[#B0B0B0]">{count}</span>
-                </div>
-              ))}
-              <span className="text-[#333333]">|</span>
-              <span className="text-[#B0B0B0] font-semibold">{stats.total} agents</span>
-            </div>
-
-            {/* Separator */}
-            <div className="hidden md:block w-px h-5" style={{ background: 'rgba(51,51,51,0.5)' }} />
-
-            {/* Zoom controls with improved styling */}
-            <div className="flex items-center gap-1">
-              <AgentCreationDialog onCreated={fetchAgents} />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
-                onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}
-              >
-                <ZoomOut className="h-3.5 w-3.5" />
-              </Button>
-              {/* Zoom level indicator badge */}
-              <span
-                className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded"
-                style={{
-                  background: 'rgba(6, 182, 212, 0.1)',
-                  border: '1px solid rgba(6, 182, 212, 0.2)',
-                  color: '#06B6D4',
-                  minWidth: '36px',
-                  textAlign: 'center',
-                }}
-              >
-                {Math.round(zoom * 100)}%
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
-                onClick={() => setZoom(z => Math.min(3, z * 1.15))}
-              >
-                <ZoomIn className="h-3.5 w-3.5" />
-              </Button>
-              {/* Fit to Screen button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
-                onClick={fitToScreen}
-                title="Fit to screen (F)"
-              >
-                <Maximize2 className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
-                onClick={resetView}
-                title="Reset view (0)"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-[#B0B0B0] hover:text-white transition-all hover:scale-110"
-                onClick={() => setShortcutsOpen(true)}
-                title="Keyboard shortcuts (?)"
-              >
-                <Keyboard className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Breadcrumb trail */}
-      <BreadcrumbTrail
-        activeFilter={activeFilter}
-        onClearFilter={() => setActiveFilter(null)}
-        zoom={zoom}
-        onResetView={resetView}
-      />
-
-      {/* Mobile filter dropdown */}
-      <div className="sm:hidden fixed top-16 left-4 z-40">
-        <div className="relative">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-[#B0B0B0] border-white/10 bg-[#1A1A1A]/80 backdrop-blur-md text-xs"
-            onClick={() => setActiveFilter(activeFilter ? null : ROLE_ORDER[0])}
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Filter
-            <ChevronDown className="w-3 h-3 ml-1" />
-          </Button>
-          {activeFilter && (
-            <div className="absolute top-9 left-0 flex flex-col gap-1 p-1.5 rounded-lg z-50"
-              style={{ background: 'rgba(13, 13, 13, 0.95)', border: '1px solid rgba(51,51,51,0.5)' }}
-            >
+          {/* Right: Role filters (desktop), controls */}
+          <div className="flex items-center gap-1.5">
+            {/* Role group filter chips - hidden on mobile */}
+            <div className="hidden lg:flex items-center gap-1">
               {ROLE_ORDER.map(group => {
                 const cfg = ROLE_CONFIG[group]
+                const Icon = cfg.icon
+                const count = stats.byGroup[group] || 0
+                const isActive = activeFilter === group
                 return (
                   <button
                     key={group}
-                    onClick={() => setActiveFilter(activeFilter === group ? null : group)}
-                    className="text-xs px-3 py-1.5 rounded text-left whitespace-nowrap"
+                    onClick={() => setActiveFilter(isActive ? null : group)}
+                    onMouseEnter={() => setHoveredGroup(group)}
+                    onMouseLeave={() => setHoveredGroup(null)}
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition-all hover:scale-105"
                     style={{
-                      color: activeFilter === group ? cfg.color : '#B0B0B0',
-                      background: activeFilter === group ? `rgba(${cfg.colorRgb}, 0.15)` : 'transparent',
+                      background: isActive ? `rgba(${cfg.colorRgb}, 0.2)` : 'rgba(30, 30, 30, 0.6)',
+                      color: isActive ? cfg.color : '#888',
+                      border: `1px solid ${isActive ? `rgba(${cfg.colorRgb}, 0.4)` : 'rgba(51,51,51,0.4)'}`,
                     }}
                   >
-                    {group}
+                    <Icon className="w-3 h-3" />
+                    <span className="hidden xl:inline">{cfg.label}</span>
+                    <span className="text-[8px] px-0.5 rounded" style={{ background: `rgba(${cfg.colorRgb}, 0.12)`, color: cfg.color }}>
+                      {count}
+                    </span>
                   </button>
                 )
               })}
             </div>
+
+            {/* Mobile filter button */}
+            <div className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-[#888] hover:text-white"
+                onClick={() => setActiveFilter(activeFilter ? null : ROLE_ORDER[0])}
+              >
+                <Filter className="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div className="w-px h-4" style={{ background: 'rgba(51,51,51,0.4)' }} />
+
+            {/* View mode toggle */}
+            <div className="hidden sm:flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'radial' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('radial')}>
+                <Circle className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="icon" className={`h-6 w-6 ${viewMode === 'grid' ? 'text-white' : 'text-[#555]'}`} onClick={() => setViewMode('grid')}>
+                <LayoutGrid className="h-3 w-3" />
+              </Button>
+            </div>
+
+            {/* Zoom controls */}
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}>
+              <ZoomOut className="h-3 w-3" />
+            </Button>
+            <span className="text-[8px] font-mono font-semibold px-1 py-0.5 rounded min-w-[30px] text-center" style={{ background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.15)', color: '#06B6D4' }}>
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={() => setZoom(z => Math.min(3, z * 1.15))}>
+              <ZoomIn className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={fitToScreen} title="Fit (F)">
+              <Maximize2 className="h-3 w-3" />
+            </Button>
+
+            <div className="w-px h-4" style={{ background: 'rgba(51,51,51,0.4)' }} />
+
+            <AgentCreationDialog onCreated={fetchAgents} />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={() => setShortcutsOpen(true)} title="Shortcuts (?)">
+              <Keyboard className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile search row */}
+      <div className="md:hidden fixed top-12 left-0 right-0 z-30 px-3 py-1" style={{ background: 'rgba(13, 13, 13, 0.9)', backdropFilter: 'blur(12px)' }}>
+        <div className="flex items-center relative">
+          <Search className="w-3 h-3 absolute left-2 text-[#555]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            className="w-full pl-7 pr-7 py-1 rounded-md text-[11px] text-white placeholder:text-[#444] outline-none"
+            style={{ background: 'rgba(30, 30, 30, 0.8)', border: '1px solid rgba(51,51,51,0.4)' }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 text-[#555] hover:text-white">
+              <X className="w-3 h-3" />
+            </button>
           )}
         </div>
       </div>
 
-      {/* Main SVG canvas */}
+      {/* Breadcrumb trail - centered on canvas area */}
+      <div style={{ marginLeft: isMobile ? 0 : (sidebarOpen ? 280 : 48), transition: 'margin-left 0.25s ease' }}>
+        <BreadcrumbTrail
+          activeFilter={activeFilter}
+          onClearFilter={() => setActiveFilter(null)}
+          zoom={zoom}
+          onResetView={resetView}
+        />
+      </div>
+
+      {/* Main SVG canvas - offset by sidebar width */}
       <svg
         ref={svgRef}
-        className="absolute inset-0 w-full h-full z-10"
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        className="absolute inset-0 z-10"
+        style={{
+          marginLeft: sidebarOpen ? (isMobile ? 0 : 280) : (isMobile ? 0 : 48),
+          width: isMobile ? '100%' : (sidebarOpen ? 'calc(100% - 280px)' : 'calc(100% - 48px)'),
+          transition: 'margin-left 0.25s ease, width 0.25s ease',
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
         onMouseMove={(e) => {
           const target = e.target as SVGElement
           const edgeGroup = target.closest('[data-edge-id]')
@@ -3246,29 +3237,186 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </g>
       </svg>
 
-      {/* Bottom-left panels: Combined Stats + Legend + Connection Filter */}
-      <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-2" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-        <LegendPanel />
-        <StatsDashboard stats={stats} />
-        <ConnectionFilterPanel
-          hiddenEdgeTypes={hiddenEdgeTypes}
-          onToggleEdgeType={handleToggleEdgeType}
-        />
-      </div>
+      {/* ─── Collapsible Left Sidebar ─── */}
+      <motion.div
+        initial={false}
+        animate={{ width: sidebarOpen ? 280 : 48 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        className="fixed left-0 z-30 flex flex-col"
+        style={{
+          top: '48px',
+          bottom: 0,
+          background: 'rgba(13, 13, 13, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRight: '1px solid rgba(6, 182, 212, 0.15)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Sidebar toggle button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center w-6 h-12 rounded-r-md transition-all hover:scale-110"
+          style={{
+            background: 'rgba(13, 13, 13, 0.95)',
+            border: '1px solid rgba(6, 182, 212, 0.2)',
+            borderLeft: 'none',
+            color: '#06B6D4',
+          }}
+        >
+          {sidebarOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        </button>
 
-      {/* Bottom-right: Mini-map */}
-      <div className="fixed bottom-4 right-4 z-40">
-        <MiniMap
-          agents={agents}
-          positions={positions}
-          connections={connections}
-          dimensions={dimensions}
-          pan={pan}
-          zoom={zoom}
-          onClickMap={handleMiniMapClick}
-          selectedAgentId={selectedAgent?.id || null}
+        <ScrollArea className="flex-1">
+          <div className="py-2 px-2" style={{ width: sidebarOpen ? 280 : 48 }}>
+
+            {/* ─── Stats Section ─── */}
+            <SidebarSection
+              icon={BarChart3}
+              title="Stats"
+              count={8}
+              isOpen={statsSectionOpen}
+              onToggle={() => setStatsSectionOpen(!statsSectionOpen)}
+              sidebarOpen={sidebarOpen}
+            >
+              {/* Quick Stats */}
+              <div className="space-y-1.5 mb-2">
+                {[
+                  { icon: Users, label: 'Total', value: stats.total, max: stats.total },
+                  { icon: Activity, label: 'Active', value: stats.active, max: stats.total },
+                  { icon: Circle, label: 'Idle', value: stats.idle, max: stats.total },
+                  { icon: ListChecks, label: 'Tasks', value: stats.tasks, max: Math.max(stats.tasks, 1) },
+                ].map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <item.icon className="w-3 h-3 text-[#555] flex-shrink-0" />
+                    <span className="text-[10px] text-[#888] flex-1">{item.label}</span>
+                    <span className="text-[11px] font-bold text-[#06B6D4]">{item.value}</span>
+                    <div className="w-12 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(51,51,51,0.5)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: '#06B6D4', opacity: 0.6 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Detailed Stats (collapsible) */}
+              <div className="mt-1">
+                <button
+                  onClick={() => setDetailedStatsOpen(!detailedStatsOpen)}
+                  className="flex items-center gap-1.5 w-full text-left py-1"
+                >
+                  <ChevronRight className={`w-2.5 h-2.5 text-[#555] transition-transform ${detailedStatsOpen ? 'rotate-90' : ''}`} />
+                  <span className="text-[9px] text-[#555] uppercase tracking-wider font-medium">Detailed</span>
+                </button>
+                {detailedStatsOpen && (
+                  <div className="space-y-1.5 pl-1 mt-1">
+                    {[
+                      { icon: Layers, label: 'Role Groups', value: ROLE_ORDER.length, max: 10 },
+                      { icon: Hash, label: 'Formulas', value: Object.keys(FORMULA_COLORS).length, max: 25 },
+                      { icon: Link2, label: 'Edge Types', value: Object.keys(EDGE_CONFIG).length, max: 10 },
+                      { icon: Gauge, label: 'Coverage', value: Math.round((stats.active / Math.max(stats.total, 1)) * 100), max: 100 },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <item.icon className="w-3 h-3 text-[#444] flex-shrink-0" />
+                        <span className="text-[10px] text-[#666] flex-1">{item.label}</span>
+                        <span className="text-[11px] font-bold text-[#06B6D4]">{item.value}{item.label === 'Coverage' ? '%' : ''}</span>
+                        <div className="w-10 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(51,51,51,0.4)' }}>
+                          <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: '#06B6D4', opacity: 0.4 }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </SidebarSection>
+
+            {/* ─── Legend Section ─── */}
+            <SidebarSection
+              icon={BookOpen}
+              title="Legend"
+              count={Object.keys(EDGE_CONFIG).length + Object.keys(STATUS_COLORS).length}
+              isOpen={legendSectionOpen}
+              onToggle={() => setLegendSectionOpen(!legendSectionOpen)}
+              sidebarOpen={sidebarOpen}
+            >
+              <div className="space-y-1 mb-2">
+                {(Object.entries(EDGE_CONFIG) as [EdgeType, typeof EDGE_CONFIG[EdgeType]][]).map(([type, cfg]) => (
+                  <div key={type} className="flex items-center gap-1.5">
+                    {React.createElement(cfg.icon, { size: 9, color: cfg.color })}
+                    <div className="w-4 h-0 flex-shrink-0" style={{ borderTop: `1.5px ${type === 'command' ? 'solid' : type === 'sync' ? 'dotted' : 'dashed'} ${cfg.color}`, opacity: 0.7 }} />
+                    <span className="text-[9px] text-[#999]">{cfg.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="h-px w-full my-1.5" style={{ background: 'rgba(51,51,51,0.4)' }} />
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {Object.entries(STATUS_COLORS).map(([status, color]) => (
+                  <div key={status} className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                    <span className="text-[8px] text-[#888] capitalize">{status}</span>
+                  </div>
+                ))}
+              </div>
+            </SidebarSection>
+
+            {/* ─── Connection Types Section ─── */}
+            <SidebarSection
+              icon={Link2}
+              title="Connections"
+              count={(Object.keys(EDGE_CONFIG) as EdgeType[]).length - hiddenEdgeTypes.size}
+              isOpen={connectionsSectionOpen}
+              onToggle={() => setConnectionsSectionOpen(!connectionsSectionOpen)}
+              sidebarOpen={sidebarOpen}
+            >
+              <div className="space-y-0.5">
+                {(Object.entries(EDGE_CONFIG) as [EdgeType, typeof EDGE_CONFIG[EdgeType]][]).map(([type, cfg]) => {
+                  const isHidden = hiddenEdgeTypes.has(type)
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => handleToggleEdgeType(type)}
+                      className="w-full text-left flex items-center gap-1.5 py-1 px-1 rounded transition-colors hover:bg-white/5"
+                      style={{ color: isHidden ? '#444' : cfg.color }}
+                    >
+                      {isHidden ? <EyeOff className="w-3 h-3" style={{ color: '#444' }} /> : <Eye className="w-3 h-3" style={{ color: cfg.color }} />}
+                      {React.createElement(cfg.icon, { size: 9, color: isHidden ? '#444' : cfg.color })}
+                      <span className={`text-[10px] ${isHidden ? 'line-through' : ''}`}>{cfg.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </SidebarSection>
+
+            {/* ─── Minimap Section ─── */}
+            <SidebarSection
+              icon={Crosshair}
+              title="Minimap"
+              count={Math.round(zoom * 100)}
+              isOpen={minimapSectionOpen}
+              onToggle={() => setMinimapSectionOpen(!minimapSectionOpen)}
+              sidebarOpen={sidebarOpen}
+            >
+              <MiniMap
+                agents={agents}
+                positions={positions}
+                connections={connections}
+                dimensions={dimensions}
+                pan={pan}
+                zoom={zoom}
+                onClickMap={handleMiniMapClick}
+                selectedAgentId={selectedAgent?.id || null}
+              />
+            </SidebarSection>
+
+          </div>
+        </ScrollArea>
+      </motion.div>
+
+      {/* Mobile overlay when sidebar is open */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/50"
+          onClick={() => setSidebarOpen(false)}
         />
-      </div>
+      )}
 
       {/* Agent detail panel */}
       <AnimatePresence>

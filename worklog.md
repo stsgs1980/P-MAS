@@ -367,3 +367,62 @@ Stage Summary:
 - Legend/Stats/ConnectionFilter panels properly stacked without overlap
 - Header redesigned: compact single-row, modern, dark with cyan accents
 - All 4 user requests addressed
+
+---
+Task ID: 12
+Agent: full-stack-developer subagent
+Task: Redesign hierarchy view with collapsible sidebar instead of overlapping overlay panels
+
+Work Log:
+- Replaced bottom-left floating overlay panels (Legend, Stats, ConnectionFilter) with a proper collapsible left sidebar
+- Sidebar: 280px expanded / 48px collapsed, smooth framer-motion animation
+- Added sidebar toggle button (ChevronLeft/ChevronRight) at the right edge
+- Created SidebarSection reusable component with icon, title, count badge, chevron toggle, left cyan accent line
+- Stats section: Quick Stats (Total, Active, Idle, Tasks with progress bars) + Detailed Stats (Role Groups, Formulas, Edge Types, Coverage - collapsible)
+- Legend section: Edge types with icons + status colors
+- Connections section: Always visible edge type toggles (not dropdown)
+- Minimap section: Moved from bottom-right floating position into sidebar
+- Redesigned header: 48px compact, top cyan accent line, Back+Logo left, Search center, Role filters+Controls right
+- SVG canvas: marginLeft and width adjust based on sidebar state (280px/48px), smooth transition
+- Mobile responsive: sidebar starts collapsed, overlays canvas with dark backdrop
+- Lint: 0 errors
+- Dev server: 200 OK
+
+Stage Summary:
+- Sidebar layout eliminates all panel overlap issues
+- All sections individually collapsible with SidebarSection component
+- Stats metrics split into Quick Stats (open) and Detailed Stats (collapsed by default)
+- Header is compact and modern (48px height)
+- Minimap integrated into sidebar
+- Mobile: overlay mode with backdrop
+- VLM verification: no overlapping panels, clean layout, well-organized
+
+---
+Task ID: 12
+Agent: Main Orchestrator
+Task: Redesign P-MAS Agent Hierarchy view with Sidebar layout
+
+Work Log:
+- Fixed file corruption: Lines with `hiddenEdgeTypes` and `highlightedConnections` had `[h` ANSI escape sequences embedded. Fixed using byte-level replacement with Python.
+- Added 7 new state variables: sidebarOpen, statsSectionOpen, detailedStatsOpen, legendSectionOpen, connectionsSectionOpen, minimapSectionOpen, isMobile
+- Added mobile detection in resize useEffect - auto-collapses sidebar on mobile (<768px)
+- Created SidebarSection component: reusable collapsible section with icon, title, count badge, chevron toggle, left cyan accent line, supports both expanded (280px) and collapsed (48px) modes
+- Redesigned header to compact 48px: Left (back + logo), Center (search bar), Right (role filters + controls), top cyan accent line, mobile search row below
+- Implemented collapsible left sidebar (280px/48px): Stats section (Quick Stats + Detailed Stats), Legend section, Connection Types section (always visible with toggle buttons), Minimap section (moved from bottom-right), toggle button at edge
+- Removed bottom-left overlay panels (LegendPanel, StatsDashboard, ConnectionFilterPanel floating cards)
+- Removed bottom-right floating minimap container
+- Adjusted SVG canvas: offset by sidebar width (280px expanded / 48px collapsed), full width on mobile with sidebar overlay, smooth CSS transition
+- Added mobile responsive: sidebar starts collapsed, overlays canvas with dark backdrop, mobile search row, role group filters hidden with filter button
+- Fixed AgentDetailPanel position for 48px header
+- Color scheme maintained: monochrome cyan (#06B6D4 primary)
+- Lint: 0 errors
+- Dev server: GET / 200, API /api/hierarchy returns 26 agents
+
+Stage Summary:
+- Complete layout redesign from floating overlays to collapsible sidebar
+- Header redesigned from thick toolbar to compact 48px bar
+- Stats, Legend, Connection Types, and Minimap now in sidebar with independent collapsible sections
+- SVG canvas properly offsets for sidebar width with smooth animation
+- Mobile responsive with overlay sidebar
+- All existing functionality preserved
+- Monochrome cyan color scheme maintained
