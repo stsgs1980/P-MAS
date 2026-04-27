@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.shutterstock.com/search/connected-radial-diagram?image_type=illustration",
+    "name": "Connected Radial Diagram illustrations",
+    "snippet": "A visual representation of a network , featuring a central blue node connected to eight green nodes via radial lines, symbolizing connectivity and data flow.",
+    "host_name": "www.shutterstock.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://dribbble.com/search/radial-chart",
+    "name": "radial chart",
+    "snippet": "Explore thousands of high-quality radial chart images on Dribbble . Your resource to get inspired, discover and connect with designers worldwide.",
+    "host_name": "dribbble.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.pinterest.com/ideas/dark-mode-data-chart/912531639850",
+    "name": "Dark Mode Data Chart",
+    "snippet": "Dark mode data chart . Discover Pinterest's best ideas and inspiration for Dark mode data chart. Get inspired and try out new things.",
+    "host_name": "www.pinterest.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.yworks.com/pages/drawing-radial-diagrams",
+    "name": "Drawing Radial Diagrams",
+    "snippet": "A radial graph drawing algorithm arranges the nodes (or vertices) of a graph on concentric circles, as shown in the example below.",
+    "host_name": "www.yworks.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.highcharts.com/blog/tutorials/network-graph",
+    "name": "Network graph",
+    "snippet": "May 7, 2021 — A network graph is a chart that displays relations between elements (nodes) using simple links. Network graph allows us to visualize clusters and relationships ...",
+    "host_name": "www.highcharts.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.yfiles.com/the-yfiles-sdk/features/automatic-layouts/radial-layout",
+    "name": "About Radial Layout",
+    "snippet": "Radial layout is a graph visualization technique that arranges nodes in concentric circles around one or more central hubs, emphasizing hierarchical structure, ...",
+    "host_name": "www.yfiles.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://r-graph-gallery.com/network.html",
+    "name": "Network Graph",
+    "snippet": "Network graph . Network diagrams (or Graphs) show interconnections between a set of entities. Each entity is represented by a Node (or vertice).",
+    "host_name": "r-graph-gallery.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.researchgate.net/figure/Radial-layout-of-node-link-diagram-of-randomly-generated-dataset-Left-Initial-radial_fig2_354422200",
+    "name": "Radial layout of node-link diagram of randomly generated",
+    "snippet": "Radial layout displays the nodes aligned as a circle in which each node has an equal distance to the center, and edges are represented as straight lines ...",
+    "host_name": "www.researchgate.net",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://schochastics.github.io/graphlayouts",
+    "name": "Additional Layout Algorithms for Network Visualizations",
+    "snippet": "Nodes are anchored with a reference layout and only moved slightly in each wave depending on deleted/added edges. In this way, it is easy to track down specific ...",
+    "host_name": "schochastics.github.io",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://flourish.studio/visualisations/network-charts",
+    "name": "Make interactive network graphs without coding",
+    "snippet": "Network graphs (also known as node-link diagrams ) are ideal for visualizing relationships, from social networks and team structures to ownership chains and data ...",
+    "host_name": "flourish.studio",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]
