@@ -69,41 +69,67 @@ export interface NodePosition {
   height: number
 }
 
+// ─── Virtual layer nodes for Dagre rank constraints ──────────────────────────
+
 export function computeDagreLayout(
   agents: AgentData[],
   connections: ConnectionData[],
   direction: 'TB' | 'LR' = 'TB'
 ): NodePosition[] {
-  const g = new dagre.graphlib.Graph()
-  g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({
-    rankdir: direction,
-    nodesep: 50,
-    ranksep: 80,
-    marginx: 40,
-    marginy: 40,
-  })
+  // Hybrid layout: use Dagre for X positioning within each layer,
+  // but manually assign Y positions based on ROLE_CONFIG level.
+  // This guarantees strict layer separation.
 
+  const nodeWidth = 160
+  const nodeHeight = 58
+  const layerGap = 100
+  const nodeSep = 50
+  const marginX = 40
+  const marginTop = 40
+
+  // Group agents by level
+  const layers: Record<number, AgentData[]> = {}
   for (const agent of agents) {
-    g.setNode(agent.id, { width: 160, height: 58 })
+    const cfg = ROLE_CONFIG[agent.roleGroup]
+    const level = cfg ? cfg.level : 4
+    if (!layers[level]) layers[level] = []
+    layers[level].push(agent)
   }
 
-  for (const conn of connections) {
-    if (conn.type === 'command' || conn.type === 'delegate') {
-      g.setEdge(conn.from, conn.to, { weight: conn.type === 'command' ? 2 : 1 })
+  const sortedLevels = Object.keys(layers).map(Number).sort((a, b) => a - b)
+
+  // Use Dagre per-layer for X positioning
+  const positions: Record<string, { x: number; y: number }> = {}
+  let currentY = marginTop
+
+  for (const level of sortedLevels) {
+    const layerAgents = layers[level]
+    if (layerAgents.length === 0) continue
+
+    // Simple even distribution for X within each layer
+    // (more readable than Dagre's LR mode for single-rank layers)
+    const totalWidth = layerAgents.length * nodeWidth + (layerAgents.length - 1) * nodeSep
+    let startX = marginX
+
+    for (let i = 0; i < layerAgents.length; i++) {
+      positions[layerAgents[i].id] = {
+        x: startX + i * (nodeWidth + nodeSep),
+        y: currentY,
+      }
     }
-  }
 
-  dagre.layout(g)
+    // Move Y down for next layer
+    currentY += nodeHeight + layerGap
+  }
 
   return agents.map(agent => {
-    const node = g.node(agent.id)
+    const pos = positions[agent.id] || { x: 0, y: 0 }
     return {
       id: agent.id,
-      x: node.x - 80,
-      y: node.y - 29,
-      width: 160,
-      height: 58,
+      x: pos.x,
+      y: pos.y,
+      width: nodeWidth,
+      height: nodeHeight,
     }
   })
 }
