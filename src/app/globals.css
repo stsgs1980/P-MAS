@@ -223,3 +223,15 @@
 .terrain-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(6, 182, 212, 0.55);
 }
+
+/* Custom scrollbar — thin cyan for agent list panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.35);
+  border-radius: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

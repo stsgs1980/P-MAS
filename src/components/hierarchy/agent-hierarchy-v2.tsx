@@ -461,8 +461,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           <button
             style={{
               padding: '3px 5px', borderRadius: 3,
-              background: 'transparent', border: '1px solid rgba(51,51,51,0.3)',
-              color: '#555', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
+              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Zoom In"
           >
@@ -471,8 +471,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           <button
             style={{
               padding: '3px 5px', borderRadius: 3,
-              background: 'transparent', border: '1px solid rgba(51,51,51,0.3)',
-              color: '#555', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
+              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Zoom Out"
           >
@@ -481,8 +481,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           <button
             style={{
               padding: '3px 5px', borderRadius: 3,
-              background: 'transparent', border: '1px solid rgba(51,51,51,0.3)',
-              color: '#555', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
+              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Fit View"
           >
@@ -494,13 +494,15 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       {/* ─── Main layout ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar */}
-        <GroupSidebar
-          agents={agents}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          selectedAgentId={selectedAgentId}
-          onSelectAgent={handleSidebarSelect}
-        />
+        <div className="custom-scrollbar" style={{ overflowY: 'auto' }}>
+          <GroupSidebar
+            agents={agents}
+            activeFilter={activeFilter}
+            onFilterChange={setActiveFilter}
+            selectedAgentId={selectedAgentId}
+            onSelectAgent={handleSidebarSelect}
+          />
+        </div>
 
         {/* React Flow Canvas */}
         <div ref={reactFlowWrapper} style={{ flex: 1, position: 'relative' }}>
@@ -526,14 +528,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               size={0.5}
               color="rgba(51,51,51,0.3)"
             />
-            <Controls
-              showInteractive={false}
-              style={{
-                background: 'rgba(10,10,10,0.9)',
-                border: '1px solid rgba(51,51,51,0.3)',
-                borderRadius: 8,
-              }}
-            />
+            {/* Native controls hidden — custom zoom buttons in toolbar */}
             <MiniMap
               nodeColor={node => {
                 const data = node.data as AgentData
