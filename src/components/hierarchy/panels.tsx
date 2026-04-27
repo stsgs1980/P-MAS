@@ -55,6 +55,7 @@ export function GroupSidebar({
         overflowY: 'auto',
         fontSize: 11,
       }}
+      className="terrain-scroll"
     >
       {/* Groups */}
       <div style={{ padding: 12, borderBottom: '1px solid rgba(51,51,51,0.2)' }}>
@@ -228,6 +229,7 @@ export function DetailPanel({
         flexDirection: 'column',
         overflowY: 'auto',
       }}
+      className="terrain-scroll"
     >
       {/* Header */}
       <div style={{ padding: 16, position: 'relative', borderBottom: '1px solid rgba(51,51,51,0.2)' }}>
