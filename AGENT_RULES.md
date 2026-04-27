@@ -67,7 +67,22 @@ Before telling the user data is lost, check ALL 5 paths:
 
 NEVER say "permanently lost" until all 5 checks are exhausted.
 
-### 2.5 Log Everything
+### 2.5 Always Push After Commit
+
+After EVERY `git commit` -- MANDATORY `git push origin main` (no exceptions).
+
+- One commit = one push. NEVER accumulate multiple commits without pushing.
+- If push is rejected -- use `git push --force-with-lease origin main`, NOT `git pull --rebase`.
+- NEVER use `git pull --rebase` (only `git pull --no-rebase` is allowed).
+
+### 2.6 Stash Before Conflict-Prone Operations
+
+Before any git operation that may cause a conflict:
+
+1. `git stash push -m "pre-conflict-backup"`
+2. `git push origin main`
+
+### 2.7 Log Everything
 
 After every git operation, log to `worklog.md`: operation, hash before/after, result.
 
