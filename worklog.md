@@ -531,3 +531,26 @@ Stage Summary:
 - Lint: 0 errors
 - Cron job creation failed (401)
 - Dev server process management issue (needs investigation)
+
+---
+Task ID: 15
+Agent: Main Orchestrator
+Task: Replace my-project content with P-MAS project files
+
+Work Log:
+- Removed old my-project content (src, prisma, db, public, standards, templates, docs, instructions, agent-ctx, preview, upload, download, AGENT_RULES.md, etc.)
+- Copied all P-MAS files from /home/z/pmas to /home/z/my-project (src, prisma, standards, templates, docs, instructions, agent-ctx, public, upload, db, AGENT_RULES.md, PROJECT_CONFIG.md, README.md, Caddyfile, worklog.md, components.json)
+- Copied pmas/package.json to my-project and ran `bun install` — 3 new packages installed: @types/dagre, @xyflow/react, dagre
+- Ran `npx prisma db push` — database already in sync
+- Seeded database via POST /api/seed — 26 agents + 26 tasks created
+- Started dev server with `npx next dev -p 3000 </dev/null >/tmp/zdev.log 2>&1 &`
+- Verified GET / returns 200 (P-MAS Dashboard)
+- Verified GET /hierarchy returns 200 (Agent Hierarchy)
+- Server process dies after first few requests (known sandbox behavior per dev-watchdog skill)
+
+Stage Summary:
+- P-MAS project fully migrated to /home/z/my-project
+- All dependencies installed (including @xyflow/react for React Flow)
+- Database seeded with 26 agents across 8 role groups
+- Both Dashboard (/) and Hierarchy (/hierarchy) pages serving 200
+- Dev server needs periodic restart due to sandbox process management

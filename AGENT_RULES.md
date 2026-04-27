@@ -249,6 +249,14 @@ Deploy AFTER Group B. These SUBMIT to Group B standards.
 - Перед push: `git log --oneline -5` — убедиться что нет лишних коммитов
 - При старте: `git remote -v` — если нет origin, привязать к GitHub
 
+## Проект в Sandbox
+
+- Рабочая директория sandbox: `/home/z/my-project/`
+- Основной проект ДОЛЖЕН находиться в `/home/z/my-project/` — sandbox автоматически запускает dev-сервер отсюда
+- НЕ создавать отдельные папки для клонов проекта
+- После git clone — переместить содержимое в `/home/z/my-project/`
+- При старте: `cd /home/z/my-project && git remote -v` — убедиться что remote привязан к GitHub
+
 ---
 
 Built with: Next.js 16 + TypeScript + Tailwind CSS 4 + Prisma + shadcn/ui + Framer Motion + Zustand
