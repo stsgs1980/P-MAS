@@ -2071,6 +2071,7 @@ function SidebarSection({
 
 export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [agents, setAgents] = useState<Agent[]>([])
+  const [apiConnections, setApiConnections] = useState<Connection[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null)
@@ -2109,8 +2110,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       const res = await fetchWithRetry('/api/hierarchy')
       const data = await res.json()
       setAgents(data.agents || [])
+      setApiConnections((data.connections || []) as Connection[])
     } catch {
       setAgents([])
+      setApiConnections([])
     } finally {
       setLoading(false)
     }
@@ -2412,122 +2415,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       }
     }
 
-    // Build connections from hierarchy API data
-    const conns: Connection[] = []
-
-    // Command edges: parent -> child
-    for (const agent of agents) {
-      if (agent.parentId && pos[agent.id] && pos[agent.parentId]) {
-        conns.push({
-          id: `cmd-${agent.id}-${agent.parentId}`,
-          from: agent.parentId,
-          to: agent.id,
-          type: 'command',
-          strength: 1,
-        })
-      }
-    }
-
-    // Sync edges
-    const syncSeen = new Set<string>()
-    for (const group of ROLE_ORDER) {
-      const groupAgents = agents.filter(a => a.roleGroup === group)
-      for (let i = 0; i < groupAgents.length; i++) {
-        for (let j = i + 1; j < groupAgents.length; j++) {
-          const a1 = groupAgents[i]
-          const a2 = groupAgents[j]
-          if (a1.parentId === a2.parentId && pos[a1.id] && pos[a2.id]) {
-            const key = [a1.id, a2.id].sort().join('-')
-            if (!syncSeen.has(key)) {
-              syncSeen.add(key)
-              conns.push({
-                id: `sync-${key}`,
-                from: a1.id,
-                to: a2.id,
-                type: 'sync',
-                strength: 0.5,
-              })
-            }
-          }
-        }
-      }
-    }
-
-    // Twin edges
-    const twinSeen = new Set<string>()
-    for (const agent of agents) {
-      if (agent.twinId && pos[agent.id] && pos[agent.twinId]) {
-        const key = [agent.id, agent.twinId].sort().join('-')
-        if (!twinSeen.has(key)) {
-          twinSeen.add(key)
-          conns.push({
-            id: `twin-${key}`,
-            from: agent.id,
-            to: agent.twinId,
-            type: 'twin',
-            strength: 1,
-          })
-        }
-      }
-    }
-
-    // Delegate edges
-    const taktikaAgents = agents.filter(a => a.roleGroup === '\u0422\u0430\u043a\u0442\u0438\u043a\u0430')
-    const ispolnenieAgents = agents.filter(a => a.roleGroup === '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435')
-    for (const t of taktikaAgents) {
-      if (t.role.includes('Coordinator') && pos[t.id]) {
-        for (const e of ispolnenieAgents) {
-          if (!e.parentId && pos[e.id]) {
-            conns.push({
-              id: `delegate-${t.id}-${e.id}`,
-              from: t.id,
-              to: e.id,
-              type: 'delegate',
-              strength: 0.7,
-            })
-          }
-        }
-      }
-    }
-
-    // Supervise edges
-    const kontrolAgents = agents.filter(a => a.roleGroup === '\u041a\u043e\u043d\u0442\u0440\u043e\u043b\u044c')
-    for (const c of kontrolAgents) {
-      if (pos[c.id]) {
-        for (const e of ispolnenieAgents) {
-          if (pos[e.id] && conns.filter(cn => cn.type === 'supervise' && cn.to === e.id).length === 0) {
-            conns.push({
-              id: `supervise-${c.id}-${e.id}`,
-              from: c.id,
-              to: e.id,
-              type: 'supervise',
-              strength: 0.4,
-            })
-            break
-          }
-        }
-      }
-    }
-
-    // Broadcast edges
-    const strategyAgents = agents.filter(a => a.roleGroup === '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f' && !a.parentId)
-    for (const s of strategyAgents) {
-      if (pos[s.id]) {
-        const groupLeads = agents.filter(a => !a.parentId && a.roleGroup !== '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u044f' && pos[a.id])
-        for (const lead of groupLeads) {
-          conns.push({
-            id: `broadcast-${s.id}-${lead.id}`,
-            from: s.id,
-            to: lead.id,
-            type: 'broadcast',
-            strength: 0.5,
-          })
-        }
-      }
-    }
+    // Use connections from API directly (6 edge types computed server-side)
+    const conns: Connection[] = apiConnections.filter(
+      c => pos[c.from] && pos[c.to]
+    )
 
     return { positions: pos, connections: conns, groupCentroids: centroids }
-  }, [agents, dimensions, viewMode])
+  }, [agents, dimensions, viewMode, apiConnections])
 
   // ─── Simulated Connection Pulse (every 8s) ────────────────────────────────
   useEffect(() => {
