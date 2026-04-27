@@ -2925,16 +2925,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             </div>
 
             {/* Zoom controls */}
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" style={{ background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)' }} onClick={() => setZoom(z => Math.max(0.3, z * 0.85))}>
               <ZoomOut className="h-3 w-3" />
             </Button>
-            <span className="text-[8px] font-mono font-semibold px-1 py-0.5 rounded min-w-[30px] text-center" style={{ background: 'rgba(6, 182, 212, 0.1)', border: '1px solid rgba(6, 182, 212, 0.15)', color: '#06B6D4' }}>
+            <span className="text-[8px] font-mono font-semibold px-1 py-0.5 rounded min-w-[30px] text-center" style={{ background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)', color: '#06B6D4' }}>
               {Math.round(zoom * 100)}%
             </span>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={() => setZoom(z => Math.min(3, z * 1.15))}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" style={{ background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)' }} onClick={() => setZoom(z => Math.min(3, z * 1.15))}>
               <ZoomIn className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" onClick={fitToScreen} title="Fit (F)">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-[#888] hover:text-white" style={{ background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)' }} onClick={fitToScreen} title="Fit (F)">
               <Maximize2 className="h-3 w-3" />
             </Button>
 
