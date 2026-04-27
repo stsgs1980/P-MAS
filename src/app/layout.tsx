@@ -15,24 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "P-MAS Dashboard — Multi-Agent System",
+  description: "P-MAS Agent Hierarchy Dashboard — Prompt-based Multi-Agent System with 26 agents across 8 role groups.",
+  keywords: ["P-MAS", "Multi-Agent System", "Agent Hierarchy", "Cognitive Formulas", "Dashboard", "Next.js"],
+  authors: [{ name: "P-MAS Team" }],
   icons: {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "P-MAS Dashboard",
+    description: "Prompt-based Multi-Agent System Dashboard",
     url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    siteName: "P-MAS",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "P-MAS Dashboard",
+    description: "Prompt-based Multi-Agent System Dashboard",
   },
 };
 
