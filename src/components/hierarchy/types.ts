@@ -18,6 +18,8 @@ export interface AgentData {
 
 export type EdgeType = 'command' | 'sync' | 'twin' | 'delegate' | 'supervise' | 'broadcast'
 
+export type ViewMode = 'hierarchy' | 'radial' | 'grid'
+
 export interface ConnectionData {
   id: string
   from: string
@@ -131,6 +133,109 @@ export function computeDagreLayout(
       width: nodeWidth,
       height: nodeHeight,
     }
+  })
+}
+
+// ─── Radial layout (concentric rings by hierarchy level) ─────────────────────
+
+export function computeRadialLayout(agents: AgentData[]): NodePosition[] {
+  const nodeWidth = 160
+  const nodeHeight = 58
+  const centerX = 800
+  const centerY = 500
+  const baseRadius = 120   // L0 at center, L1 ring, L2 ring, etc.
+  const radiusStep = 180   // distance between rings
+
+  // Group agents by level
+  const layers: Record<number, AgentData[]> = {}
+  for (const agent of agents) {
+    const cfg = ROLE_CONFIG[agent.roleGroup]
+    const level = cfg ? cfg.level : 4
+    if (!layers[level]) layers[level] = []
+    layers[level].push(agent)
+  }
+
+  const positions: Record<string, { x: number; y: number }> = {}
+
+  const sortedLevels = Object.keys(layers).map(Number).sort((a, b) => a - b)
+
+  for (const level of sortedLevels) {
+    const layerAgents = layers[level]
+    if (layerAgents.length === 0) continue
+
+    if (level === 0) {
+      // Root agents: place at center
+      for (let i = 0; i < layerAgents.length; i++) {
+        const angle = (2 * Math.PI * i) / Math.max(layerAgents.length, 1) - Math.PI / 2
+        const r = layerAgents.length === 1 ? 0 : 80
+        positions[layerAgents[i].id] = {
+          x: centerX + r * Math.cos(angle) - nodeWidth / 2,
+          y: centerY + r * Math.sin(angle) - nodeHeight / 2,
+        }
+      }
+    } else {
+      // Outer rings: distribute evenly around circle
+      const radius = baseRadius + level * radiusStep
+      const count = layerAgents.length
+      // Offset angle per level so rings don't align monotonously
+      const angleOffset = level * 0.3
+
+      for (let i = 0; i < count; i++) {
+        const angle = (2 * Math.PI * i) / count - Math.PI / 2 + angleOffset
+        positions[layerAgents[i].id] = {
+          x: centerX + radius * Math.cos(angle) - nodeWidth / 2,
+          y: centerY + radius * Math.sin(angle) - nodeHeight / 2,
+        }
+      }
+    }
+  }
+
+  return agents.map(agent => {
+    const pos = positions[agent.id] || { x: 0, y: 0 }
+    return { id: agent.id, x: pos.x, y: pos.y, width: nodeWidth, height: nodeHeight }
+  })
+}
+
+// ─── Grid layout (uniform grid by roleGroup) ─────────────────────────────────
+
+export function computeGridLayout(agents: AgentData[]): NodePosition[] {
+  const nodeWidth = 160
+  const nodeHeight = 58
+  const cellW = nodeWidth + 30
+  const cellH = nodeHeight + 30
+  const marginX = 40
+  const marginTop = 40
+
+  // Group by roleGroup in ROLE_ORDER
+  const groupSlots: { group: string; agents: AgentData[] }[] = []
+  for (const group of ROLE_ORDER) {
+    const groupAgents = agents.filter(a => a.roleGroup === group)
+    if (groupAgents.length > 0) {
+      groupSlots.push({ group, agents: groupAgents })
+    }
+  }
+
+  // Determine grid dimensions: try to keep it somewhat square
+  const totalAgents = agents.length
+  const cols = Math.ceil(Math.sqrt(totalAgents))
+  const positions: Record<string, { x: number; y: number }> = {}
+
+  let idx = 0
+  for (const slot of groupSlots) {
+    for (const agent of slot.agents) {
+      const col = idx % cols
+      const row = Math.floor(idx / cols)
+      positions[agent.id] = {
+        x: marginX + col * cellW,
+        y: marginTop + row * cellH,
+      }
+      idx++
+    }
+  }
+
+  return agents.map(agent => {
+    const pos = positions[agent.id] || { x: 0, y: 0 }
+    return { id: agent.id, x: pos.x, y: pos.y, width: nodeWidth, height: nodeHeight }
   })
 }
 

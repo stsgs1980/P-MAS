@@ -34,12 +34,15 @@ import { AgentEdge } from './agent-edge'
 import { GroupSidebar, DetailPanel, KPIStrip } from './panels'
 import {
   computeDagreLayout,
+  computeRadialLayout,
+  computeGridLayout,
   buildConnections,
   ROLE_CONFIG,
   ROLE_ORDER,
   EDGE_CONFIG,
   type AgentData,
   type EdgeType,
+  type ViewMode,
 } from './types'
 import { fetchWithRetry } from '@/lib/client-fetch'
 
@@ -69,7 +72,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [visibleEdgeTypes, setVisibleEdgeTypes] = useState<Set<EdgeType>>(
     new Set(Object.entries(EDGE_CONFIG).filter(([, v]) => v.defaultVisible).map(([k]) => k as EdgeType))
   )
-  const [viewMode, setViewMode] = useState<'hierarchy' | 'radial' | 'grid'>('hierarchy')
+  const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
   // ─── Fetch agents ──────────────────────────────────────────────────────
@@ -127,13 +130,25 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
   // ─── Build React Flow nodes ────────────────────────────────────────────
   const { positions } = useMemo(() => {
-    const layoutPositions = computeDagreLayout(agents, connections)
+    let layoutPositions
+    switch (viewMode) {
+      case 'radial':
+        layoutPositions = computeRadialLayout(agents)
+        break
+      case 'grid':
+        layoutPositions = computeGridLayout(agents)
+        break
+      case 'hierarchy':
+      default:
+        layoutPositions = computeDagreLayout(agents, connections)
+        break
+    }
     const posMap: Record<string, { x: number; y: number }> = {}
     for (const p of layoutPositions) {
       posMap[p.id] = { x: p.x, y: p.y }
     }
     return { positions: posMap }
-  }, [agents, connections])
+  }, [agents, connections, viewMode])
 
   const flowNodes: Node[] = useMemo(() => {
     return agents.map(agent => {
@@ -525,31 +540,33 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               }}
             />
 
-            {/* Layer labels overlay */}
-            <Panel position="top-left" style={{ pointerEvents: 'none' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {LAYER_LABELS.map(layer => {
-                  const pos = layerPositions[layer.level]
-                  if (!pos) return null
-                  return (
-                    <div
-                      key={layer.level}
-                      style={{
-                        fontSize: 8,
-                        fontWeight: 700,
-                        color: layer.color,
-                        opacity: 0.4,
-                        letterSpacing: 1,
-                        textTransform: 'uppercase',
-                        padding: '2px 6px',
-                      }}
-                    >
-                      {layer.label}
-                    </div>
-                  )
-                })}
-              </div>
-            </Panel>
+            {/* Layer labels overlay — only in hierarchy mode */}
+            {viewMode === 'hierarchy' && (
+              <Panel position="top-left" style={{ pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {LAYER_LABELS.map(layer => {
+                    const pos = layerPositions[layer.level]
+                    if (!pos) return null
+                    return (
+                      <div
+                        key={layer.level}
+                        style={{
+                          fontSize: 8,
+                          fontWeight: 700,
+                          color: layer.color,
+                          opacity: 0.4,
+                          letterSpacing: 1,
+                          textTransform: 'uppercase',
+                          padding: '2px 6px',
+                        }}
+                      >
+                        {layer.label}
+                      </div>
+                    )
+                  })}
+                </div>
+              </Panel>
+            )}
           </ReactFlow>
         </div>
 
