@@ -41,6 +41,7 @@ import {
   ROLE_ORDER,
   EDGE_CONFIG,
   type AgentData,
+  type ConnectionData,
   type EdgeType,
   type ViewMode,
 } from './types'
@@ -75,21 +76,6 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
-  // ─── Fetch agents ──────────────────────────────────────────────────────
-  const fetchAgents = useCallback(async () => {
-    try {
-      const res = await fetchWithRetry('/api/hierarchy')
-      const data = await res.json()
-      setAgents(data.agents || [])
-    } catch {
-      setAgents([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { fetchAgents() }, [fetchAgents])
-
   // ─── Simulate status transitions ───────────────────────────────────────
   useEffect(() => {
     if (agents.length === 0) return
@@ -111,8 +97,30 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     return () => clearInterval(interval)
   }, [agents.length])
 
-  // ─── Connections ────────────────────────────────────────────────────────
-  const connections = useMemo(() => buildConnections(agents), [agents])
+  // ─── Connections (from API, with client-side fallback) ─────────────────
+  const [apiConnections, setApiConnections] = useState<ConnectionData[]>([])
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      const res = await fetchWithRetry('/api/hierarchy')
+      const data = await res.json()
+      setAgents(data.agents || [])
+      // Use server-built connections (more accurate than client rebuild)
+      if (Array.isArray(data.connections)) {
+        setApiConnections(data.connections)
+      }
+    } catch {
+      setAgents([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchAgents() }, [fetchAgents])
+
+  // Fallback to client-side connections if API didn't provide them
+  const clientConnections = useMemo(() => buildConnections(agents), [agents])
+  const connections = apiConnections.length > 0 ? apiConnections : clientConnections
 
   // ─── Search matches ────────────────────────────────────────────────────
   const searchMatches = useMemo(() => {
