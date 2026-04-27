@@ -83,6 +83,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { fetchWithRetry } from '@/lib/client-fetch'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1562,7 +1563,7 @@ function AgentCreationDialog({ onCreated }: { onCreated: () => void }) {
     if (!name.trim() || !role.trim()) return
     setSubmitting(true)
     try {
-      const res = await fetch('/api/agents', {
+      const res = await fetchWithRetry('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2105,7 +2106,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
   const fetchAgents = useCallback(async () => {
     try {
-      const res = await fetch('/api/hierarchy')
+      const res = await fetchWithRetry('/api/hierarchy')
       const data = await res.json()
       setAgents(data.agents || [])
     } catch {
@@ -2122,7 +2123,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const handleSeed = useCallback(async () => {
     setLoading(true)
     try {
-      await fetch('/api/seed', { method: 'POST' })
+      await fetchWithRetry('/api/seed', { method: 'POST' })
       await fetchAgents()
     } catch {
       // ignore

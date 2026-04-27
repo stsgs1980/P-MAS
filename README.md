@@ -84,6 +84,7 @@ The dashboard provides two main views:
 | **Framer Motion** | Animations & transitions |
 | **Zustand** | Client state management |
 | **Lucide Icons** | SVG icon system (no emoji/Unicode) |
+| **agent-toolkit v1.5.0** | Standards, skills, resilience layer |
 
 ---
 
@@ -182,9 +183,13 @@ P-MAS/
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── agents/         # Agent CRUD endpoints
-│   │   │   ├── hierarchy/      # Hierarchy data endpoint
-│   │   │   └── seed/           # Database seeding endpoint
+│   │   │   ├── agents/         # Agent CRUD (GET, POST)
+│   │   │   ├── agents/[id]/    # Agent CRUD (GET, PATCH, DELETE)
+│   │   │   ├── tasks/          # Task CRUD (GET, POST)
+│   │   │   ├── tasks/[id]/     # Task CRUD (GET, PATCH, DELETE)
+│   │   │   ├── hierarchy/      # Hierarchy with connections
+│   │   │   ├── health/         # Server health check
+│   │   │   └── seed/           # Database seeding
 │   │   ├── globals.css         # Global styles & CSS variables
 │   │   ├── layout.tsx          # Root layout with metadata
 │   │   └── page.tsx            # Dashboard page
@@ -192,7 +197,20 @@ P-MAS/
 │   │   ├── agent-hierarchy.tsx # Hierarchy visualization component
 │   │   └── ui/                 # shadcn/ui components
 │   └── lib/
-│       └── db.ts               # Prisma client instance
+│       ├── db.ts               # Prisma client instance
+│       ├── api-retry.ts        # Exponential backoff retry
+│       ├── circuit-breaker.ts  # Circuit breaker pattern
+│       ├── health-check.ts     # Health monitoring
+│       ├── fallback-manager.ts # Multi-provider fallback
+│       ├── client-fetch.ts     # Client-side fetch with retry
+│       ├── resilience.ts       # Unified resilience exports
+│       └── utils.ts            # Utility functions
+├── skills/                     # Agent skills (api-retry, health-check, etc.)
+├── standards/                  # Governance documents (No-Unicode, Markdown, etc.)
+├── instructions/               # Behavioral instructions
+├── templates/                  # Operational templates
+├── AGENT_RULES.md              # Agent behavioral rules
+├── PROJECT_CONFIG.md           # Project-specific configuration
 ├── public/                     # Static assets
 ├── package.json
 ├── tailwind.config.ts
@@ -203,11 +221,32 @@ P-MAS/
 
 ## API Endpoints
 
+### Agents
+
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/agents` | List all agents |
 | `POST` | `/api/agents` | Create a new agent |
-| `GET` | `/api/hierarchy` | Get hierarchy with relationships |
+| `GET` | `/api/agents/[id]` | Get agent by ID |
+| `PATCH` | `/api/agents/[id]` | Update agent |
+| `DELETE` | `/api/agents/[id]` | Delete agent (with cleanup) |
+
+### Tasks
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/tasks` | List tasks (filter by agentId, status, priority) |
+| `POST` | `/api/tasks` | Create a new task |
+| `GET` | `/api/tasks/[id]` | Get task by ID |
+| `PATCH` | `/api/tasks/[id]` | Update task |
+| `DELETE` | `/api/tasks/[id]` | Delete task |
+
+### System
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/hierarchy` | Get hierarchy with connections |
+| `GET` | `/api/health` | Server health check (database status) |
 | `POST` | `/api/seed` | Seed database with sample data |
 
 ---

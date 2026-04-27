@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { fetchWithRetry } from '@/lib/client-fetch'
 
 const AgentHierarchy = dynamic(
   () => import('@/components/agent-hierarchy'),
@@ -1201,7 +1202,7 @@ function QuickActionsPanel() {
   const handleReseed = async () => {
     setReseeding(true)
     try {
-      const res = await fetch('/api/seed', { method: 'POST' })
+      const res = await fetchWithRetry('/api/seed', { method: 'POST' })
       if (res.ok) {
         toast.success('Database reseeded successfully')
       } else {
@@ -1216,7 +1217,7 @@ function QuickActionsPanel() {
 
   const handleExportConfig = async () => {
     try {
-      const res = await fetch('/api/hierarchy')
+      const res = await fetchWithRetry('/api/hierarchy')
       const data = await res.json()
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
