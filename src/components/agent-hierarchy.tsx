@@ -1896,11 +1896,11 @@ function ConnectionFilterPanel({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-2 left-0 rounded-xl overflow-hidden"
+            className="absolute top-full mt-2 left-0 rounded-xl overflow-hidden z-50"
             style={{
               background: 'rgba(26, 26, 26, 0.95)',
               backdropFilter: 'blur(16px)',
@@ -3246,10 +3246,10 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </g>
       </svg>
 
-      {/* Bottom-left panels: Stats + Legend + Connection Filter */}
-      <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-2">
-        <StatsDashboard stats={stats} />
+      {/* Bottom-left panels: Combined Stats + Legend + Connection Filter */}
+      <div className="fixed bottom-4 left-4 z-40 flex flex-col gap-2" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
         <LegendPanel />
+        <StatsDashboard stats={stats} />
         <ConnectionFilterPanel
           hiddenEdgeTypes={hiddenEdgeTypes}
           onToggleEdgeType={handleToggleEdgeType}

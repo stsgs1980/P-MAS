@@ -289,3 +289,81 @@ Stage Summary:
 - Status colors refined for better semantic meaning
 - All 5 user requests addressed
 - Cron job creation failed (401 - system limitation)
+
+---
+## P-MAS Dashboard — Roadmap & Planned Improvements
+
+### Phase 1: UI/UX Fixes (CURRENT)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 1.1 | Make Quick Stats row collapsible (Total Agents, Role Groups, etc.) | HIGH | PENDING |
+| 1.2 | Fix Legend/Stats being covered by Connection Types panel in hierarchy view | HIGH | PENDING |
+| 1.3 | Redesign Header — more compact, modern layout | HIGH | PENDING |
+| 1.4 | Add connection flow animation to hierarchy view | MEDIUM | PENDING |
+| 1.5 | Improve node depth/shadow effects (3D feel) | MEDIUM | PENDING |
+
+### Phase 2: Visual Enhancements
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 2.1 | Pulsing concentric waves from central node in hierarchy | MEDIUM | PENDING |
+| 2.2 | Semi-transparent cluster backgrounds for role groups | MEDIUM | PENDING |
+| 2.3 | Edge flow animation (data flowing along connections) | MEDIUM | PENDING |
+| 2.4 | Node inner-shadow/gradient for depth | LOW | PENDING |
+| 2.5 | More pronounced group boundary contours | LOW | PENDING |
+
+### Phase 3: Functionality
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 3.1 | Real-time agent status updates (WebSocket) | MEDIUM | PENDING |
+| 3.2 | Interactive formula dependency explorer | LOW | PENDING |
+| 3.3 | Agent task queue visualization | LOW | PENDING |
+| 3.4 | Export dashboard as PDF/image | LOW | PENDING |
+
+### Design Principles (confirmed via Pinterest board analysis)
+- Dark background (#000000) as base — graphs "glow" on black
+- Monochrome + one accent color (Cyan #06B6D4) — no rainbow
+- Radial/hierarchical layout — structure over chaos
+- Glow effects — nodes "breathe", not flat circles
+- Thin, semi-transparent edges — edges don't dominate
+- High contrast — everything reads instantly
+- Minimalism — no decoration, data-first
+
+---
+Task ID: 11
+Agent: Main Orchestrator
+Task: Create roadmap, make Quick Stats collapsible, fix hierarchy Legend/Stats overlap, redesign Header
+
+Work Log:
+- Created roadmap document in worklog.md with 3 phases of planned improvements (UI/UX Fixes, Visual Enhancements, Functionality)
+- Made Quick Stats row collapsible: wrapped in CollapsibleSection with defaultOpen=false, icon=BarChart3, count=8
+- Fixed hierarchy Legend/Stats being covered by Connection Types panel:
+  - Reordered bottom-left panels: Legend first, then Stats, then ConnectionFilter
+  - Added maxHeight with overflow scroll to container
+  - Changed ConnectionFilterPanel dropdown direction from bottom-up to top-down (absolute top-full)
+  - Changed animation from y:-8 to y:8 for correct slide-down direction
+  - Added z-50 to ConnectionFilterPanel dropdown
+- Redesigned Header to be compact single-row:
+  - Reduced padding from py-4 to py-2.5
+  - Logo: smaller (w-8 h-8 instead of w-10 h-10)
+  - Title: smaller text (text-sm instead of text-lg)
+  - Subtitle: "Multi-Agent System" instead of "Prompt-based Multi-Agent System" (hidden on small screens)
+  - Search: centered in header, max-w-xs
+  - Clock: integrated into right actions area (inline with buttons)
+  - Buttons: icon-only for Refresh and Bell (no text), smaller padding (p-1.5)
+  - Hierarchy button: shorter text "Hierarchy" instead of "Open Hierarchy", smaller icon
+  - Background: solid dark (rgba(13,13,13,0.95)) with backdrop blur instead of gradient animation
+  - Added subtle top accent line (cyan gradient)
+  - Mobile search: separate row below main header
+  - Notification badge: yellow (#EAB308) instead of cyan, smaller (w-3 h-3)
+- Lint: 0 errors
+- VLM verification: all panels visible and non-overlapping in both views
+
+Stage Summary:
+- Roadmap created with 3 phases of improvements
+- Quick Stats now collapsible (hidden by default)
+- Legend/Stats/ConnectionFilter panels properly stacked without overlap
+- Header redesigned: compact single-row, modern, dark with cyan accents
+- All 4 user requests addressed

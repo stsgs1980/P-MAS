@@ -1496,166 +1496,163 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         }
       `}</style>
 
-      {/* Header */}
+      {/* Header — Compact single-row */}
       <header
-        className="px-4 sm:px-6 py-4 border-b border-white/5 relative"
+        className="px-4 sm:px-6 py-2.5 border-b border-white/5 relative"
         style={{
-          background: 'linear-gradient(135deg, rgba(103,232,249,0.05), rgba(6,182,212,0.04), rgba(14,116,144,0.03))',
-          backgroundSize: '200% 200%',
-          animation: 'gradientShift 12s ease infinite',
+          background: 'rgba(13, 13, 13, 0.95)',
+          backdropFilter: 'blur(12px)',
         }}
       >
-        <div className="max-w-[1280px] mx-auto">
-          {/* Top row: Logo + actions */}
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center relative"
-                style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.3)' }}>
-                <Brain className="w-5 h-5" style={{ color: '#06B6D4' }} />
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <h1 className="text-white font-bold text-lg tracking-wide">P-MAS</h1>
-                  {/* System Status badge */}
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)' }}>
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#06B6D4' }} />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#06B6D4' }} />
-                    </span>
-                    <span className="text-[9px] font-bold tracking-wider" style={{ color: '#06B6D4' }}>ONLINE</span>
-                  </div>
-                </div>
-                <p className="text-slate-500 text-xs hidden sm:block">Prompt-based Multi-Agent System</p>
-              </div>
+        {/* Subtle top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.4), transparent)' }} />
+        
+        <div className="max-w-[1280px] mx-auto flex items-center justify-between gap-4">
+          {/* Left: Logo + Title + Status */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.25)' }}>
+              <Brain className="w-4 h-4" style={{ color: '#06B6D4' }} />
             </div>
             <div className="flex items-center gap-2">
-              {/* Search input */}
-              <div className="relative hidden sm:block">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: '#6B7280' }} />
-                <input
-                  type="text"
-                  placeholder="Filter dashboard..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 pr-3 py-2 rounded-lg text-xs w-40 lg:w-52 focus:outline-none focus:ring-1 transition-all duration-200"
-                  style={{
-                    background: 'rgba(45, 45, 45, 0.5)',
-                    border: '1px solid rgba(51, 51, 51, 0.5)',
-                    color: '#FFFFFF',
-                    focusRingColor: 'rgba(6, 182, 212, 0.4)',
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.4)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(6,182,212,0.1)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(51,51,51,0.5)'; e.currentTarget.style.boxShadow = 'none' }}
-                />
+              <h1 className="text-white font-bold text-sm tracking-wide">P-MAS</h1>
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#06B6D4' }} />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#06B6D4' }} />
+                </span>
+                <span className="text-[8px] font-bold tracking-wider" style={{ color: '#06B6D4' }}>ONLINE</span>
               </div>
-              {/* Refresh button */}
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50"
-                style={{
-                  background: 'rgba(45, 45, 45, 0.5)',
-                  border: '1px solid rgba(51, 51, 51, 0.5)',
-                  color: '#B0B0B0',
-                }}
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin-slow' : ''}`} />
-                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
-              </button>
-              {/* Notification bell */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="flex items-center p-2 rounded-lg transition-all duration-200 hover:scale-105"
-                  style={{
-                    background: 'rgba(45, 45, 45, 0.5)',
-                    border: '1px solid rgba(51, 51, 51, 0.5)',
-                    color: '#B0B0B0',
-                  }}
-                >
-                  <Bell className="w-3.5 h-3.5" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: '#06B6D4', color: '#000000' }}>3</span>
-                </button>
-                {showNotifications && (
-                  <div
-                    className="absolute right-0 top-10 w-64 rounded-xl p-3 z-50 animate-fade-in-up"
-                    style={{
-                      background: 'rgba(26,26,26,0.98)',
-                      border: '1px solid rgba(51,51,51,0.5)',
-                      boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white text-xs font-semibold">Alerts</span>
-                      <button onClick={() => setShowNotifications(false)} className="text-[#B0B0B0] hover:text-white transition-colors"><X className="w-3 h-3" /></button>
-                    </div>
-                    <div className="space-y-2">
-                      {[
-                        { text: 'Memory threshold warning detected', time: '25s ago', color: '#FFC107' },
-                        { text: 'Escalation protocol triggered', time: '1m ago', color: '#06B6D4' },
-                        { text: 'Agent latency spike traced', time: '2m ago', color: '#0891B2' },
-                      ].map((alert, i) => (
-                        <div key={i} className="flex items-start gap-2 p-2 rounded-lg transition-colors duration-150 hover:bg-white/[0.03]" style={{ background: 'rgba(13,13,13,0.6)' }}>
-                          <span className="w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0" style={{ background: alert.color }} />
-                          <div>
-                            <p className="text-[10px] text-[#B0B0B0]">{alert.text}</p>
-                            <p className="text-[8px] text-slate-600 mt-0.5">{alert.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              {/* Open Hierarchy */}
-              <button
-                onClick={onOpenHierarchy}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105"
-                style={{
-                  background: 'rgba(6, 182, 212, 0.15)',
-                  border: '1px solid rgba(6, 182, 212, 0.4)',
-                  color: '#06B6D4',
-                  boxShadow: '0 0 20px rgba(6, 182, 212, 0.1)',
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <circle cx="12" cy="12" r="4"/>
-                  <line x1="12" y1="2" x2="12" y2="6"/>
-                  <line x1="12" y1="18" x2="12" y2="22"/>
-                  <line x1="2" y1="12" x2="6" y2="12"/>
-                  <line x1="18" y1="12" x2="22" y2="12"/>
-                </svg>
-                <span>Open Hierarchy</span>
-              </button>
+              <span className="text-slate-600 text-[10px] hidden md:inline">Multi-Agent System</span>
             </div>
           </div>
-          {/* Bottom row: Last Updated */}
-          <div className="flex items-center justify-between mt-2 relative z-10">
-            <div className="flex items-center gap-2">
-              <Clock className="w-3 h-3" style={{ color: '#6B7280' }} />
-              <span className="text-[10px] text-slate-500" suppressHydrationWarning>Last Updated: {lastUpdated || '--:--:--'}</span>
+
+          {/* Center: Search */}
+          <div className="relative flex-1 max-w-xs hidden sm:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#64748B' }} />
+            <input
+              type="text"
+              placeholder="Filter dashboard..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-7 pr-3 py-1.5 rounded-md text-[11px] focus:outline-none transition-all duration-200"
+              style={{
+                background: 'rgba(30, 30, 30, 0.8)',
+                border: '1px solid rgba(51, 51, 51, 0.4)',
+                color: '#FFFFFF',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(6,182,212,0.4)'; e.currentTarget.style.boxShadow = '0 0 8px rgba(6,182,212,0.08)' }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)'; e.currentTarget.style.boxShadow = 'none' }}
+            />
+          </div>
+
+          {/* Right: Actions + Clock */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 mr-1">
+              <Clock className="w-3 h-3" style={{ color: '#475569' }} />
+              <span className="text-[9px] text-slate-600 font-mono hidden sm:inline" suppressHydrationWarning>{lastUpdated || '--:--:--'}</span>
             </div>
-            {/* Mobile search */}
-            <div className="relative sm:hidden">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#6B7280' }} />
-              <input
-                type="text"
-                placeholder="Filter..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2 py-1.5 rounded-lg text-[10px] w-32 focus:outline-none transition-all duration-200"
-                style={{ background: 'rgba(45,45,45,0.5)', border: '1px solid rgba(51,51,51,0.5)', color: '#FFFFFF' }}
-              />
+            {/* Refresh */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 disabled:opacity-50"
+              style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
+              title="Refresh"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin-slow' : ''}`} />
+            </button>
+            {/* Notifications */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 relative"
+                style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#64748B' }}
+                title="Alerts"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold" style={{ background: '#EAB308', color: '#000000' }}>3</span>
+              </button>
+              {showNotifications && (
+                <div
+                  className="absolute right-0 top-9 w-60 rounded-lg p-2.5 z-50 animate-fade-in-up"
+                  style={{
+                    background: 'rgba(20,20,20,0.98)',
+                    border: '1px solid rgba(51,51,51,0.5)',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-white text-[10px] font-semibold uppercase tracking-wider">Alerts</span>
+                    <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white transition-colors"><X className="w-3 h-3" /></button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { text: 'Memory threshold warning detected', time: '25s ago', color: '#EAB308' },
+                      { text: 'Escalation protocol triggered', time: '1m ago', color: '#06B6D4' },
+                      { text: 'Agent latency spike traced', time: '2m ago', color: '#0891B2' },
+                    ].map((alert, i) => (
+                      <div key={i} className="flex items-start gap-2 p-1.5 rounded-md transition-colors duration-150 hover:bg-white/[0.03]" style={{ background: 'rgba(13,13,13,0.6)' }}>
+                        <span className="w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0" style={{ background: alert.color }} />
+                        <div>
+                          <p className="text-[9px] text-[#B0B0B0]">{alert.text}</p>
+                          <p className="text-[7px] text-slate-600 mt-0.5">{alert.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+            {/* Open Hierarchy */}
+            <button
+              onClick={onOpenHierarchy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
+              style={{
+                background: 'rgba(6, 182, 212, 0.12)',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                color: '#06B6D4',
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4"/>
+                <line x1="12" y1="2" x2="12" y2="6"/>
+                <line x1="12" y1="18" x2="12" y2="22"/>
+                <line x1="2" y1="12" x2="6" y2="12"/>
+                <line x1="18" y1="12" x2="22" y2="12"/>
+              </svg>
+              <span className="hidden sm:inline">Hierarchy</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile search row */}
+        <div className="sm:hidden mt-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3" style={{ color: '#64748B' }} />
+            <input
+              type="text"
+              placeholder="Filter..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-7 pr-3 py-1.5 rounded-md text-[10px] focus:outline-none transition-all duration-200"
+              style={{ background: 'rgba(30,30,30,0.8)', border: '1px solid rgba(51,51,51,0.4)', color: '#FFFFFF' }}
+            />
           </div>
         </div>
       </header>
 
       {/* Main content */}
       <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 max-w-[1280px] mx-auto w-full">
-        {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {/* Quick Stats Row — collapsible */}
+        <CollapsibleSection
+          title="Quick Stats"
+          icon={<BarChart3 className="w-3.5 h-3.5" style={{ color: '#06B6D4' }} />}
+          count={QUICK_STATS.length}
+          accentColor="#06B6D4"
+          defaultOpen={false}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {QUICK_STATS.map((stat, index) => {
             const isActiveAgents = stat.label === 'Active Agents'
             return (
@@ -1694,7 +1691,8 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
               </div>
             )
           })}
-        </div>
+          </div>
+        </CollapsibleSection>
 
         {/* Role Groups Grid */}
         <CollapsibleSection
