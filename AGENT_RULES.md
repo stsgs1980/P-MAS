@@ -234,6 +234,21 @@ Deploy AFTER Group B. These SUBMIT to Group B standards.
 | `PROJECT_CONFIG.md` | Project-specific settings (stack, paths, server) |
 | `instructions/*.md` | Detailed behavioral instructions |
 
+## Sandbox Z.ai
+
+- Файловая система общая между чатами. Файлы не удаляются между сессиями.
+- Shell процесс умирает с чатом. Файлы остаются.
+- При блокировке (ошибка `needs merge`): `rm -rf .git/rebase-merge .git/rebase-apply && rm -f .git/MERGE_HEAD && git reset --hard HEAD` — ТОЛЬКО из нового чата.
+
+## Правила поведения
+
+- НЕ создавать функции, страницы, компоненты без запроса
+- НЕ «улучшать» проект без запроса
+- НЕ переименовывать, НЕ перемещать, НЕ удалять файлы без запроса
+- Перед коммитом: `git diff` — убедиться что изменено только запрошенное
+- Перед push: `git log --oneline -5` — убедиться что нет лишних коммитов
+- При старте: `git remote -v` — если нет origin, привязать к GitHub
+
 ---
 
 Built with: Next.js 16 + TypeScript + Tailwind CSS 4 + Prisma + shadcn/ui + Framer Motion + Zustand
