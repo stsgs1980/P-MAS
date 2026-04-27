@@ -1018,7 +1018,7 @@ function AgentDetailPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 400, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="fixed right-4 bottom-4 w-[340px] z-50 rounded-2xl overflow-hidden"
+      className="absolute right-4 bottom-4 w-[340px] z-50 rounded-2xl overflow-hidden"
       style={{
         top: '48px',
         background: 'rgba(26, 26, 26, 0.92)',
@@ -1962,7 +1962,7 @@ function BreadcrumbTrail({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
       style={{
         background: 'rgba(26, 26, 26, 0.92)',
         backdropFilter: 'blur(16px)',
@@ -2098,6 +2098,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [isMobile, setIsMobile] = useState(false)
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const svgContainerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 })
   const svgRef = useRef<SVGSVGElement>(null)
@@ -2130,15 +2131,28 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
   useEffect(() => {
     const update = () => {
-      setDimensions({ width: window.innerWidth, height: window.innerHeight })
+      if (svgContainerRef.current) {
+        const rect = svgContainerRef.current.getBoundingClientRect()
+        setDimensions({ width: rect.width, height: rect.height })
+      }
       setIsMobile(window.innerWidth < 768)
       if (window.innerWidth < 768) {
         setSidebarOpen(false)
       }
     }
     update()
+
+    // Use ResizeObserver for container-based sizing
+    const observer = new ResizeObserver(update)
+    if (svgContainerRef.current) {
+      observer.observe(svgContainerRef.current)
+    }
+
     window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   // ─── Fit to Screen ────────────────────────────────────────────────────
@@ -2700,7 +2714,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   // Empty state
   if (!loading && agents.length === 0) {
     return (
-      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#000000' }}>
+      <div className="min-h-screen bg-black flex justify-center">
         <BackgroundParticles />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -2733,17 +2747,16 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="w-screen h-screen overflow-hidden relative select-none"
-      style={{ background: '#000000' }}
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      <BackgroundParticles />
+    <div className="min-h-screen bg-black flex justify-center">
+      {/* Background particles behind everything */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <BackgroundParticles />
+      </div>
+
+      <div
+        ref={containerRef}
+        className="max-w-[1280px] w-full h-screen flex flex-col relative overflow-hidden select-none"
+      >
 
       {/* SVG Filters */}
       <svg className="absolute w-0 h-0">
@@ -2788,7 +2801,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       </svg>
 
       {/* ─── Compact Header (48px) ─── */}
-      <div className="fixed top-0 left-0 right-0 z-40" style={{ height: '48px' }}>
+      <div className="relative z-40" style={{ height: '48px' }}>
         {/* Top cyan accent line */}
         <div
           className="absolute top-0 left-0 right-0 h-[2px]"
@@ -2935,7 +2948,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       </div>
 
       {/* Mobile search row */}
-      <div className="md:hidden fixed top-12 left-0 right-0 z-30 px-3 py-1" style={{ background: 'rgba(13, 13, 13, 0.9)', backdropFilter: 'blur(12px)' }}>
+      <div className="md:hidden relative z-30 px-3 py-1" style={{ background: 'rgba(13, 13, 13, 0.9)', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-center relative">
           <Search className="w-3 h-3 absolute left-2 text-[#555]" />
           <input
@@ -2954,302 +2967,20 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </div>
       </div>
 
-      {/* Breadcrumb trail - centered on canvas area */}
-      <div style={{ marginLeft: isMobile ? 0 : (sidebarOpen ? 280 : 48), transition: 'margin-left 0.25s ease' }}>
-        <BreadcrumbTrail
-          activeFilter={activeFilter}
-          onClearFilter={() => setActiveFilter(null)}
-          zoom={zoom}
-          onResetView={resetView}
-        />
-      </div>
-
-      {/* Main SVG canvas - offset by sidebar width */}
-      <svg
-        ref={svgRef}
-        className="absolute inset-0 z-10"
-        style={{
-          marginLeft: sidebarOpen ? (isMobile ? 0 : 280) : (isMobile ? 0 : 48),
-          width: isMobile ? '100%' : (sidebarOpen ? 'calc(100% - 280px)' : 'calc(100% - 48px)'),
-          transition: 'margin-left 0.25s ease, width 0.25s ease',
-          cursor: isDragging ? 'grabbing' : 'grab',
-        }}
-        onMouseMove={(e) => {
-          const target = e.target as SVGElement
-          const edgeGroup = target.closest('[data-edge-id]')
-          if (edgeGroup) {
-            const id = edgeGroup.getAttribute('data-edge-id')
-            setHoveredEdge(id)
-          } else if (hoveredEdge) {
-            setHoveredEdge(null)
-          }
-        }}
-      >
-        <g
-          transform={`translate(${dimensions.width / 2 + pan.x}, ${dimensions.height / 2 + pan.y}) scale(${zoom}) translate(${-dimensions.width / 2}, ${-dimensions.height / 2})`}
-        >
-          {/* Background grid - zoom-aware */}
-          <BackgroundGrid width={dimensions.width} height={dimensions.height} zoom={zoom} />
-
-          {/* ─── Cluster backgrounds with group boundary contours ─── */}
-          {ROLE_ORDER.map((group, gi) => {
-            const cfg = ROLE_CONFIG[group]
-            const minDim = Math.min(dimensions.width, dimensions.height)
-            const baseRadius = minDim * 0.14
-            const ringSpacing = minDim * 0.14
-            const radius = baseRadius + ringSpacing * gi
-            const isHighlighted = hoveredGroup === group || activeFilter === group
-            const isCollapsedGroup = collapsedGroups.has(group)
-
-            // Compute group contour from actual node positions
-            const groupAgents = visibleAgents.filter(a => a.roleGroup === group)
-            const groupPositions = groupAgents.map(a => positions[a.id]).filter(Boolean)
-
-            return (
-              <g key={`cluster-${group}`}>
-                {/* Filled cluster background */}
-                <circle
-                  cx={dimensions.width / 2}
-                  cy={dimensions.height / 2}
-                  r={radius}
-                  fill={`rgba(${cfg.colorRgb}, ${isHighlighted ? 0.04 : 0.015})`}
-                  stroke={cfg.color}
-                  strokeWidth={isHighlighted ? 0.5 : 0.12}
-                  strokeOpacity={isHighlighted ? 0.25 : 0.04}
-                  strokeDasharray="4 8"
-                />
-
-                {/* ─── Group boundary contour line ─── */}
-                {/* Draw a subtle dashed contour around the actual group nodes */}
-                {groupPositions.length >= 2 && viewMode === 'radial' && !isCollapsedGroup && (
-                  <ellipse
-                    cx={groupCentroids[group]?.x || dimensions.width / 2}
-                    cy={groupCentroids[group]?.y || dimensions.height / 2}
-                    rx={radius * 0.35}
-                    ry={radius * 0.3}
-                    fill="none"
-                    stroke={cfg.color}
-                    strokeWidth={0.15}
-                    strokeOpacity={isHighlighted ? 0.2 : 0.06}
-                    strokeDasharray="6 6"
-                  />
-                )}
-
-                {/* Active filter group: glow + pulse */}
-                {activeFilter === group && (
-                  <>
-                    <circle
-                      cx={dimensions.width / 2}
-                      cy={dimensions.height / 2}
-                      r={radius}
-                      fill="none"
-                      stroke={cfg.color}
-                      strokeWidth={0.6}
-                      strokeOpacity={0.12}
-                      strokeDasharray="4 8"
-                      filter="url(#orbGlow)"
-                    >
-                      <animate
-                        attributeName="strokeOpacity"
-                        values="0.08;0.18;0.08"
-                        dur="3s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  </>
-                )}
-
-                {/* Orbit dots along cluster ring */}
-                {[0, 1, 2, 3].map(dotIdx => {
-                  const dotAngleOffset = (2 * Math.PI * dotIdx) / 4
-                  return (
-                    <circle
-                      key={`orbit-${group}-${dotIdx}`}
-                      cx={dimensions.width / 2 + Math.cos(dotAngleOffset) * radius}
-                      cy={dimensions.height / 2 + Math.sin(dotAngleOffset) * radius}
-                      r={1.5}
-                      fill={cfg.color}
-                      opacity={isHighlighted ? 0.6 : 0.2}
-                    >
-                      <animateTransform
-                        attributeName="transform"
-                        type="rotate"
-                        from={`0 ${dimensions.width / 2} ${dimensions.height / 2}`}
-                        to={`${360 / (4 + dotIdx)} ${dimensions.width / 2} ${dimensions.height / 2}`}
-                        dur={`${20 + dotIdx * 8}s`}
-                        repeatCount="indefinite"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values={isHighlighted ? '0.4;0.8;0.4' : '0.1;0.3;0.1'}
-                        dur="2s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  )
-                })}
-
-                {/* Cluster header badge on ring */}
-                {viewMode === 'radial' && !isCollapsedGroup && (
-                  <g
-                    transform={`translate(${dimensions.width / 2 + radius + 12}, ${dimensions.height / 2 - 14})`}
-                    className="cursor-pointer"
-                    onDoubleClick={() => toggleCollapseGroup(group)}
-                  >
-                    <rect
-                      x={-4}
-                      y={-10}
-                      width={group.length * 7 + 32}
-                      height={20}
-                      rx={6}
-                      fill="rgba(26, 26, 26, 0.92)"
-                      stroke={cfg.color}
-                      strokeWidth={0.15}
-                      strokeOpacity={0.1}
-                    />
-                    <foreignObject x={0} y={-7} width={12} height={12} style={{ pointerEvents: 'none' }}>
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {React.createElement(cfg.icon, { size: 9, color: cfg.color })}
-                      </div>
-                    </foreignObject>
-                    <text
-                      x={16}
-                      y={3}
-                      fill={cfg.color}
-                      fontSize="9"
-                      fontWeight="600"
-                      opacity={isHighlighted ? 0.9 : 0.5}
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {group}
-                    </text>
-                    <text
-                      x={16 + group.length * 7 + 4}
-                      y={3}
-                      fill={cfg.color}
-                      fontSize="8"
-                      opacity={0.6}
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      ({stats.byGroup[group] || 0})
-                    </text>
-                  </g>
-                )}
-
-                {/* Cluster stats inside ring */}
-                {viewMode === 'radial' && !isCollapsedGroup && (
-                  <g transform={`translate(${dimensions.width / 2 + radius - 50}, ${dimensions.height / 2 + 8})`}>
-                    <text
-                      fill={cfg.color}
-                      fontSize="7"
-                      opacity={0.3}
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {agents.filter(a => a.roleGroup === group && a.status === 'active').length} active / {agents.filter(a => a.roleGroup === group && a.status === 'idle').length} idle
-                    </text>
-                  </g>
-                )}
-              </g>
-            )
-          })}
-
-          {/* Inter-cluster connections (faint lines between centroids) */}
-          {viewMode === 'radial' && ROLE_ORDER.map((group, i) => {
-            const nextGroup = ROLE_ORDER[(i + 1) % ROLE_ORDER.length]
-            const c1 = groupCentroids[group]
-            const c2 = groupCentroids[nextGroup]
-            if (!c1 || !c2) return null
-            return (
-              <line
-                key={`inter-${group}-${nextGroup}`}
-                x1={c1.x}
-                y1={c1.y}
-                x2={c2.x}
-                y2={c2.y}
-                stroke="#333333"
-                strokeWidth={0.15}
-                strokeOpacity={0.07}
-                strokeDasharray="4 8"
-              />
-            )
-          })}
-
-          {/* Connection lines */}
-          {visibleConnections.map(conn => {
-            const fromPos = positions[conn.from]
-            const toPos = positions[conn.to]
-            if (!fromPos || !toPos) return null
-            const fromAgent = agents.find(a => a.id === conn.from)
-            const toAgent = agents.find(a => a.id === conn.to)
-            const cfg = ROLE_CONFIG[fromAgent?.roleGroup || '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
-            const isHighlightedConn = highlightedConnections.has(conn.id)
-            return (
-              <ConnectionLine
-                key={conn.id}
-                x1={fromPos.x}
-                y1={fromPos.y}
-                x2={toPos.x}
-                y2={toPos.y}
-                color={cfg.color}
-                colorRgb={cfg.colorRgb}
-                type={conn.type}
-                strength={conn.strength}
-                hoveredEdge={hoveredEdge}
-                fromName={fromAgent?.name || ''}
-                toName={toAgent?.name || ''}
-                isPulsing={pulsingConnections.has(conn.id) || isHighlightedConn}
-              />
-            )
-          })}
-
-          {/* Agent nodes */}
-          {visibleAgents.map(agent => {
-            const pos = positions[agent.id]
-            if (!pos) return null
-            const metrics = agentMetrics[agent.id] || { skillCount: 0 }
-            const isHighlighted = searchQuery.trim() ? searchMatches.has(agent.id) : hoveredGroup === agent.roleGroup || activeFilter === agent.roleGroup
-            const isCollapsed = collapsedNodes.has(agent.id)
-            return (
-              <React.Fragment key={agent.id}>
-                <AgentNode
-                  agent={agent}
-                  x={pos.x}
-                  y={pos.y}
-                  isSelected={selectedAgent?.id === agent.id}
-                  isHighlighted={!!isHighlighted}
-                  isDimmed={isAgentDimmed(agent)}
-                  isCollapsed={isCollapsed}
-                  skillCount={metrics.skillCount}
-                  taskCount={Array.isArray(agent.tasks) ? agent.tasks.length : 0}
-                  statusTransition={statusTransitions[agent.id] || null}
-                  onClick={() => setSelectedAgent(selectedAgent?.id === agent.id ? null : agent)}
-                  onToggleCollapse={() => toggleCollapseNode(agent.id)}
-                  onHover={setHoveredAgent}
-                  onContextMenu={handleContextMenu}
-                />
-                {/* Hover tooltip */}
-                {hoveredAgent === agent.id && (
-                  <AgentTooltip agent={agent} x={pos.x} y={pos.y} />
-                )}
-              </React.Fragment>
-            )
-          })}
-        </g>
-      </svg>
-
+      {/* Main content: sidebar + SVG canvas */}
+      <div className="flex flex-1 overflow-hidden relative">
       {/* ─── Collapsible Left Sidebar ─── */}
       <motion.div
         initial={false}
         animate={{ width: sidebarOpen ? 280 : 48 }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        className="fixed left-0 z-30 flex flex-col"
+        className="relative z-30 flex flex-col flex-shrink-0 h-full"
         style={{
-          top: '48px',
-          bottom: 0,
           background: 'rgba(13, 13, 13, 0.95)',
           backdropFilter: 'blur(20px)',
           borderRight: '1px solid rgba(6, 182, 212, 0.15)',
-          overflow: 'hidden',
+          overflowX: 'visible',
+          overflowY: 'hidden',
         }}
       >
         {/* Sidebar toggle button */}
@@ -3410,13 +3141,302 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         </ScrollArea>
       </motion.div>
 
+      {/* SVG canvas container - fills remaining space */}
+      <div
+        ref={svgContainerRef}
+        className="flex-1 relative overflow-hidden"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        {/* Breadcrumb trail - positioned within SVG canvas area */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40" style={{ pointerEvents: 'auto' }}>
+          <BreadcrumbTrail
+            activeFilter={activeFilter}
+            onClearFilter={() => setActiveFilter(null)}
+            zoom={zoom}
+            onResetView={resetView}
+          />
+        </div>
+
+        <svg
+          ref={svgRef}
+          width="100%"
+          height="100%"
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          onMouseMove={(e) => {
+            const target = e.target as SVGElement
+            const edgeGroup = target.closest('[data-edge-id]')
+            if (edgeGroup) {
+              const id = edgeGroup.getAttribute('data-edge-id')
+              setHoveredEdge(id)
+            } else if (hoveredEdge) {
+              setHoveredEdge(null)
+            }
+          }}
+        >
+          <g
+            transform={`translate(${dimensions.width / 2 + pan.x}, ${dimensions.height / 2 + pan.y}) scale(${zoom}) translate(${-dimensions.width / 2}, ${-dimensions.height / 2})`}
+          >
+            {/* Background grid - zoom-aware */}
+            <BackgroundGrid width={dimensions.width} height={dimensions.height} zoom={zoom} />
+
+            {/* ─── Cluster backgrounds with group boundary contours ─── */}
+            {ROLE_ORDER.map((group, gi) => {
+              const cfg = ROLE_CONFIG[group]
+              const minDim = Math.min(dimensions.width, dimensions.height)
+              const baseRadius = minDim * 0.14
+              const ringSpacing = minDim * 0.14
+              const radius = baseRadius + ringSpacing * gi
+              const isHighlighted = hoveredGroup === group || activeFilter === group
+              const isCollapsedGroup = collapsedGroups.has(group)
+
+              // Compute group contour from actual node positions
+              const groupAgents = visibleAgents.filter(a => a.roleGroup === group)
+              const groupPositions = groupAgents.map(a => positions[a.id]).filter(Boolean)
+
+              return (
+                <g key={`cluster-${group}`}>
+                  {/* Filled cluster background */}
+                  <circle
+                    cx={dimensions.width / 2}
+                    cy={dimensions.height / 2}
+                    r={radius}
+                    fill={`rgba(${cfg.colorRgb}, ${isHighlighted ? 0.04 : 0.015})`}
+                    stroke={cfg.color}
+                    strokeWidth={isHighlighted ? 0.5 : 0.12}
+                    strokeOpacity={isHighlighted ? 0.25 : 0.04}
+                    strokeDasharray="4 8"
+                  />
+
+                  {/* ─── Group boundary contour line ─── */}
+                  {groupPositions.length >= 2 && viewMode === 'radial' && !isCollapsedGroup && (
+                    <ellipse
+                      cx={groupCentroids[group]?.x || dimensions.width / 2}
+                      cy={groupCentroids[group]?.y || dimensions.height / 2}
+                      rx={radius * 0.35}
+                      ry={radius * 0.3}
+                      fill="none"
+                      stroke={cfg.color}
+                      strokeWidth={0.15}
+                      strokeOpacity={isHighlighted ? 0.2 : 0.06}
+                      strokeDasharray="6 6"
+                    />
+                  )}
+
+                  {/* Active filter group: glow + pulse */}
+                  {activeFilter === group && (
+                    <>
+                      <circle
+                        cx={dimensions.width / 2}
+                        cy={dimensions.height / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={cfg.color}
+                        strokeWidth={0.6}
+                        strokeOpacity={0.12}
+                        strokeDasharray="4 8"
+                        filter="url(#orbGlow)"
+                      >
+                        <animate
+                          attributeName="strokeOpacity"
+                          values="0.08;0.18;0.08"
+                          dur="3s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    </>
+                  )}
+
+                  {/* Orbit dots along cluster ring */}
+                  {[0, 1, 2, 3].map(dotIdx => {
+                    const dotAngleOffset = (2 * Math.PI * dotIdx) / 4
+                    return (
+                      <circle
+                        key={`orbit-${group}-${dotIdx}`}
+                        cx={dimensions.width / 2 + Math.cos(dotAngleOffset) * radius}
+                        cy={dimensions.height / 2 + Math.sin(dotAngleOffset) * radius}
+                        r={1.5}
+                        fill={cfg.color}
+                        opacity={isHighlighted ? 0.6 : 0.2}
+                      >
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from={`0 ${dimensions.width / 2} ${dimensions.height / 2}`}
+                          to={`${360 / (4 + dotIdx)} ${dimensions.width / 2} ${dimensions.height / 2}`}
+                          dur={`${20 + dotIdx * 8}s`}
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values={isHighlighted ? '0.4;0.8;0.4' : '0.1;0.3;0.1'}
+                          dur="2s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    )
+                  })}
+
+                  {/* Cluster header badge on ring */}
+                  {viewMode === 'radial' && !isCollapsedGroup && (
+                    <g
+                      transform={`translate(${dimensions.width / 2 + radius + 12}, ${dimensions.height / 2 - 14})`}
+                      className="cursor-pointer"
+                      onDoubleClick={() => toggleCollapseGroup(group)}
+                    >
+                      <rect
+                        x={-4}
+                        y={-10}
+                        width={group.length * 7 + 32}
+                        height={20}
+                        rx={6}
+                        fill="rgba(26, 26, 26, 0.92)"
+                        stroke={cfg.color}
+                        strokeWidth={0.15}
+                        strokeOpacity={0.1}
+                      />
+                      <foreignObject x={0} y={-7} width={12} height={12} style={{ pointerEvents: 'none' }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {React.createElement(cfg.icon, { size: 9, color: cfg.color })}
+                        </div>
+                      </foreignObject>
+                      <text
+                        x={16}
+                        y={3}
+                        fill={cfg.color}
+                        fontSize="9"
+                        fontWeight="600"
+                        opacity={isHighlighted ? 0.9 : 0.5}
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        {group}
+                      </text>
+                      <text
+                        x={16 + group.length * 7 + 4}
+                        y={3}
+                        fill={cfg.color}
+                        fontSize="8"
+                        opacity={0.6}
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        ({stats.byGroup[group] || 0})
+                      </text>
+                    </g>
+                  )}
+
+                  {/* Cluster stats inside ring */}
+                  {viewMode === 'radial' && !isCollapsedGroup && (
+                    <g transform={`translate(${dimensions.width / 2 + radius - 50}, ${dimensions.height / 2 + 8})`}>
+                      <text
+                        fill={cfg.color}
+                        fontSize="7"
+                        opacity={0.3}
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        {agents.filter(a => a.roleGroup === group && a.status === 'active').length} active / {agents.filter(a => a.roleGroup === group && a.status === 'idle').length} idle
+                      </text>
+                    </g>
+                  )}
+                </g>
+              )
+            })}
+
+            {/* Inter-cluster connections (faint lines between centroids) */}
+            {viewMode === 'radial' && ROLE_ORDER.map((group, i) => {
+              const nextGroup = ROLE_ORDER[(i + 1) % ROLE_ORDER.length]
+              const c1 = groupCentroids[group]
+              const c2 = groupCentroids[nextGroup]
+              if (!c1 || !c2) return null
+              return (
+                <line
+                  key={`inter-${group}-${nextGroup}`}
+                  x1={c1.x}
+                  y1={c1.y}
+                  x2={c2.x}
+                  y2={c2.y}
+                  stroke="#333333"
+                  strokeWidth={0.15}
+                  strokeOpacity={0.07}
+                  strokeDasharray="4 8"
+                />
+              )
+            })}
+
+            {/* Connection lines */}
+            {visibleConnections.map(conn => {
+              const fromPos = positions[conn.from]
+              const toPos = positions[conn.to]
+              if (!fromPos || !toPos) return null
+              const fromAgent = agents.find(a => a.id === conn.from)
+              const toAgent = agents.find(a => a.id === conn.to)
+              const cfg = ROLE_CONFIG[fromAgent?.roleGroup || '\u0418\u0441\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435']
+              const isHighlightedConn = highlightedConnections.has(conn.id)
+              return (
+                <ConnectionLine
+                  key={conn.id}
+                  x1={fromPos.x}
+                  y1={fromPos.y}
+                  x2={toPos.x}
+                  y2={toPos.y}
+                  color={cfg.color}
+                  colorRgb={cfg.colorRgb}
+                  type={conn.type}
+                  strength={conn.strength}
+                  hoveredEdge={hoveredEdge}
+                  fromName={fromAgent?.name || ''}
+                  toName={toAgent?.name || ''}
+                  isPulsing={pulsingConnections.has(conn.id) || isHighlightedConn}
+                />
+              )
+            })}
+
+            {/* Agent nodes */}
+            {visibleAgents.map(agent => {
+              const pos = positions[agent.id]
+              if (!pos) return null
+              const metrics = agentMetrics[agent.id] || { skillCount: 0 }
+              const isHighlighted = searchQuery.trim() ? searchMatches.has(agent.id) : hoveredGroup === agent.roleGroup || activeFilter === agent.roleGroup
+              const isCollapsed = collapsedNodes.has(agent.id)
+              return (
+                <React.Fragment key={agent.id}>
+                  <AgentNode
+                    agent={agent}
+                    x={pos.x}
+                    y={pos.y}
+                    isSelected={selectedAgent?.id === agent.id}
+                    isHighlighted={!!isHighlighted}
+                    isDimmed={isAgentDimmed(agent)}
+                    isCollapsed={isCollapsed}
+                    skillCount={metrics.skillCount}
+                    taskCount={Array.isArray(agent.tasks) ? agent.tasks.length : 0}
+                    statusTransition={statusTransitions[agent.id] || null}
+                    onClick={() => setSelectedAgent(selectedAgent?.id === agent.id ? null : agent)}
+                    onToggleCollapse={() => toggleCollapseNode(agent.id)}
+                    onHover={setHoveredAgent}
+                    onContextMenu={handleContextMenu}
+                  />
+                  {/* Hover tooltip */}
+                  {hoveredAgent === agent.id && (
+                    <AgentTooltip agent={agent} x={pos.x} y={pos.y} />
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </g>
+        </svg>
+      </div>
+
       {/* Mobile overlay when sidebar is open */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50"
+          className="absolute inset-0 z-20 bg-black/50"
           onClick={() => setSidebarOpen(false)}
         />
       )}
+      </div>{/* end flex content area */}
 
       {/* Agent detail panel */}
       <AnimatePresence>
@@ -3469,7 +3489,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
       {/* Loading overlay */}
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(26, 26, 26, 0.92)' }}>
+        <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(26, 26, 26, 0.92)' }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -3484,6 +3504,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </motion.div>
         </div>
       )}
+    </div>
     </div>
   )
 }

@@ -426,3 +426,78 @@ Stage Summary:
 - Mobile responsive with overlay sidebar
 - All existing functionality preserved
 - Monochrome cyan color scheme maintained
+
+---
+Task ID: 13
+Agent: full-stack-developer
+Task: Restructure agent-hierarchy.tsx to W1280 centered layout and fix overlapping layer issues
+
+Work Log:
+- Restructured main container from `w-screen h-screen overflow-hidden relative` to W1280 centered layout:
+  - Outer wrapper: `min-h-screen bg-black flex justify-center` (fills viewport with black background)
+  - Inner container: `max-w-[1280px] w-full h-screen flex flex-col relative overflow-hidden select-none` (constrains content to 1280px)
+  - BackgroundParticles moved to a separate `fixed inset-0 pointer-events-none z-0` div behind everything
+- Fixed header positioning: Changed from `fixed top-0 left-0 right-0 z-40` to `relative z-40` — header is now a normal block element at the top of the flex column
+- Fixed sidebar positioning: Changed from `fixed left-0 z-30` with `top: 48px; bottom: 0` to `relative z-30 flex flex-col flex-shrink-0 h-full` — sidebar is now a proper flex child
+  - Changed sidebar overflow from `overflow: hidden` to `overflowX: visible; overflowY: hidden` to allow toggle button to extend outside
+- Fixed SVG canvas positioning: Changed from `absolute inset-0 z-10` with marginLeft/width calculation hacks to a proper flex child
+  - Wrapped SVG in `<div ref={svgContainerRef} className="flex-1 relative overflow-hidden">` container
+  - SVG uses `width="100%" height="100%"` to fill container instead of calc() width hacks
+  - Removed all marginLeft and width calculation hacks (marginLeft based on sidebar state, `calc(100% - 280px)` etc.)
+- Updated dimensions calculation: Changed from `window.innerWidth/innerHeight` to container-based sizing
+  - Added `svgContainerRef` ref for the SVG container div
+  - Used `ResizeObserver` on the container to update dimensions when it resizes
+  - Dimensions now reflect the actual SVG canvas area, not the full window
+- Fixed breadcrumb trail: Removed marginLeft hack, moved inside SVG container div with `absolute top-2 left-1/2 -translate-x-1/2 z-40` positioning
+- Fixed mobile search row: Changed from `fixed top-12 left-0 right-0 z-30` to `relative z-30` within the flex column
+- Fixed AgentDetailPanel: Changed from `fixed right-4 bottom-4` to `absolute right-4 bottom-4` relative to container
+- Fixed mobile overlay: Changed from `fixed inset-0 z-20` to `absolute inset-0 z-20` within the flex content area
+- Fixed loading overlay: Changed from `fixed inset-0 z-50` to `absolute inset-0 z-50` within the container
+- Moved mouse event handlers (onWheel, onMouseDown, onMouseMove, onMouseUp, onMouseLeave) from the container div to the SVG container div — panning/zooming only triggers on the canvas, not on sidebar/header
+- Updated BreadcrumbTrail component: Removed `fixed` positioning from its className (now positioned by parent wrapper)
+- Context menu and keyboard shortcuts dialog remain fixed/portaled as overlay UI (correct behavior)
+- Lint: 0 errors
+- Dev server: compiling and serving successfully
+
+Stage Summary:
+- Complete layout restructure from fullscreen fixed/absolute positioning to W1280 centered flex layout
+- All overlapping layer issues fixed: header, sidebar, SVG canvas are now proper flex children with no z-index conflicts
+- SVG canvas dimensions now based on actual container size via ResizeObserver instead of window dimensions
+- Removed all marginLeft/width calculation hacks — layout is now purely flex-based
+- Mouse interactions (pan/zoom) only trigger on SVG canvas, not on sidebar or header
+- All existing functionality preserved: zoom, pan, drag, search, filtering, node selection, context menu, keyboard shortcuts
+- Breadcrumb now positioned within SVG canvas area, not overlapping sidebar
+- Monochrome cyan color scheme maintained
+
+---
+Task ID: 13
+Agent: Main Orchestrator + full-stack-developer subagent
+Task: Restructure hierarchy to W1280 layout and fix overlapping layers
+
+Work Log:
+- Read and analyzed the full agent-hierarchy.tsx component (~3500 lines)
+- Identified key overlap issues: SVG canvas used `absolute inset-0`, sidebar used `fixed left-0`, header used `fixed top-0` - all causing layer conflicts
+- Delegated restructuring to full-stack-developer subagent
+- Main container changed from `w-screen h-screen` to `min-h-screen bg-black flex justify-center` outer wrapper + `max-w-[1280px] w-full h-screen flex flex-col relative overflow-hidden` inner container
+- Header changed from `fixed top-0 left-0 right-0 z-40` to `relative z-40` (normal flex child)
+- Sidebar changed from `fixed left-0 z-30` to `relative z-30 flex flex-col flex-shrink-0 h-full` (proper flex child within the content area)
+- SVG canvas changed from `absolute inset-0 z-10` with marginLeft/width hacks to `flex-1 relative overflow-hidden` container with `width="100%" height="100%"` SVG
+- Breadcrumb trail: Removed marginLeft hack, moved inside SVG container div as `absolute top-2 left-1/2 -translate-x-1/2 z-40`
+- Mobile search row: Changed from `fixed top-12` to `relative z-30`
+- Agent detail panel: Changed from `fixed` to `absolute` positioning
+- Mobile overlay: Changed from `fixed` to `absolute`
+- Loading overlay: Changed from `fixed` to `absolute`
+- Dimensions calculation: Added `svgContainerRef` ref, uses ResizeObserver instead of `window.innerWidth/innerHeight`
+- Mouse events (wheel, mousedown, mousemove, mouseup) moved from outer container to SVG container div
+- Verified dashboard page already uses `max-w-[1280px]` consistently
+- Lint: 0 errors
+- Dev server: compiling and serving successfully
+- VLM verification: both pages render correctly with W1280 centered layout, no overlapping elements
+
+Stage Summary:
+- Both pages now use W1280 (max-w-[1280px]) centered layout
+- All overlapping layer issues fixed - no more fixed/absolute positioning conflicts
+- Sidebar properly integrated as flex child instead of fixed overlay
+- SVG canvas fills remaining space correctly using ResizeObserver
+- Hierarchy visualization center calculations use container dimensions instead of window dimensions
+- All existing functionality preserved: zoom, pan, drag, search, filtering, context menu, keyboard shortcuts
