@@ -12,6 +12,11 @@ const AgentHierarchy = dynamic(
   { ssr: false }
 )
 
+const WorkflowPipeline = dynamic(
+  () => import('@/components/workflows/workflow-pipeline'),
+  { ssr: false }
+)
+
 export default function Home() {
   const [activeView, setActiveView] = useState<'dashboard' | 'hierarchy'>('dashboard')
 
@@ -2168,6 +2173,11 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
             <div className="lg:col-span-2">
               <FormulaAgentMappingGrid />
             </div>
+          </div>
+
+          {/* Workflow Pipeline Section */}
+          <div className="mt-6">
+            <WorkflowPipeline />
           </div>
         </main>
       </div>

@@ -39,3 +39,83 @@ model Task {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ─── Operational Architecture: Workflow Pipeline ─────────────────────────────
+
+model Workflow {
+  id            String   @id @default(cuid())
+  name          String
+  description   String   @default("")
+  status        String   @default("draft") // draft | active | paused | archived
+  triggerType   String   @default("manual") // manual | event | schedule | webhook | agent
+  triggerConfig String   @default("{}") // JSON: schedule cron, event pattern, webhook URL, etc.
+  version       Int      @default(1)
+  tags          String   @default("") // comma-separated tags
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  steps         PipelineStep[]
+  executions    WorkflowExecution[]
+}
+
+model PipelineStep {
+  id             String    @id @default(cuid())
+  workflowId     String
+  workflow       Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  order          Int       // position in pipeline (0-based)
+  name           String    // human-readable step name
+  agentId        String?   // specific agent (null = any from roleGroup)
+  roleGroup      String?   // agent group alternative to agentId
+  action         String    @default("process") // process | review | transform | delegate | broadcast | decision
+  inputSchema    String    @default("{}") // JSON: expected input data schema
+  outputSchema   String    @default("{}") // JSON: output data schema
+  condition      String    @default("{}") // JSON: execution condition (if/else/switch)
+  fallbackStepId String?   // step ID to jump to on failure (stored as plain string for flexibility)
+  timeout        Int       @default(300) // seconds
+  retryPolicy    String    @default("{}") // JSON: { maxRetries, backoffMs }
+  config         String    @default("{}") // JSON: step-specific config (prompt template, etc.)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  stepExecutions StepExecution[]
+}
+
+model WorkflowExecution {
+  id          String        @id @default(cuid())
+  workflowId  String
+  workflow    Workflow      @relation(fields: [workflowId], references: [id])
+  status      String        @default("running") // running | completed | failed | cancelled | paused
+  taskContext String        @default("{}") // JSON: shared context — grows as pipeline progresses
+  input       String        @default("{}") // JSON: initial input to the workflow
+  output      String        @default("{}") // JSON: final output of the workflow
+  error       String?
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+  steps       StepExecution[]
+}
+
+model StepExecution {
+  id            String        @id @default(cuid())
+  executionId   String
+  execution     WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId        String
+  step          PipelineStep  @relation(fields: [stepId], references: [id])
+  agentId       String?       // agent that executed this step
+  status        String        @default("pending") // pending | running | completed | failed | skipped | waiting_feedback
+  inputData     String        @default("{}") // JSON: what this step received
+  outputData    String        @default("{}") // JSON: what this step returned
+  error         String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  messages      AgentMessage[]
+}
+
+model AgentMessage {
+  id              String        @id @default(cuid())
+  stepExecutionId String
+  stepExecution   StepExecution @relation(fields: [stepExecutionId], references: [id], onDelete: Cascade)
+  fromAgentId     String        // sender
+  toAgentId       String?       // receiver (null = broadcast within step)
+  type            String        @default("request") // request | response | feedback | error | status | context_update
+  content         String        @default("{}") // JSON: typed message body
+  metadata        String        @default("{}") // JSON: routing info, headers, correlation IDs
+  timestamp       DateTime      @default(now())
+}
