@@ -1245,3 +1245,47 @@ model AgentMessage {
 5. **Агент interchangeable** — если агент упал, пайплайн может заменить его другим из той же группы
 6. **Observability first** — каждое сообщение, каждый переход логируется и визуализируется
 
+
+---
+Task ID: 22
+Agent: Main Orchestrator + full-stack-developer subagent
+Task: Implement Phase 1 — Workflow Pipeline operational architecture
+
+Work Log:
+- Updated Prisma schema with 5 new models: Workflow, PipelineStep, WorkflowExecution, StepExecution, AgentMessage
+- Pushed schema to SQLite database successfully
+- Created 5 API routes:
+  - GET/POST /api/workflows — list and create workflows
+  - GET/PUT/DELETE /api/workflows/[id] — single workflow CRUD
+  - POST /api/workflows/execute — execution engine (resolves agents, simulates steps, records messages)
+  - POST /api/workflows/seed — seed 5 sample workflows
+- Seeded 5 workflows with pipeline steps:
+  1. Development Pipeline (7 steps): Request→Plan→Implement→Test→Review→Store→Notify
+  2. Analysis & Reporting (5 steps): Gather→Analyze→Evaluate→Generate→Distribute
+  3. Incident Response (6 steps): Detect→Diagnose→Decide→Fix→Verify→Learn
+  4. Knowledge Update (4 steps): Retrieve→Verify→Index→Propagate
+  5. Agent Coordination (4 steps): Classify→Route→Execute→Aggregate
+- Tested execution engine: Development Pipeline ran successfully through all 7 steps
+  - Agent resolution worked: Arkhitektor→Koordinator→Ispolnitel-A→Testirovshchik→Revizor→Arkhivarius→Shlyuz
+  - Messages recorded between agents (request/response)
+  - TaskContext accumulated across steps
+  - Review step had feedback loop logic (20% chance of rejection)
+- Created WorkflowPipeline UI component (1066 lines):
+  - Workflow cards grid (responsive 1/2/3 columns)
+  - Mini pipeline visualization on each card
+  - Expanded pipeline view with step nodes and SVG arrows
+  - Execution modal with step-by-step animation
+  - Execution history per workflow
+  - Color coding by action type and status
+- Integrated into dashboard page.tsx via dynamic import
+- VLM verification: Workflow Pipeline section visible with all cards
+- Lint: 0 errors
+- Committed: 692600d, pushed to GitHub
+
+Stage Summary:
+- **Phase 1 of operational architecture COMPLETE**
+- 5 new Prisma models + 5 API routes + execution engine + UI visualization
+- Pipeline execution works end-to-end: agents resolved by group, steps executed, messages recorded
+- Feedback loops implemented in review steps
+- TaskContext accumulates across pipeline steps
+- All workflows connected to real agents from the database
