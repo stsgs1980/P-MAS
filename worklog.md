@@ -554,3 +554,23 @@ Stage Summary:
 - Database seeded with 26 agents across 8 role groups
 - Both Dashboard (/) and Hierarchy (/hierarchy) pages serving 200
 - Dev server needs periodic restart due to sandbox process management
+
+---
+Task ID: agent-toolkit-update
+Agent: Main Orchestrator
+Task: Update agent-toolkit repo with sandbox rules, disown, force-with-lease, data loss checks
+
+Work Log:
+- Read all 4 target files in agent-toolkit before making changes
+- AGENT_RULES.md: sections 2.2/2.3 already had --force-with-lease (from previous session); added sections 10 (Sandbox Z.ai), 11 (Project in Sandbox), 12 (Dev Server Startup), and reference to sandbox-rules.md in section 8
+- skills/git-safe-ops/SKILL.md: replaced all `git push --force` with `git push --force-with-lease`, added explanation of why --force-with-lease is safer, updated checklist
+- skills/dev-watchdog/SKILL.md: added `disown` after server start command, added `disown` to Important Notes
+- instructions/git-workflow-rules.md: replaced --force with --force-with-lease in Rules 2,3 and Summary Table; added Rule 6 (Five Checks Before Declaring Data Loss); added Rule 7 (Diff Before Commit)
+- Created new instructions/sandbox-rules.md with 4 sections: Shared Filesystem, Shell Process Lifecycle, Recovery from Git Lockup, Startup Checklist
+- Committed as `14005a7`, pushed with --force-with-lease to origin/main
+- Started dev server for my-project (200 OK)
+
+Stage Summary:
+- agent-toolkit updated with 5 files changed, 226 insertions, 11 deletions
+- Pushed to Sts8987/agent-toolkit on GitHub
+- Dev server running on port 3000
