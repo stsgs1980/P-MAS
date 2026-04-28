@@ -24,6 +24,7 @@ import {
   Grid3X3,
   Home,
   ChevronRight,
+  ChevronLeft,
   Plus,
   ZoomIn,
   ZoomOut,
@@ -186,12 +187,21 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       if (Array.isArray(data.connections)) {
         setApiConnections(data.connections)
       }
+      // Re-fit after data loads
+      if (fitMode) {
+        setTimeout(() => {
+          if (reactFlowInstance.current) {
+            const instance = reactFlowInstance.current as any
+            instance.fitView({ padding: 0.15, duration: 600 })
+          }
+        }, 300)
+      }
     } catch {
       setAgents([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [fitMode])
 
   useEffect(() => { fetchAgents() }, [fetchAgents])
 
@@ -314,16 +324,37 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     setFitMode(prev => {
       const next = !prev
       if (next) {
-        // FIT ON → auto-collapse detail panel + re-fit graph
+        // FIT ON → auto-collapse detail panel
         setDetailPanelOpen(false)
-        if (reactFlowInstance.current) {
-          const instance = reactFlowInstance.current as any
-          instance.fitView({ padding: 0.2, duration: 500 })
-        }
       }
       return next
     })
   }, [])
+
+  // Re-fit graph after FIT mode or panel state changes (needs to wait for React re-render)
+  useEffect(() => {
+    if (fitMode && reactFlowInstance.current) {
+      const instance = reactFlowInstance.current as any
+      // Use longer delay to ensure DOM has fully updated after both state changes
+      const timer = setTimeout(() => {
+        if (!instance) return
+        instance.fitView({ padding: 0.15, duration: 500 })
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [fitMode, detailPanelOpen])
+
+  // Also re-fit when agents change (new node positions)
+  useEffect(() => {
+    if (fitMode && reactFlowInstance.current) {
+      const instance = reactFlowInstance.current as any
+      const timer = setTimeout(() => {
+        if (!instance) return
+        instance.fitView({ padding: 0.15, duration: 500 })
+      }, 400)
+      return () => clearTimeout(timer)
+    }
+  }, [agents.length, fitMode])
 
   // ─── Add new agent ───────────────────────────────────────────────────
   const handleAddAgent = useCallback(async () => {
@@ -734,9 +765,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            onInit={(instance) => { reactFlowInstance.current = instance }}
-            fitView={fitMode}
-            fitViewOptions={{ padding: 0.2 }}
+            onInit={(instance) => {
+              reactFlowInstance.current = instance
+              // Initial fit with delay to ensure layout is settled
+              setTimeout(() => instance.fitView({ padding: 0.15, duration: 500 }), 300)
+            }}
+            fitView={false}
+            fitViewOptions={{ padding: 0.15 }}
             minZoom={0.2}
             maxZoom={3}
             proOptions={{ hideAttribution: true }}
@@ -838,27 +873,60 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           </ReactFlow>
         </div>
 
-        {/* Detail Panel */}
-        <DetailPanel
-          agent={selectedAgent}
-          allAgents={agents}
-          open={detailPanelOpen}
-          onToggle={() => {
-            setDetailPanelOpen(prev => {
-              const next = !prev
-              if (next) setFitMode(false) // opening panel disables fit mode
-              return next
-            })
-          }}
-          onClose={() => setSelectedAgentId(null)}
-          onAgentUpdated={(updatedAgent) => {
-            setAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a))
-          }}
-          onAgentDeleted={(agentId) => {
-            setAgents(prev => prev.filter(a => a.id !== agentId))
-            setSelectedAgentId(null)
-          }}
-        />
+        {/* Detail Panel — hidden completely in FIT mode, thin strip otherwise */}
+        {fitMode && !detailPanelOpen ? (
+          /* Small floating toggle to re-open panel (only when FIT ON) */
+          <button
+            onClick={() => {
+              setDetailPanelOpen(true)
+              setFitMode(false)
+            }}
+            title="Open detail panel (disables Fit mode)"
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 24,
+              height: 48,
+              borderRadius: 6,
+              border: '1px solid rgba(51,51,51,0.4)',
+              background: 'rgba(10,10,10,0.9)',
+              color: '#555',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 20,
+              transition: 'color 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#555'; e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)' }}
+          >
+            <ChevronLeft size={12} />
+          </button>
+        ) : (
+          <DetailPanel
+            agent={selectedAgent}
+            allAgents={agents}
+            open={detailPanelOpen}
+            onToggle={() => {
+              setDetailPanelOpen(prev => {
+                const next = !prev
+                if (next) setFitMode(false) // opening panel disables fit mode
+                return next
+              })
+            }}
+            onClose={() => setSelectedAgentId(null)}
+            onAgentUpdated={(updatedAgent) => {
+              setAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a))
+            }}
+            onAgentDeleted={(agentId) => {
+              setAgents(prev => prev.filter(a => a.id !== agentId))
+              setSelectedAgentId(null)
+            }}
+          />
+        )}
       </div>
 
       {/* ─── KPI Strip ──────────────────────────────────────────────────── */}

@@ -86,8 +86,6 @@ export function computeDagreLayout(
   const nodeHeight = 58
   const layerGap = 100
   const nodeSep = 50
-  const marginX = 40
-  const marginTop = 40
 
   // Group agents by level
   const layers: Record<number, AgentData[]> = {}
@@ -100,18 +98,20 @@ export function computeDagreLayout(
 
   const sortedLevels = Object.keys(layers).map(Number).sort((a, b) => a - b)
 
-  // Use Dagre per-layer for X positioning
+  // Use per-layer for X positioning, centered around 0
   const positions: Record<string, { x: number; y: number }> = {}
-  let currentY = marginTop
+  const totalLevels = sortedLevels.length
+  // Center Y: first level at top, negative Y
+  const totalHeight = totalLevels * nodeHeight + (totalLevels - 1) * layerGap
+  let currentY = -totalHeight / 2
 
   for (const level of sortedLevels) {
     const layerAgents = layers[level]
     if (layerAgents.length === 0) continue
 
-    // Simple even distribution for X within each layer
-    // (more readable than Dagre's LR mode for single-rank layers)
+    // Center X around 0
     const totalWidth = layerAgents.length * nodeWidth + (layerAgents.length - 1) * nodeSep
-    let startX = marginX
+    const startX = -totalWidth / 2
 
     for (let i = 0; i < layerAgents.length; i++) {
       positions[layerAgents[i].id] = {
@@ -141,8 +141,8 @@ export function computeDagreLayout(
 export function computeRadialLayout(agents: AgentData[]): NodePosition[] {
   const nodeWidth = 160
   const nodeHeight = 58
-  const centerX = 800
-  const centerY = 500
+  const centerX = 0
+  const centerY = 0
   const baseRadius = 120   // L0 at center, L1 ring, L2 ring, etc.
   const radiusStep = 180   // distance between rings
 
@@ -203,8 +203,6 @@ export function computeGridLayout(agents: AgentData[]): NodePosition[] {
   const nodeHeight = 58
   const cellW = nodeWidth + 30
   const cellH = nodeHeight + 30
-  const marginX = 40
-  const marginTop = 40
 
   // Group by roleGroup in ROLE_ORDER
   const groupSlots: { group: string; agents: AgentData[] }[] = []
@@ -218,6 +216,7 @@ export function computeGridLayout(agents: AgentData[]): NodePosition[] {
   // Determine grid dimensions: try to keep it somewhat square
   const totalAgents = agents.length
   const cols = Math.ceil(Math.sqrt(totalAgents))
+  const rows = Math.ceil(totalAgents / cols)
   const positions: Record<string, { x: number; y: number }> = {}
 
   let idx = 0
@@ -226,8 +225,8 @@ export function computeGridLayout(agents: AgentData[]): NodePosition[] {
       const col = idx % cols
       const row = Math.floor(idx / cols)
       positions[agent.id] = {
-        x: marginX + col * cellW,
-        y: marginTop + row * cellH,
+        x: col * cellW - ((cols - 1) * cellW) / 2,
+        y: row * cellH - ((rows - 1) * cellH) / 2,
       }
       idx++
     }

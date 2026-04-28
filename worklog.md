@@ -1031,3 +1031,29 @@ Stage Summary:
 - Selecting agent (click node or sidebar): auto FIT OFF + panel opens
 - Opening detail panel: auto FIT OFF
 - FIT ON: auto-collapses detail panel
+
+---
+Task ID: 22
+Agent: Main Orchestrator
+Task: Fix graph centering in FIT ON mode — graph should be perfectly centered
+
+Work Log:
+- Root cause: All 3 layout algorithms (radial, dagre, grid) used hardcoded centerX/Y offsets (800,500 or margins), causing fitView to miscalculate centering
+- Fixed computeRadialLayout: centerX=0, centerY=0 (was 800,500)
+- Fixed computeDagreLayout: X centered around 0, Y centered around -totalHeight/2 (was marginX=40, marginTop=40)
+- Fixed computeGridLayout: X/Y centered using -(cols-1)*cellW/2 and -(rows-1)*cellH/2 (was marginX=40, marginTop=40)
+- Changed ReactFlow fitView prop from fitMode to false — all centering done via manual fitView() calls
+- Added onInit fitView with 300ms delay for initial page load centering
+- Added useEffect with 500ms delay for re-centering when fitMode or detailPanelOpen changes
+- Added useEffect with 400ms delay for re-centering when agents count changes
+- In FIT ON mode: DetailPanel completely hidden (0px), replaced by floating ChevronLeft button at right edge
+- In FIT OFF mode: DetailPanel rendered normally (collapsible 36px strip / 280px expanded)
+- VLM verified: Initial load = 1:1 centered, FIT toggle OFF→ON = 1:1 centered
+- Lint: 0 errors
+
+Stage Summary:
+- Graph is now perfectly centered (1:1 left:right margin) in FIT ON mode
+- All 3 layout algorithms use (0,0) as center, ReactFlow fitView handles centering
+- FIT ON = no right panel, full-width canvas, centered graph
+- FIT OFF = user controls panel visibility, free zoom/pan
+- DetailPanel only rendered when NOT in (fitMode && !detailPanelOpen) state
