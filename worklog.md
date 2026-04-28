@@ -961,3 +961,25 @@ Stage Summary:
 - Sidebar width increased (260px → 280px), agent name tooltips added
 - All visual QA passed — both pages render correctly
 - No visual bugs, no overlapping elements, consistent monochrome cyan design
+
+---
+Task ID: 19
+Agent: Main Orchestrator
+Task: Make Agent Detail Panel collapsible/hideable in Hierarchy view
+
+Work Log:
+- Added `detailPanelOpen` state to agent-hierarchy-v2.tsx (default: true)
+- Added `open` and `onToggle` props to DetailPanel component
+- Collapsed state (width: 36px): thin vertical strip with PanelRightOpen toggle button, status dot, and vertical agent name text
+- Open state: full 280px panel with PanelRightClose toggle button in header (view mode, edit mode, and empty state)
+- All hooks moved above early returns to fix react-hooks/rules-of-hooks lint errors
+- Added PanelRightClose, PanelRightOpen, ChevronLeft imports from lucide-react
+- Lint: 0 errors
+- Tested via agent-browser: collapse → expand works correctly
+
+Stage Summary:
+- Agent Detail Panel is now hideable with smooth toggle
+- Collapsed: 36px strip with expand button + agent name vertical + status dot
+- Expanded: full panel with collapse button in all 3 states (view, edit, empty)
+- All 3 header variants (no agent, view mode, edit mode) have collapse buttons
+- No lint errors

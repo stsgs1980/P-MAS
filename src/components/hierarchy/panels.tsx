@@ -6,6 +6,9 @@ import {
   Hexagon,
   X,
   ChevronRight,
+  ChevronLeft,
+  PanelRightClose,
+  PanelRightOpen,
   Users,
   Activity,
   List,
@@ -221,12 +224,16 @@ const labelStyle: React.CSSProperties = {
 export function DetailPanel({
   agent,
   allAgents,
+  open,
+  onToggle,
   onClose,
   onAgentUpdated,
   onAgentDeleted,
 }: {
   agent: AgentData | null
   allAgents: AgentData[]
+  open: boolean
+  onToggle: () => void
   onClose: () => void
   onAgentUpdated?: (agent: AgentData) => void
   onAgentDeleted?: (agentId: string) => void
@@ -326,6 +333,74 @@ export function DetailPanel({
     }
   }
 
+  // ─── Collapsed state: thin strip with toggle ─────────────────────────────
+  if (!open) {
+    return (
+      <div
+        style={{
+          width: 36,
+          flexShrink: 0,
+          background: '#0A0A0A',
+          borderLeft: '1px solid rgba(51,51,51,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          paddingTop: 12,
+          gap: 12,
+        }}
+      >
+        <button
+          onClick={onToggle}
+          title="Show detail panel"
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            border: '1px solid rgba(51,51,51,0.4)',
+            background: 'rgba(255,255,255,0.03)',
+            color: '#64748B',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.15s, border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)'; e.currentTarget.style.background = 'rgba(6,182,212,0.06)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = '#64748B'; e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+        >
+          <PanelRightOpen size={14} />
+        </button>
+        {agent && (
+          <>
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: STATUS_COLORS[agent.status] || STATUS_COLORS.offline,
+                boxShadow: agent.status === 'active' ? `0 0 6px ${STATUS_COLORS[agent.status]}` : 'none',
+              }}
+            />
+            <div
+              style={{
+                writingMode: 'vertical-rl',
+                textOrientation: 'mixed',
+                fontSize: 9,
+                color: '#64748B',
+                letterSpacing: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxHeight: 120,
+              }}
+            >
+              {agent.name}
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
   if (!agent) {
     return (
       <div
@@ -336,15 +411,48 @@ export function DetailPanel({
           borderLeft: '1px solid rgba(51,51,51,0.25)',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#555',
-          textAlign: 'center',
-          padding: 20,
+          position: 'relative',
         }}
       >
-        <Hexagon size={28} color="#333" strokeWidth={1} style={{ marginBottom: 8 }} />
-        <div style={{ fontSize: 11, lineHeight: 1.5 }}>Select an agent to view details</div>
+        {/* Collapse toggle at top */}
+        <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={onToggle}
+            title="Hide detail panel"
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 5,
+              border: '1px solid rgba(51,51,51,0.4)',
+              background: 'rgba(255,255,255,0.03)',
+              color: '#555',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#555'; e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)' }}
+          >
+            <PanelRightClose size={11} />
+          </button>
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#555',
+            textAlign: 'center',
+            padding: 20,
+          }}
+        >
+          <Hexagon size={28} color="#333" strokeWidth={1} style={{ marginBottom: 8 }} />
+          <div style={{ fontSize: 11, lineHeight: 1.5 }}>Select an agent to view details</div>
+        </div>
       </div>
     )
   }
@@ -404,23 +512,43 @@ export function DetailPanel({
               </div>
               <span style={{ fontSize: 12, fontWeight: 700, color: config.color }}>Edit Agent</span>
             </div>
-            <button
-              onClick={cancelEdit}
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 5,
-                border: '1px solid rgba(51,51,51,0.4)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#B0B0B0',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <X size={12} />
-            </button>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                onClick={onToggle}
+                title="Hide detail panel"
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 5,
+                  border: '1px solid rgba(51,51,51,0.4)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: '#B0B0B0',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <PanelRightClose size={11} />
+              </button>
+              <button
+                onClick={cancelEdit}
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 5,
+                  border: '1px solid rgba(51,51,51,0.4)',
+                  background: 'rgba(255,255,255,0.03)',
+                  color: '#B0B0B0',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <X size={12} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -663,6 +791,27 @@ export function DetailPanel({
             </div>
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              onClick={onToggle}
+              title="Hide detail panel"
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 5,
+                border: '1px solid rgba(51,51,51,0.4)',
+                background: 'rgba(255,255,255,0.03)',
+                color: '#B0B0B0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#B0B0B0'; e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)' }}
+            >
+              <PanelRightClose size={11} />
+            </button>
             <button
               onClick={enterEditMode}
               title="Edit agent"

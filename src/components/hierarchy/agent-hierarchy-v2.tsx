@@ -81,6 +81,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   )
   const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
   const [showLayers, setShowLayers] = useState(true)
+  const [detailPanelOpen, setDetailPanelOpen] = useState(true)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const reactFlowInstance = useRef<ReturnType<typeof Object> | null>(null)
 
@@ -824,6 +825,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         <DetailPanel
           agent={selectedAgent}
           allAgents={agents}
+          open={detailPanelOpen}
+          onToggle={() => setDetailPanelOpen(prev => !prev)}
           onClose={() => setSelectedAgentId(null)}
           onAgentUpdated={(updatedAgent) => {
             setAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a))
