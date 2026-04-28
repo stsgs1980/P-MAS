@@ -1006,3 +1006,28 @@ Stage Summary:
 - OFF: free zoom/pan, graph not constrained
 - Visual distinction: cyan active vs dark inactive button style
 - ON→OFF disables fitView; OFF→ON enables and re-fits
+
+---
+Task ID: 21
+Agent: Main Orchestrator
+Task: FIT ON = centered + Detail Panel hidden; FIT OFF = free zoom + panel user-controlled
+
+Work Log:
+- Changed `detailPanelOpen` default from `true` to `false` (panel hidden by default since FIT is ON)
+- Updated `handleFitView`: FIT ON → auto-collapses detail panel + re-fits graph
+- Updated `onNodeClick`: selecting agent → setFitMode(false) + setDetailPanelOpen(true)
+- Updated `handleSidebarSelect`: selecting agent from sidebar → setFitMode(false) + setDetailPanelOpen(true)
+- Updated `onToggle` (detail panel): opening panel → setFitMode(false)
+- Tested all transitions via agent-browser:
+  - Default: FIT ON + panel hidden ✅
+  - FIT OFF + panel hidden → expand panel manually ✅
+  - FIT OFF + panel open → click FIT ON → panel auto-collapses ✅
+  - Selecting agent → FIT OFF + panel opens ✅
+- Lint: 0 errors
+
+Stage Summary:
+- FIT ON: graph centered, detail panel hidden (auto-collapsed)
+- FIT OFF: free zoom/pan, user controls detail panel visibility
+- Selecting agent (click node or sidebar): auto FIT OFF + panel opens
+- Opening detail panel: auto FIT OFF
+- FIT ON: auto-collapses detail panel

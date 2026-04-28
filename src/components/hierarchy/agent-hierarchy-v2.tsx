@@ -81,7 +81,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   )
   const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
   const [showLayers, setShowLayers] = useState(true)
-  const [detailPanelOpen, setDetailPanelOpen] = useState(true)
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false)
   const [fitMode, setFitMode] = useState(true)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const reactFlowInstance = useRef<ReturnType<typeof Object> | null>(null)
@@ -286,6 +286,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   // ─── Selection ─────────────────────────────────────────────────────────
   const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
     setSelectedAgentId(node.id)
+    setFitMode(false)
+    setDetailPanelOpen(true)
   }, [])
 
   const onPaneClick = useCallback(() => {
@@ -295,6 +297,8 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   // ─── Select agent from sidebar ─────────────────────────────────────────
   const handleSidebarSelect = useCallback((id: string) => {
     setSelectedAgentId(id)
+    setFitMode(false)
+    setDetailPanelOpen(true)
   }, [])
 
   // ─── Focus on selected agent node ────────────────────────────────────
@@ -309,9 +313,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const handleFitView = useCallback(() => {
     setFitMode(prev => {
       const next = !prev
-      if (next && reactFlowInstance.current) {
-        const instance = reactFlowInstance.current as any
-        instance.fitView({ padding: 0.2, duration: 500 })
+      if (next) {
+        // FIT ON → auto-collapse detail panel + re-fit graph
+        setDetailPanelOpen(false)
+        if (reactFlowInstance.current) {
+          const instance = reactFlowInstance.current as any
+          instance.fitView({ padding: 0.2, duration: 500 })
+        }
       }
       return next
     })
@@ -835,7 +843,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           agent={selectedAgent}
           allAgents={agents}
           open={detailPanelOpen}
-          onToggle={() => setDetailPanelOpen(prev => !prev)}
+          onToggle={() => {
+            setDetailPanelOpen(prev => {
+              const next = !prev
+              if (next) setFitMode(false) // opening panel disables fit mode
+              return next
+            })
+          }}
           onClose={() => setSelectedAgentId(null)}
           onAgentUpdated={(updatedAgent) => {
             setAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a))
