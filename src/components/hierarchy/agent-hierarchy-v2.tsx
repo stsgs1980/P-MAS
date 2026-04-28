@@ -27,6 +27,10 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  X,
+  Crosshair,
+  Layers,
+  ArrowUpDown,
 } from 'lucide-react'
 
 import { AgentNode } from './agent-node'
@@ -40,6 +44,7 @@ import {
   ROLE_CONFIG,
   ROLE_ORDER,
   EDGE_CONFIG,
+  FORMULA_DESC,
   type AgentData,
   type ConnectionData,
   type EdgeType,
@@ -55,11 +60,11 @@ const edgeTypes = { agentEdge: AgentEdge }
 // ─── Layer labels for DAG visualization ────────────────────────────────────────
 
 const LAYER_LABELS = [
-  { level: 0, label: 'L0 Strategy', color: '#67E8F9' },
-  { level: 1, label: 'L1 Tactics', color: '#22D3EE' },
-  { level: 2, label: 'L2 Control', color: '#06B6D4' },
-  { level: 3, label: 'L3 Execution', color: '#0891B2' },
-  { level: 4, label: 'L4 Support', color: '#0E7490' },
+  { level: 0, label: 'L0', fullLabel: 'Strategy', color: '#67E8F9', colorRgb: '103,232,249', desc: 'Strategic planning & vision' },
+  { level: 1, label: 'L1', fullLabel: 'Tactics', color: '#22D3EE', colorRgb: '34,211,238', desc: 'Coordination & delegation' },
+  { level: 2, label: 'L2', fullLabel: 'Control', color: '#06B6D4', colorRgb: '6,182,212', desc: 'Quality & safety oversight' },
+  { level: 3, label: 'L3', fullLabel: 'Execution', color: '#0891B2', colorRgb: '8,145,178', desc: 'Task execution & testing' },
+  { level: 4, label: 'L4', fullLabel: 'Support', color: '#0E7490', colorRgb: '14,116,144', desc: 'Memory, monitoring, comms, learning' },
 ]
 
 // ─── Main component ────────────────────────────────────────────────────────────
@@ -74,7 +79,18 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     new Set(Object.entries(EDGE_CONFIG).filter(([, v]) => v.defaultVisible).map(([k]) => k as EdgeType))
   )
   const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
+  const [showLayers, setShowLayers] = useState(true)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
+  const reactFlowInstance = useRef<ReturnType<typeof Object> | null>(null)
+
+  // ─── Add Agent modal state ───────────────────────────────────────────
+  const [showAddAgent, setShowAddAgent] = useState(false)
+  const [newAgentName, setNewAgentName] = useState('')
+  const [newAgentRole, setNewAgentRole] = useState('')
+  const [newAgentGroup, setNewAgentGroup] = useState('Исполнение')
+  const [newAgentFormula, setNewAgentFormula] = useState('ReAct')
+  const [newAgentStatus, setNewAgentStatus] = useState('active')
+  const [newAgentSkills, setNewAgentSkills] = useState('')
 
   // ─── Simulate status transitions ───────────────────────────────────────
   useEffect(() => {
@@ -219,6 +235,54 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
     setSelectedAgentId(id)
   }, [])
 
+  // ─── Focus on selected agent node ────────────────────────────────────
+  const handleFocus = useCallback(() => {
+    if (selectedAgentId && reactFlowInstance.current) {
+      const instance = reactFlowInstance.current as any
+      instance.fitView({ nodes: [{ id: selectedAgentId }], padding: 0.3, duration: 500 })
+    }
+  }, [selectedAgentId])
+
+  // ─── Fit all nodes to view ───────────────────────────────────────────
+  const handleFitView = useCallback(() => {
+    if (reactFlowInstance.current) {
+      const instance = reactFlowInstance.current as any
+      instance.fitView({ padding: 0.2, duration: 500 })
+    }
+  }, [])
+
+  // ─── Add new agent ───────────────────────────────────────────────────
+  const handleAddAgent = useCallback(async () => {
+    if (!newAgentName.trim()) return
+    try {
+      const res = await fetchWithRetry('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAgentName,
+          role: newAgentRole || 'Custom Agent',
+          roleGroup: newAgentGroup,
+          formula: newAgentFormula,
+          status: newAgentStatus,
+          skills: newAgentSkills,
+          description: `${newAgentRole || 'Custom Agent'} agent in ${newAgentGroup} group`,
+        }),
+      })
+      if (res.ok) {
+        setShowAddAgent(false)
+        setNewAgentName('')
+        setNewAgentRole('')
+        setNewAgentSkills('')
+        setNewAgentGroup('Исполнение')
+        setNewAgentFormula('ReAct')
+        setNewAgentStatus('active')
+        fetchAgents()
+      }
+    } catch {
+      // Error handling — silently fail for now
+    }
+  }, [newAgentName, newAgentRole, newAgentGroup, newAgentFormula, newAgentStatus, newAgentSkills, fetchAgents])
+
   // ─── Selected agent data ───────────────────────────────────────────────
   const selectedAgent = useMemo(
     () => agents.find(a => a.id === selectedAgentId) || null,
@@ -358,6 +422,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             Refresh
           </button>
           <button
+            onClick={() => setShowAddAgent(true)}
             style={{
               padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
               background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', color: '#06B6D4', cursor: 'pointer',
@@ -406,6 +471,47 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               {label}
             </button>
           ))}
+
+          <div style={{ width: 1, height: 16, background: 'rgba(51,51,51,0.25)', margin: '0 4px' }} />
+
+          {/* Layers toggle */}
+          <button
+            onClick={() => setShowLayers(prev => !prev)}
+            style={{
+              padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: showLayers ? 'rgba(6,182,212,0.06)' : 'transparent',
+              border: showLayers ? '1px solid rgba(6,182,212,0.15)' : '1px solid transparent',
+              color: showLayers ? '#06B6D4' : '#555',
+              cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}
+            title="Toggle layer labels"
+          >
+            <Layers size={9} />
+            Layers
+          </button>
+
+          {/* Layout auto-recalculate */}
+          <button
+            onClick={() => {
+              // Force layout recalculation by briefly switching viewMode
+              const currentMode = viewMode
+              setViewMode('grid')
+              setTimeout(() => setViewMode(currentMode), 50)
+            }}
+            style={{
+              padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: 'transparent',
+              border: '1px solid transparent',
+              color: '#555',
+              cursor: 'pointer', textTransform: 'uppercase', letterSpacing: 0.5,
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}
+            title="Re-layout (Dagre auto-arrange)"
+          >
+            <ArrowUpDown size={9} />
+            Layout
+          </button>
 
           <div style={{ width: 1, height: 16, background: 'rgba(51,51,51,0.25)', margin: '0 4px' }} />
 
@@ -459,9 +565,15 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         {/* Zoom controls — Lucide icons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <button
+            onClick={() => {
+              if (reactFlowInstance.current) {
+                const instance = reactFlowInstance.current as any
+                instance.zoomIn({ duration: 300 })
+              }
+            }}
             style={{
               padding: '3px 5px', borderRadius: 3,
-              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(51,51,51,0.3)',
               color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Zoom In"
@@ -469,24 +581,50 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             <ZoomIn size={11} />
           </button>
           <button
+            onClick={() => {
+              if (reactFlowInstance.current) {
+                const instance = reactFlowInstance.current as any
+                instance.zoomOut({ duration: 300 })
+              }
+            }}
             style={{
               padding: '3px 5px', borderRadius: 3,
-              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(51,51,51,0.3)',
               color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
             }}
             title="Zoom Out"
           >
             <ZoomOut size={11} />
           </button>
+          <div style={{ width: 1, height: 14, background: 'rgba(51,51,51,0.25)', margin: '0 2px' }} />
           <button
+            onClick={handleFitView}
             style={{
-              padding: '3px 5px', borderRadius: 3,
-              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(6,182,212,0.2)',
-              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(51,51,51,0.3)',
+              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+              textTransform: 'uppercase',
             }}
-            title="Fit View"
+            title="Fit to screen"
           >
-            <Maximize2 size={11} />
+            <Maximize2 size={9} />
+            Fit
+          </button>
+          <button
+            onClick={handleFocus}
+            style={{
+              padding: '3px 8px', borderRadius: 4,
+              background: selectedAgentId ? 'rgba(6,182,212,0.06)' : 'rgba(13,13,13,0.95)',
+              border: selectedAgentId ? '1px solid rgba(6,182,212,0.15)' : '1px solid rgba(51,51,51,0.3)',
+              color: selectedAgentId ? '#06B6D4' : '#555',
+              cursor: selectedAgentId ? 'pointer' : 'not-allowed',
+              display: 'flex', alignItems: 'center', gap: 3,
+              fontSize: 9, fontWeight: 600, textTransform: 'uppercase',
+            }}
+            title="Focus on selected node"
+          >
+            <Crosshair size={9} />
+            Focus
           </button>
         </div>
       </div>
@@ -515,6 +653,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            onInit={(instance) => { reactFlowInstance.current = instance }}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             minZoom={0.2}
@@ -543,27 +682,72 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
               }}
             />
 
-            {/* Layer labels overlay — only in hierarchy mode */}
-            {viewMode === 'hierarchy' && (
+            {/* Layer labels overlay with enhanced visual bands — only in hierarchy mode */}
+            {viewMode === 'hierarchy' && showLayers && (
               <Panel position="top-left" style={{ pointerEvents: 'none' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {LAYER_LABELS.map(layer => {
                     const pos = layerPositions[layer.level]
                     if (!pos) return null
+                    const agentCount = agents.filter(a => {
+                      const cfg = ROLE_CONFIG[a.roleGroup]
+                      return cfg && cfg.level === layer.level
+                    }).length
+                    const activeCount = agents.filter(a => {
+                      const cfg = ROLE_CONFIG[a.roleGroup]
+                      return cfg && cfg.level === layer.level && a.status === 'active'
+                    }).length
                     return (
-                      <div
-                        key={layer.level}
-                        style={{
-                          fontSize: 8,
-                          fontWeight: 700,
-                          color: layer.color,
-                          opacity: 0.4,
-                          letterSpacing: 1,
-                          textTransform: 'uppercase',
-                          padding: '2px 6px',
-                        }}
-                      >
-                        {layer.label}
+                      <div key={layer.level} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {/* Layer badge */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '3px 8px',
+                            borderRadius: 4,
+                            background: `rgba(${layer.colorRgb}, 0.08)`,
+                            border: `1px solid rgba(${layer.colorRgb}, 0.15)`,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 800,
+                              color: layer.color,
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            {layer.label}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 8,
+                              fontWeight: 600,
+                              color: layer.color,
+                              opacity: 0.7,
+                            }}
+                          >
+                            {layer.fullLabel}
+                          </span>
+                        </div>
+                        {/* Agent count */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: layer.color }}>
+                            {activeCount}/{agentCount}
+                          </span>
+                          <span style={{ fontSize: 7, color: '#555' }}>active</span>
+                        </div>
+                        {/* Horizontal separator line */}
+                        <div
+                          style={{
+                            flex: 1,
+                            height: 1,
+                            minWidth: 40,
+                            background: `linear-gradient(90deg, ${layer.color}30, transparent)`,
+                          }}
+                        />
                       </div>
                     )
                   })}
@@ -583,6 +767,187 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
       {/* ─── KPI Strip ──────────────────────────────────────────────────── */}
       <KPIStrip agents={agents} />
+
+      {/* ─── Add Agent Modal ─────────────────────────────────────────────── */}
+      {showAddAgent && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddAgent(false) }}
+        >
+          <div
+            style={{
+              background: '#0A0A0A', border: '1px solid rgba(51,51,51,0.5)',
+              borderRadius: 12, width: 400, maxHeight: '90vh', overflowY: 'auto',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '16px 20px', borderBottom: '1px solid rgba(51,51,51,0.3)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#06B6D4' }}>Add New Agent</div>
+                <div style={{ fontSize: 10, color: '#64748B', marginTop: 2 }}>Create a new agent in the multi-agent system</div>
+              </div>
+              <button
+                onClick={() => setShowAddAgent(false)}
+                style={{
+                  padding: 4, borderRadius: 4, background: 'rgba(51,51,51,0.2)',
+                  border: '1px solid rgba(51,51,51,0.3)', color: '#888', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Form fields */}
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Name */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Agent Name
+                </label>
+                <input
+                  value={newAgentName}
+                  onChange={e => setNewAgentName(e.target.value)}
+                  placeholder="e.g. Novyj-Agent"
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Role
+                </label>
+                <input
+                  value={newAgentRole}
+                  onChange={e => setNewAgentRole(e.target.value)}
+                  placeholder="e.g. Custom Agent"
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Role Group */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Role Group
+                </label>
+                <select
+                  value={newAgentGroup}
+                  onChange={e => setNewAgentGroup(e.target.value)}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {ROLE_ORDER.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+
+              {/* Cognitive Formula */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Cognitive Formula
+                </label>
+                <select
+                  value={newAgentFormula}
+                  onChange={e => setNewAgentFormula(e.target.value)}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {Object.keys(FORMULA_DESC).map(f => (
+                    <option key={f} value={f}>{f} — {FORMULA_DESC[f].split('—')[0].trim()}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Status
+                </label>
+                <select
+                  value={newAgentStatus}
+                  onChange={e => setNewAgentStatus(e.target.value)}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {['active', 'idle', 'paused', 'standby'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Skills (comma-separated)
+                </label>
+                <input
+                  value={newAgentSkills}
+                  onChange={e => setNewAgentSkills(e.target.value)}
+                  placeholder="e.g. analysis,reporting,optimization"
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '12px 20px', borderTop: '1px solid rgba(51,51,51,0.3)',
+              display: 'flex', justifyContent: 'flex-end', gap: 8,
+            }}>
+              <button
+                onClick={() => setShowAddAgent(false)}
+                style={{
+                  padding: '6px 16px', borderRadius: 6, background: '#1A1A1A',
+                  border: '1px solid rgba(51,51,51,0.4)', color: '#B0B0B0',
+                  cursor: 'pointer', fontSize: 11,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddAgent}
+                disabled={!newAgentName.trim()}
+                style={{
+                  padding: '6px 16px', borderRadius: 6,
+                  background: 'rgba(6,182,212,0.1)',
+                  border: '1px solid rgba(6,182,212,0.3)',
+                  color: '#06B6D4', cursor: 'pointer', fontSize: 11,
+                  opacity: newAgentName.trim() ? 1 : 0.5,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}
+              >
+                <Plus size={10} />
+                Create Agent
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

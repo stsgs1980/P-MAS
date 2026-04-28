@@ -236,6 +236,17 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   offline: '#3F3F46',
 }
 
+const ROLE_GROUP_ICONS: Record<string, any> = {
+  'Стратегия': Brain,
+  'Тактика': Target,
+  'Контроль': Shield,
+  'Исполнение': Zap,
+  'Память': Database,
+  'Мониторинг': Activity,
+  'Коммуникация': Network,
+  'Обучение': Sparkles,
+}
+
 // ─── Animated Counter ────────────────────────────────────────────────────────
 
 function AnimatedCounter({ target, duration = 1200, suffix = '' }: { target: number; duration?: number; suffix?: string }) {
@@ -478,7 +489,8 @@ function SystemHealthMonitor() {
 
 // ─── Recent Activity Timeline ──────────────────────────────────────────────────
 
-function RecentActivityTimeline() {
+function RecentActivityTimeline({ events }: { events?: typeof ACTIVITY_EVENTS }) {
+  const displayEvents = events || ACTIVITY_EVENTS
   return (
     <div
       className="rounded-xl p-4 sm:p-6 flex flex-col"
@@ -500,14 +512,14 @@ function RecentActivityTimeline() {
           maxHeight: '400px',
         }}
       >
-        {ACTIVITY_EVENTS.map((event, i) => {
+        {displayEvents.map((event, i) => {
           const groupConfig = ROLE_GROUPS.find(g => g.name === event.group)
           const dotColor = groupConfig?.color || '#94a3b8'
           return (
             <div key={i} className="flex items-start gap-3 py-2.5 border-b border-white/[0.03] last:border-b-0 rounded-lg px-2 transition-colors duration-150 hover:bg-white/[0.02]">
               <div className="flex flex-col items-center mt-1">
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: dotColor, boxShadow: `0 0 6px ${dotColor}44` }} />
-                {i < ACTIVITY_EVENTS.length - 1 && (
+                {i < displayEvents.length - 1 && (
                   <span className="w-px flex-1 mt-1" style={{ background: `linear-gradient(to bottom, ${dotColor}, transparent)`, minHeight: '20px', opacity: 0.4 }} />
                 )}
               </div>
@@ -757,7 +769,8 @@ function FormulaFlowDiagram() {
 
 // ─── Connection Heatmap ────────────────────────────────────────────────────────
 
-function ConnectionHeatmap() {
+function ConnectionHeatmap({ data }: { data?: number[][] }) {
+  const heatmapData = data || CONNECTION_HEATMAP_DATA
   const getDotSize = (count: number): number => {
     if (count === 0) return 0
     if (count <= 2) return 6
@@ -793,7 +806,7 @@ function ConnectionHeatmap() {
             </div>
           ))}
         </div>
-        {CONNECTION_HEATMAP_DATA.map((row, rowIdx) => (
+        {heatmapData.map((row, rowIdx) => (
           <div
             key={rowIdx}
             className="grid gap-0 border-b border-white/[0.03]"
@@ -887,21 +900,23 @@ function ConnectionHeatmap() {
 
 // ─── Agent Performance ────────────────────────────────────────────────────────
 
-function AgentPerformance() {
-  const [barWidths, setBarWidths] = useState<number[]>(TOP_PERFORMERS.map(() => 0))
+function AgentPerformance({ topPerformers: topPerformersProp, statusDistribution: statusDistributionProp }: { topPerformersProp?: typeof TOP_PERFORMERS; statusDistributionProp?: typeof STATUS_DISTRIBUTION }) {
+  const topPerformers = topPerformersProp || TOP_PERFORMERS
+  const statusDistribution = statusDistributionProp || STATUS_DISTRIBUTION
+  const [barWidths, setBarWidths] = useState<number[]>(topPerformers.map(() => 0))
 
   useEffect(() => {
-    const timers = TOP_PERFORMERS.map((_, i) =>
+    const timers = topPerformers.map((_, i) =>
       setTimeout(() => {
         setBarWidths(prev => {
           const next = [...prev]
-          next[i] = TOP_PERFORMERS[i].score
+          next[i] = topPerformers[i].score
           return next
         })
       }, 100 + i * 80)
     )
     return () => timers.forEach(clearTimeout)
-  }, [])
+  }, [topPerformers])
 
   const getGroupColor = (groupName: string): string => {
     const group = ROLE_GROUPS.find(g => g.name === groupName)
@@ -911,9 +926,9 @@ function AgentPerformance() {
   const donutRadius = 50
   const donutStroke = 10
   const donutCircumference = 2 * Math.PI * donutRadius
-  const totalAgents = STATUS_DISTRIBUTION.reduce((sum, s) => sum + s.count, 0)
+  const totalAgents = statusDistribution.reduce((sum, s) => sum + s.count, 0)
 
-  const donutSegments = STATUS_DISTRIBUTION.filter(s => s.count > 0).reduce<Array<{
+  const donutSegments = statusDistribution.filter(s => s.count > 0).reduce<Array<{
     label: string; count: number; color: string; segmentLength: number; offset: number
   }>>((acc, status, _i, arr) => {
     const segmentLength = (status.count / totalAgents) * donutCircumference
@@ -942,7 +957,7 @@ function AgentPerformance() {
         <div className="lg:col-span-2">
           <p className="text-[10px] text-[#B0B0B0] mb-3 font-medium uppercase tracking-wider">Top Performers</p>
           <div className="space-y-2.5">
-            {TOP_PERFORMERS.map((agent, i) => {
+            {topPerformers.map((agent, i) => {
               const barColor = getGroupColor(agent.group)
               const width = barWidths[i]
               return (
@@ -998,7 +1013,7 @@ function AgentPerformance() {
             </svg>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 w-full">
-            {STATUS_DISTRIBUTION.map((status) => (
+            {statusDistribution.map((status) => (
               <div key={status.label} className="flex items-center gap-1.5">
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
@@ -1063,14 +1078,14 @@ function AgentPerformance() {
 
 // ─── Network Activity Chart ───────────────────────────────────────────────────
 
-function NetworkActivityChart() {
+function NetworkActivityChart({ data: activityData }: { data?: number[] }) {
   const [animated, setAnimated] = useState(false)
   useEffect(() => {
     const t = setTimeout(() => setAnimated(true), 300)
     return () => clearTimeout(t)
   }, [])
 
-  const data = NETWORK_ACTIVITY_DATA
+  const data = activityData || NETWORK_ACTIVITY_DATA
   const minVal = Math.min(...data)
   const maxVal = Math.max(...data)
   const range = maxVal - minVal || 1
@@ -1429,13 +1444,14 @@ function ArchitectureDiagram() {
 
 // ─── Status Distribution Card ─────────────────────────────────────────────────
 
-function StatusDistributionCard() {
+function StatusDistributionCard({ statusDistribution }: { statusDistribution?: typeof STATUS_DISTRIBUTION }) {
+  const distributionData = statusDistribution || STATUS_DISTRIBUTION
   const donutRadius = 50
   const donutStroke = 12
   const donutCircumference = 2 * Math.PI * donutRadius
-  const totalAgents = STATUS_DISTRIBUTION.reduce((sum, s) => sum + s.count, 0)
+  const totalAgents = distributionData.reduce((sum, s) => sum + s.count, 0)
 
-  const donutSegments = STATUS_DISTRIBUTION.filter(s => s.count > 0).reduce<Array<{
+  const donutSegments = distributionData.filter(s => s.count > 0).reduce<Array<{
     label: string; count: number; color: string; segmentLength: number; offset: number
   }>>((acc, status) => {
     const segmentLength = (status.count / totalAgents) * donutCircumference
@@ -1483,7 +1499,7 @@ function StatusDistributionCard() {
         </svg>
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 mt-2">
-        {STATUS_DISTRIBUTION.map((status) => (
+        {distributionData.map((status) => (
           <div key={status.label} className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: status.color, opacity: status.count > 0 ? 1 : 0.3 }} />
             <span className="text-[9px] text-[#B0B0B0]">{status.label}</span>
@@ -1497,23 +1513,25 @@ function StatusDistributionCard() {
 
 // ─── Top Performers Card ─────────────────────────────────────────────────────
 
-function TopPerformersCard() {
-  const [barWidths, setBarWidths] = useState<number[]>(TOP_PERFORMERS.map(() => 0))
+function TopPerformersCard({ topPerformers: topPerformersProp, roleGroups: roleGroupsProp }: { topPerformersProp?: typeof TOP_PERFORMERS; roleGroupsProp?: typeof ROLE_GROUPS }) {
+  const topPerformers = topPerformersProp || TOP_PERFORMERS
+  const roleGroupsData = roleGroupsProp || ROLE_GROUPS
+  const [barWidths, setBarWidths] = useState<number[]>(topPerformers.map(() => 0))
   useEffect(() => {
-    const timers = TOP_PERFORMERS.map((_, i) =>
+    const timers = topPerformers.map((_, i) =>
       setTimeout(() => {
         setBarWidths(prev => {
           const next = [...prev]
-          next[i] = TOP_PERFORMERS[i].score
+          next[i] = topPerformers[i].score
           return next
         })
       }, 100 + i * 80)
     )
     return () => timers.forEach(clearTimeout)
-  }, [])
+  }, [topPerformers])
 
   const getGroupColor = (groupName: string): string => {
-    const group = ROLE_GROUPS.find(g => g.name === groupName)
+    const group = roleGroupsData.find(g => g.name === groupName)
     return group?.color || '#94a3b8'
   }
 
@@ -1531,7 +1549,7 @@ function TopPerformersCard() {
         Top Performers
       </h3>
       <div className="flex flex-col gap-2">
-        {TOP_PERFORMERS.map((agent, i) => {
+        {topPerformers.map((agent, i) => {
           const barColor = getGroupColor(agent.group)
           const width = barWidths[i]
           return (
@@ -1625,11 +1643,12 @@ function SystemHealthCard() {
 
 // ─── KPI Strip ───────────────────────────────────────────────────────────────
 
-function KPIStrip() {
+function KPIStrip({ quickStats }: { quickStats?: typeof QUICK_STATS }) {
+  const stats = quickStats || QUICK_STATS
   const kpis = [
-    { label: 'Total Agents', value: '26', color: '#06B6D4', change: '+2 this week', changeColor: '#22D3EE', sparkData: [22, 23, 24, 24, 25, 26] },
-    { label: 'Active Now', value: '16', color: '#22D3EE', change: '4 idle / 1 paused', changeColor: '#64748B' },
-    { label: 'Tasks Running', value: '12', color: '#0891B2', change: '187 completed', changeColor: '#22D3EE' },
+    { label: 'Total Agents', value: String(stats[0]?.numericValue ?? '26'), color: '#06B6D4', change: '+2 this week', changeColor: '#22D3EE', sparkData: [22, 23, 24, 24, 25, 26] },
+    { label: 'Active Now', value: String(stats[4]?.numericValue ?? '16'), color: '#22D3EE', change: `${stats[5]?.numericValue ?? 4} idle / ${stats[2] ? '' : '1 paused'}`, changeColor: '#64748B' },
+    { label: 'Tasks Running', value: String(stats[6]?.numericValue ?? '12'), color: '#0891B2', change: '187 completed', changeColor: '#22D3EE' },
     { label: 'Success Rate', value: '94.7%', color: '#22D3EE', change: '+0.3%', changeColor: '#22D3EE', sparkData: [90, 92, 91, 93, 94, 95] },
     { label: 'Avg Response', value: '1.2s', color: '#B0B0B0', change: '-0.3s', changeColor: '#22D3EE' },
   ]
@@ -1661,7 +1680,7 @@ function KPIStrip() {
 
 // ─── Dashboard Header ────────────────────────────────────────────────────────
 
-function DashboardHeader({ onOpenHierarchy, onToggleSidebar }: { onOpenHierarchy: () => void; onToggleSidebar: () => void }) {
+function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh }: { onOpenHierarchy: () => void; onToggleSidebar: () => void; onRefresh?: () => void }) {
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [refreshing, setRefreshing] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -1679,12 +1698,13 @@ function DashboardHeader({ onOpenHierarchy, onToggleSidebar }: { onOpenHierarchy
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true)
+    onRefresh?.()
     setTimeout(() => {
       setLastUpdated(formatTime(new Date()))
       setRefreshing(false)
       toast.success('Dashboard data refreshed')
     }, 1200)
-  }, [formatTime])
+  }, [formatTime, onRefresh])
 
   return (
     <header
@@ -1785,10 +1805,12 @@ function DashboardHeader({ onOpenHierarchy, onToggleSidebar }: { onOpenHierarchy
 
 // ─── Dashboard Sidebar ───────────────────────────────────────────────────────
 
-function DashboardSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const agentsByGroup = ROLE_GROUPS.map(group => ({
+function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups: roleGroupsProp }: { open: boolean; onClose: () => void; agentListProp?: typeof AGENT_LIST; roleGroupsProp?: typeof ROLE_GROUPS }) {
+  const roleGroupsData = roleGroupsProp || ROLE_GROUPS
+  const agentsList = agentListProp || AGENT_LIST
+  const agentsByGroup = roleGroupsData.map(group => ({
     ...group,
-    agents: AGENT_LIST.filter(a => a.group === group.name),
+    agents: agentsList.filter(a => a.group === group.name),
   }))
 
   return (
@@ -1852,6 +1874,88 @@ function DashboardSidebar({ open, onClose }: { open: boolean; onClose: () => voi
 
 function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [statsData, setStatsData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<string>('')
+
+  // ── Data Fetching ──────────────────────────────────────────────────────────
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetchWithRetry('/api/stats')
+      if (res.ok) {
+        const data = await res.json()
+        setStatsData(data)
+      }
+    } catch {
+      // fallback to hardcoded constants — they remain as defaults
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchStats()
+    const now = new Date()
+    setLastUpdated(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
+  }, [fetchStats])
+
+  // ── Computed Values from API Data (with fallbacks) ─────────────────────────
+  const quickStats = statsData ? [
+    { label: 'Total Agents', value: String(statsData.quickStats.totalAgents), numericValue: statsData.quickStats.totalAgents, color: '#06B6D4', colorRgb: '6,182,212' },
+    { label: 'Role Groups', value: String(statsData.quickStats.roleGroups), numericValue: statsData.quickStats.roleGroups, color: '#0891B2', colorRgb: '8,145,178' },
+    { label: 'Cognitive Formulas', value: String(statsData.quickStats.cognitiveFormulas), numericValue: statsData.quickStats.cognitiveFormulas, color: '#6B7280', colorRgb: '107,114,128' },
+    { label: 'Edge Types', value: String(statsData.quickStats.edgeTypes), numericValue: statsData.quickStats.edgeTypes, color: '#475569', colorRgb: '71,85,105' },
+    { label: 'Active Agents', value: String(statsData.quickStats.activeAgents), numericValue: statsData.quickStats.activeAgents, color: '#06B6D4', colorRgb: '6,182,212' },
+    { label: 'Idle Agents', value: String(statsData.quickStats.idleAgents), numericValue: statsData.quickStats.idleAgents, color: '#6B7280', colorRgb: '107,114,128' },
+    { label: 'Tasks', value: String(statsData.quickStats.totalTasks), numericValue: statsData.quickStats.totalTasks, color: '#22D3EE', colorRgb: '34,211,238' },
+    { label: 'Formulas Coverage', value: statsData.quickStats.formulasCoverage + '%', numericValue: statsData.quickStats.formulasCoverage, color: '#0891B2', colorRgb: '8,145,178' },
+  ] : QUICK_STATS
+
+  const statusDistribution = statsData ? statsData.statusDistribution : STATUS_DISTRIBUTION
+
+  const roleGroups = statsData ? statsData.roleGroups.map((rg: any) => ({
+    ...rg,
+    icon: ROLE_GROUP_ICONS[rg.name] || Brain,
+    desc: rg.description || rg.desc,
+    statusSummary: rg.statusSummary || [],
+  })) : ROLE_GROUPS
+
+  const agentList = statsData ? statsData.agents.map((a: any) => ({
+    name: a.name,
+    group: a.roleGroup,
+    status: a.status === 'active' ? 'active' as const : a.status === 'idle' ? 'idle' as const : a.status === 'paused' ? 'paused' as const : a.status === 'standby' ? 'standby' as const : a.status === 'error' ? 'offline' as const : 'offline' as const,
+    role: a.status === 'active' ? 'active' as const : a.status === 'idle' ? 'idle' as const : a.status === 'paused' ? 'paused' as const : a.status === 'standby' ? 'standby' as const : a.status === 'error' ? 'offline' as const : 'offline' as const,
+  })) : AGENT_LIST
+
+  const activityEvents = statsData ? statsData.activityEvents : ACTIVITY_EVENTS
+
+  const topPerformers = statsData ? statsData.topPerformers : TOP_PERFORMERS
+
+  const connectionHeatmapData = statsData ? statsData.connectionHeatmap : CONNECTION_HEATMAP_DATA
+
+  const networkActivityData = statsData ? statsData.networkActivity : NETWORK_ACTIVITY_DATA
+
+  // ── Refresh Handler ────────────────────────────────────────────────────────
+  const handleRefresh = useCallback(() => {
+    fetchStats()
+    const now = new Date()
+    setLastUpdated(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
+  }, [fetchStats])
+
+  // ── Loading State ──────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center" style={{ background: '#000000' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full border-2 border-transparent" style={{ borderTopColor: '#06B6D4', borderRightColor: '#06B6D4', animation: 'spin 1s linear infinite' }} />
+          </div>
+          <div className="text-[#64748B] text-sm font-medium">Loading dashboard data...</div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-screen" style={{ background: '#000000' }}>
@@ -1883,33 +1987,49 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
       <DashboardHeader
         onOpenHierarchy={onOpenHierarchy}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onRefresh={handleRefresh}
       />
 
       <div className="flex flex-1 overflow-hidden">
         <DashboardSidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
+          agentListProp={agentList}
+          roleGroupsProp={roleGroups}
         />
 
         <main className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+          {/* Data source indicator */}
+          {statsData && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#22D3EE' }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#22D3EE' }} />
+              </span>
+              <span className="text-[9px] text-[#64748B]">Live data</span>
+              <span className="text-[9px] text-[#4B5563]">•</span>
+              <span className="text-[9px] text-[#64748B]" suppressHydrationWarning>Updated {lastUpdated || '—'}</span>
+            </div>
+          )}
+
           {/* Row 1: KPI Strip */}
-          <KPIStrip />
+          <KPIStrip quickStats={quickStats} />
 
           {/* Row 2-4: Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
             {/* Row 2 */}
-            <StatusDistributionCard />
-            <TopPerformersCard />
+            <StatusDistributionCard statusDistribution={statusDistribution} />
+            <TopPerformersCard topPerformersProp={topPerformers} roleGroupsProp={roleGroups} />
             <SystemHealthCard />
 
             {/* Row 3 */}
             <div className="lg:col-span-2">
-              <NetworkActivityChart />
+              <NetworkActivityChart data={networkActivityData} />
             </div>
-            <RecentActivityTimeline />
+            <RecentActivityTimeline events={activityEvents} />
 
             {/* Row 4 */}
-            <ConnectionHeatmap />
+            <ConnectionHeatmap data={connectionHeatmapData} />
             <div className="lg:col-span-2">
               <FormulaAgentMappingGrid />
             </div>
