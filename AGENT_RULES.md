@@ -257,6 +257,19 @@ Deploy AFTER Group B. These SUBMIT to Group B standards.
 - После git clone — переместить содержимое в `/home/z/my-project/`
 - При старте: `cd /home/z/my-project && git remote -v` — убедиться что remote привязан к GitHub
 
+## Запуск dev-сервера
+
+Правильный способ запуска (процесс выживает после завершения bash):
+
+````bash
+cd /home/z/my-project && npx next dev -p 3000 </dev/null >/tmp/zdev.log 2>&1 &
+disown
+sleep 8
+````
+
+НЕ запускать без `disown` — bash убьёт дочерний процесс при завершении.
+НЕ использовать `bun dev` — процесс умирает быстрее.
+
 ---
 
 Built with: Next.js 16 + TypeScript + Tailwind CSS 4 + Prisma + shadcn/ui + Framer Motion + Zustand
