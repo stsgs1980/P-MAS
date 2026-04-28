@@ -1,21 +1,23 @@
-# Task 3: Add Agent Modal + Enhanced Hierarchy Toolbar Features
+# Task 3: full-stack-developer
 
-## Agent: full-stack-developer
+## Task: Make Dashboard API-driven and add Workflow stats panel
 
-## Changes Made
+### Work Completed
 
-### File Modified: `/home/z/my-project/src/components/hierarchy/agent-hierarchy-v2.tsx`
+1. **Task A - Dashboard API-driven**: Already implemented in previous work. DashboardPanel fetches `/api/stats` on mount, stores in `statsData` state, and derives all dashboard data with hardcoded fallbacks.
 
-1. **New Imports**: Added `X`, `Crosshair` from lucide-react; `FORMULA_DESC` from types
-2. **New State Variables** (7): `showAddAgent`, `newAgentName`, `newAgentRole`, `newAgentGroup`, `newAgentFormula`, `newAgentStatus`, `newAgentSkills`
-3. **ReactFlow Instance Ref**: `reactFlowInstance` ref stored via `onInit` callback on `<ReactFlow>`
-4. **Add Agent Button**: Now calls `setShowAddAgent(true)` to open modal
-5. **handleAddAgent**: POST to `/api/agents`, resets form, refreshes data
-6. **handleFocus**: `fitView` with selected node filter
-7. **handleFitView**: `fitView` for all nodes
-8. **Enhanced Toolbar**: Zoom In/Out use ReactFlow API, added Fit button (text + icon), Focus button (cyan when selected, gray when not)
-9. **Custom Add Agent Modal**: Fixed overlay with dark backdrop, 6 form fields, Cancel/Create buttons, click-outside-to-close
+2. **Task B - Workflow Stats Section**: 
+   - Added `workflowsData` state and parallel fetch of `/api/workflows`
+   - Created `WorkflowStatsSection` component with summary cards, per-workflow cards, mini pipeline visualization, and "View Workflows" button
+   - Replaced `<WorkflowPipeline />` embed with the new compact section
 
-## Verification
-- Lint: 0 errors (only unrelated templates/playwright.config.ts parse error)
-- Dev server: running successfully
+3. **Task C - CSS Animations**: Added `feedbackPulse` and `pulseRing` keyframes to `globals.css`
+
+### Files Modified
+- `src/app/page.tsx`: Added workflowsData state, modified fetchStats, added WorkflowStatsSection component, replaced WorkflowPipeline embed
+- `src/app/globals.css`: Added feedbackPulse and pulseRing keyframe animations
+
+### Verification
+- Lint: 0 errors
+- Dev server: 200 OK
+- Both APIs verified: /api/stats (26 agents), /api/workflows (5 workflows)

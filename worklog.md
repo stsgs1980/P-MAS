@@ -1408,3 +1408,94 @@ Unresolved:
 - Dev server process dies frequently (sandbox limitation) - requires periodic restart
 - FIT ON centering in Hierarchy view still broken (deferred)
 - ROADMAP.md not yet created (deferred)
+
+---
+Task ID: 3
+Agent: full-stack-developer
+Task: Make Dashboard API-driven and add Workflow stats panel
+
+Work Log:
+- Verified Dashboard is already API-driven: DashboardPanel fetches /api/stats, maps all 8 data sections (quickStats, statusDistribution, roleGroups, agents, activityEvents, topPerformers, connectionHeatmap, networkActivity) with hardcoded fallbacks
+- Added workflowsData state to DashboardPanel (useState<any>(null))
+- Modified fetchStats to use Promise.all for parallel fetch of both /api/stats and /api/workflows
+- Created WorkflowStatsSection component (~200 lines) with:
+  - Summary stats: Total Workflows, Active, Total Executions, Avg Success Rate (4-card grid)
+  - Per-workflow cards with: name, status badge, description, execution count, success rate
+  - Mini pipeline visualization: colored dots per step with gradient connector lines
+  - Step action-to-color mapping (22 action types mapped to cyan/gray palette)
+  - Status color mapping (active=#22D3EE, draft=#64748B, paused=#EAB308, etc.)
+  - Tags display per workflow
+  - "View Workflows" button that calls onOpenWorkflows()
+  - Empty state with icon when no workflows found
+  - Scrollable list (max-h-96) with thin cyan scrollbar
+- Replaced embedded <WorkflowPipeline /> with <WorkflowStatsSection /> in dashboard layout
+- Added feedbackPulse and pulseRing keyframe animations to globals.css
+- Lint: 0 errors
+- Dev server: 200 OK, both APIs returning data (26 agents, 5 workflows)
+
+Stage Summary:
+- Dashboard was already API-driven from previous work (Task 17 in worklog)
+- New WorkflowStatsSection provides compact summary view of workflow pipeline
+- Replaces the heavy full WorkflowPipeline embed with a summary view; full pipeline accessible via "Workflows" button
+- CSS animations feedbackPulse and pulseRing added to globals.css
+- All changes use monochrome cyan (#06B6D4) color scheme
+
+---
+Task ID: 18
+Agent: Main Orchestrator
+Task: Resume session - Verify Phase 1 implementation, seed workflows, make dashboard API-driven, add workflow stats
+
+Work Log:
+- Read worklog.md (1441 lines) and assessed current project state
+- Verified Prisma schema already has Workflow, PipelineStep, WorkflowExecution, StepExecution, AgentMessage models
+- Verified API routes exist: /api/workflows, /api/workflows/[id], /api/workflows/execute, /api/workflows/seed
+- Verified workflow-pipeline.tsx component exists (2552 lines) with full workflow management UI
+- Restarted dev server (was down due to sandbox process management)
+- Seeded 5 workflows via POST /api/workflows/seed: Development Pipeline (7 steps), Analysis & Reporting (5 steps), Incident Response (6 steps), Knowledge Update (4 steps), Agent Coordination (4 steps)
+- Ran multiple workflow executions: Development Pipeline (2 runs, 100% success), Incident Response (1 run, 100% success)
+- Delegated Task 3 to full-stack-developer subagent: Make Dashboard API-driven + Add Workflow stats
+- Subagent confirmed Dashboard was already partially API-driven from Task 17, enhanced it with:
+  - Added workflowsData state with parallel fetch of both /api/stats and /api/workflows using Promise.all
+  - Created WorkflowStatsSection component with 4 summary cards + per-workflow cards
+  - Added CSS animations: feedbackPulse, pulseRing keyframes
+- Verified all changes with agent-browser: Dashboard shows "Live data" indicator, Workflows view shows 5 workflows with filters
+- Ran lint check: 0 errors
+- Attempted cron job creation: failed with 401 (authorization - known sandbox limitation)
+
+Stage Summary:
+- Phase 1 Workflow Pipeline is fully implemented and working
+- Dashboard now fetches real data from /api/stats and /api/workflows APIs
+- New WorkflowStatsSection shows summary stats (5 workflows, 4 active, 3 total executions, avg success rate)
+- 5 seeded workflows with different trigger types (manual, schedule, event, webhook, agent)
+- Workflow execution engine works with feedback loops, task context, and agent messages
+- All 3 views functional: Dashboard, Hierarchy, Workflow Pipeline
+- Lint: 0 errors
+- Cron job creation failed (401 - sandbox auth limitation)
+
+**Current Project Status:**
+
+**Architecture (Operational):**
+- Workflow model with pipeline steps, conditions, fallback/retry policies
+- StepExecution with status tracking (pending/running/completed/failed/skipped/waiting_feedback)
+- AgentMessage for inter-agent communication (request/response/feedback/error/status/context_update)
+- TaskContext grows as pipeline progresses with _history tracking
+- Feedback loops: review steps with reject → fallbackStepId routing
+
+**Database:**
+- 26 Agents across 8 role groups
+- 26 Tasks
+- 5 Workflows (4 active, 1 draft)
+- 3 Workflow Executions (all completed, 100% success rate)
+- Multiple StepExecutions and AgentMessages per execution
+
+**API Routes:**
+- /api/agents (CRUD), /api/tasks (CRUD), /api/hierarchy, /api/health, /api/seed, /api/stats
+- /api/workflows (CRUD), /api/workflows/[id] (GET/PUT/DELETE), /api/workflows/execute (POST), /api/workflows/seed (POST)
+
+**Unresolved/Next Steps:**
+- Dev server stability: process dies periodically in sandbox (needs watchdog)
+- Cron review job cannot be created (401 auth limitation)
+- Dashboard still uses some hardcoded data for FORMULA_TAXONOMY, FORMULA_AGENT_MAP, SPARKLINE_DATA, PERFORMANCE_METRICS
+- Could add more workflow types and execution scenarios
+- Could add real-time WebSocket updates for workflow execution progress
+- Could add workflow template system for quick workflow creation
