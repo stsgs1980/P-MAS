@@ -574,3 +574,26 @@ Stage Summary:
 - agent-toolkit updated with 5 files changed, 226 insertions, 11 deletions
 - Pushed to Sts8987/agent-toolkit on GitHub
 - Dev server running on port 3000
+
+---
+Task ID: 16
+Agent: Main Orchestrator
+Task: Audit P-MAS — what's on real API data vs hardcoded demo data
+
+Work Log:
+- Checked all API routes: /api/agents (200), /api/tasks (200), /api/hierarchy (200), /api/health (200), /api/seed (405 on GET, POST works)
+- Queried all API endpoints — all return real data from SQLite (26 agents, 26 tasks)
+- Read full page.tsx (1930 lines) — identified 22+ hardcoded constants
+- Read agent-hierarchy-v2.tsx — confirmed it uses /api/hierarchy for real data
+- Checked Prisma schema: Agent + Task models with hierarchy/twin relations
+- Verified DB has 26 agents, 26 tasks via Node.js Prisma query
+- Found critical discrepancy: AGENT_LIST (sidebar) has 12 agent names that don't match DB
+- Found dashboard has ZERO API calls for rendering data — all visualizations are hardcoded
+
+Stage Summary:
+- **Agent Hierarchy (v2)**: 100% API-driven — fetches /api/hierarchy, renders real data
+- **Dashboard**: 100% hardcoded — ALL KPIs, charts, metrics, sidebar, timeline are fake demo data
+- **Critical discrepancy**: 12 of 26 agent names in AGENT_LIST don't match the database
+- **API infrastructure**: Fully functional — all CRUD routes work correctly
+- **Database**: 26 agents + 26 tasks seeded, all queries return correct data
+- Key hardcoded sections: ROLE_GROUPS, QUICK_STATS, ACTIVITY_EVENTS, FORMULA_AGENT_MAP, CONNECTION_HEATMAP_DATA, TOP_PERFORMERS, SPARKLINE_DATA, PERFORMANCE_METRICS, STATUS_DISTRIBUTION, NETWORK_ACTIVITY_DATA, AGENT_LIST, SystemHealthMonitor, RecentActivityTimeline, ConnectionHeatmap, AgentPerformance, NetworkActivityChart, StatusDistributionCard, TopPerformersCard, SystemHealthCard, KPIStrip, DashboardSidebar, DashboardHeader (partially)
