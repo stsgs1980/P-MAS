@@ -1823,7 +1823,7 @@ function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups:
       <aside
         className={`
           fixed lg:relative z-40 top-0 left-0 h-full
-          w-[260px] flex-shrink-0
+          w-[280px] flex-shrink-0
           transition-transform duration-300 ease-in-out
           ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
@@ -1858,8 +1858,8 @@ function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups:
                           boxShadow: agent.status === 'active' ? `0 0 4px ${dotColor}` : 'none',
                         }}
                       />
-                      <span className="text-[11px] text-[#B0B0B0] flex-1 truncate group-hover:text-white transition-colors">{agent.name}</span>
-                      <span className="text-[8px] text-[#64748B] group-hover:text-[#B0B0B0] transition-colors">{agent.role}</span>
+                      <span className="text-[11px] text-[#B0B0B0] flex-1 truncate group-hover:text-white transition-colors" title={agent.name}>{agent.name}</span>
+                      <span className="text-[8px] text-[#64748B] group-hover:text-[#B0B0B0] transition-colors truncate max-w-[60px]">{agent.role}</span>
                       <Pencil size={8} className="opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" />
                     </div>
                   )
@@ -2171,6 +2171,27 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           </div>
         </main>
       </div>
+
+      {/* ─── Footer ─────────────────────────────────────────────────── */}
+      <footer className="flex-shrink-0 flex items-center justify-between px-5 py-2" style={{ background: '#0A0A0A', borderTop: '1px solid rgba(51,51,51,0.3)' }}>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-semibold tracking-wider" style={{ color: '#64748B' }}>P-MAS</span>
+          <span className="text-[9px]" style={{ color: '#4B5563' }}>v5.2</span>
+          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#22C55E' }} />
+            <span className="text-[8px] font-bold" style={{ color: '#22C55E' }}>ONLINE</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[9px]" style={{ color: '#4B5563' }} suppressHydrationWarning>
+            {lastUpdated ? `Updated ${lastUpdated}` : '—'}
+          </span>
+          <span className="text-[9px]" style={{ color: '#3F3F46' }}>•</span>
+          <span className="text-[9px]" style={{ color: '#4B5563' }}>26 agents</span>
+          <span className="text-[9px]" style={{ color: '#3F3F46' }}>•</span>
+          <span className="text-[9px]" style={{ color: '#4B5563' }}>Next.js 16 + Turbopack</span>
+        </div>
+      </footer>
 
       {/* ─── Agent Edit Modal ─────────────────────────────────────────────── */}
       {editingAgent && (
