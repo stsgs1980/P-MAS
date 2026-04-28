@@ -1,37 +1,11 @@
-import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { NextResponse } from 'next/server'
 
+// Health check + auto-restart hint for external watchdog
 export async function GET() {
-  const startTime = Date.now();
-
-  try {
-    // Check database connectivity
-    await db.$queryRaw`SELECT 1`;
-
-    const responseTime = Date.now() - startTime;
-
-    return NextResponse.json({
-      status: "healthy",
-      timestamp: new Date().toISOString(),
-      services: {
-        database: "connected",
-      },
-      responseTime: `${responseTime}ms`,
-    });
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
-
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        timestamp: new Date().toISOString(),
-        services: {
-          database: "disconnected",
-          error: error instanceof Error ? "Database connection failed" : "Unknown error",
-        },
-        responseTime: `${responseTime}ms`,
-      },
-      { status: 503 }
-    );
-  }
+  return NextResponse.json({
+    status: 'ok',
+    service: 'p-mas',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  })
 }
