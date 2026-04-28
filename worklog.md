@@ -1289,3 +1289,122 @@ Stage Summary:
 - Feedback loops implemented in review steps
 - TaskContext accumulates across pipeline steps
 - All workflows connected to real agents from the database
+
+---
+Task ID: 2-3-4-5-6
+Agent: full-stack-developer
+Task: Enhance WorkflowPipeline component with full-page layout, CRUD, TaskContext visualization, data contracts, and feedback loops
+
+Work Log:
+- Read worklog.md, page.tsx, workflow-pipeline.tsx, all API routes (workflows, execute, seed, [id]), Prisma schema
+- Read client-fetch.ts to understand fetchWithRetry usage
+- Completely rewrote workflow-pipeline.tsx (~1000→~1200 lines) with all 5 feature enhancements:
+
+1. **Full-Page Layout Support** (fullPage, onBack, onOpenHierarchy props):
+   - When fullPage=true: renders full page with W1280 centered layout
+   - Top header bar (48px, dark #0D0D0D, top cyan accent line)
+   - Left section: Back button (ArrowLeft) + P-MAS logo + "Workflow Pipeline" title
+   - Center: Search bar to filter workflows by name/tags/description
+   - Right: Hierarchy button + Refresh button
+   - Collapsible LEFT SIDEBAR (280px/48px) with toggle button
+   - Sidebar sections: Pipeline Stats (total/active/draft/steps/executions/success rate), Filter by Status (active/draft/paused/archived), Filter by Trigger Type (manual/event/schedule/webhook/agent), Action Types legend (color-coded with icons), Quick Actions (Seed Demo Workflows)
+   - Main area: workflow cards in responsive grid + "+ New Workflow" button
+   - When fullPage=false (embedded in dashboard): keeps existing card wrapper layout
+   - Added New/Seed/Refresh buttons to embedded mode header too
+
+2. **Workflow CRUD Operations**:
+   - CreateWorkflowDialog: full-screen modal with form fields (Name, Description, Trigger Type select, Tags comma-separated, Pipeline Steps dynamic list with add/remove step rows, each step has Name/RoleGroup dropdown/Action dropdown/Timeout)
+   - Creates via POST /api/workflows, validates required fields, shows toast notifications
+   - Delete workflow: trash icon button on each WorkflowCard, shows DeleteConfirmDialog with warning message
+   - Confirmed delete calls DELETE /api/workflows/[id]
+   - Seed Demo Workflows button: calls POST /api/workflows/seed, shows loading state while seeding
+
+3. **TaskContext Visualization in Execution Modal**:
+   - Added TaskContextTimeline component after pipeline visualization and before step details
+   - Parses execution's taskContext JSON, extracts _history array
+   - Shows visual timeline: each entry with step name, agent name, action badge, timestamp, status
+   - Connected by vertical line (timeline style)
+   - Color-coded: completed=green dots, feedback_requested=amber dots
+   - Feedback loop entries highlighted with CornerDownLeft icon + "Feedback loop → back to previous step" text
+   - Shows count of entries and feedback loops in collapsible header
+   - Max height 64px with scroll for long histories
+
+4. **Data Contract Visualization**:
+   - In ExpandedPipelineView: added "Data Contracts" toggle button
+   - When expanded: shows DataContractCard for each pair of consecutive steps
+   - Each card: expandable with prev step outputSchema + next step inputSchema
+   - Compatibility check: green check (compatible, overlapping properties), yellow warning (unknown), red alert (incompatible)
+   - Shows JSON schema preview for both input and output
+
+5. **Enhanced Feedback Loop Visualization**:
+   - FeedbackLoopArrow component: curved dashed SVG arrow from step with fallbackStepId back to the fallback step
+   - Labeled "feedback" in amber (#EAB308)
+   - In ExpandedPipelineView: feedback arrows rendered above the pipeline flow
+   - In ExecutionModal: feedback arrows animate with feedbackPulse CSS keyframe when step has waiting_feedback status
+   - Feedback loop entries also highlighted in action type legend with CornerDownLeft icon
+
+- Updated ACTION_COLORS to use only cyan/gray/amber palette (removed purple/violet/orange/green):
+  - process=#06B6D4, review=#EAB308, transform=#22D3EE, delegate=#0891B2, broadcast=#0E7490, decision=#155E75
+- Added new icons: ArrowLeft, Search, Trash2, Plus, Network, ChevronLeft, Beaker, CornerDownLeft, FileJson, AlertCircle, CheckCircle, CircleDot, ArrowUpRight, Activity, AlertTriangle, LayoutDashboard, Database, Target, RotateCcw, ArrowLeftRight
+- Added SidebarSection reusable component for sidebar collapsible sections
+- Added ROLE_GROUP_OPTIONS (8 groups) and ACTION_OPTIONS constants for create dialog
+- Added WorkflowPipelineProps interface with fullPage, onBack, onOpenHierarchy
+- Added filter state: searchQuery, filterStatus, filterTrigger
+- Added CRUD state: showCreateDialog, deleteTarget, seeding
+- Computed pipelineStats from workflows array (total/active/draft/totalSteps/totalExecutions/avgSuccessRate)
+- All API calls use fetchWithRetry from @/lib/client-fetch
+- All notifications use toast from sonner
+- Monochrome cyan color scheme maintained throughout
+- Lint: 0 errors
+- Dev server: compiling and serving successfully
+
+Stage Summary:
+- WorkflowPipeline fully enhanced with 5 major feature areas
+- Full-page layout with sidebar, header bar, search, filters
+- CRUD: Create dialog with dynamic steps, Delete with confirmation, Seed demo workflows
+- TaskContext timeline with visual history and feedback loop highlighting
+- Data Contract visualization with schema compatibility checks
+- Feedback loop arrows with animation on active loops
+- Both fullPage and embedded modes supported
+- No lint errors, dev server running
+
+---
+Task ID: 18
+Agent: Main Orchestrator
+Task: Implement Phase 1 Operational Architecture - Workflow Pipeline UI
+
+Work Log:
+- Restarted dev server (502 Bad Gateway issue from previous session)
+- Verified backend Phase 1 is complete: Prisma schema has Workflow, PipelineStep, WorkflowExecution, StepExecution, AgentMessage models
+- Verified API routes exist: GET/POST /api/workflows, GET/PUT/DELETE /api/workflows/[id], POST /api/workflows/execute, POST /api/workflows/seed
+- Verified 5 seeded workflows with 26 total pipeline steps are in the database
+- Added 'workflows' to activeView type in page.tsx (was only 'dashboard' | 'hierarchy')
+- Added WorkflowPipeline full-page view with onBack and onOpenHierarchy props
+- Added "Workflows" navigation button in DashboardHeader (next to Hierarchy button)
+- Updated DashboardPanel to accept and pass onOpenWorkflows prop
+- Delegated WorkflowPipeline component enhancement to full-stack-developer subagent
+
+Subagent completed:
+- Full-page layout with header (48px), collapsible sidebar (280px/48px), and main content area
+- Sidebar with Pipeline Stats, Filter by Status, Filter by Trigger, Action Types legend, Quick Actions (Seed Demo)
+- CreateWorkflowDialog for creating new workflows (name, description, trigger type, tags, dynamic step list)
+- Delete workflow with confirmation dialog
+- Seed Demo Workflows button
+- TaskContextTimeline visualization in ExecutionModal (parses _history array, shows vertical timeline)
+- DataContractCard visualization between pipeline steps (shows input/output schemas with compatibility check)
+- FeedbackLoopArrow with curved dashed SVG arrow in amber (#EAB308) and pulsing animation
+- Lint: 0 errors
+
+Stage Summary:
+- Phase 1 Operational Architecture is now FULLY IMPLEMENTED:
+  - Backend: Workflow, PipelineStep, WorkflowExecution, StepExecution, AgentMessage models with full CRUD + execute API
+  - Frontend: Full-page Workflow Pipeline view with sidebar, filters, CRUD, TaskContext visualization, data contracts, feedback loops
+  - Navigation: "Workflows" button in header alongside "Hierarchy"
+  - 5 seeded demo workflows (Development Pipeline, Analysis & Reporting, Incident Response, Knowledge Update, Agent Coordination)
+- Lint passes with 0 errors
+- Dev server instability (sandbox behavior) causes intermittent 502s - not a code issue
+
+Unresolved:
+- Dev server process dies frequently (sandbox limitation) - requires periodic restart
+- FIT ON centering in Hierarchy view still broken (deferred)
+- ROADMAP.md not yet created (deferred)

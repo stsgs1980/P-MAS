@@ -18,13 +18,28 @@ const WorkflowPipeline = dynamic(
 )
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<'dashboard' | 'hierarchy'>('dashboard')
+  const [activeView, setActiveView] = useState<'dashboard' | 'hierarchy' | 'workflows'>('dashboard')
 
   if (activeView === 'hierarchy') {
     return <AgentHierarchy onBack={() => setActiveView('dashboard')} />
   }
 
-  return <DashboardPanel onOpenHierarchy={() => setActiveView('hierarchy')} />
+  if (activeView === 'workflows') {
+    return (
+      <WorkflowPipeline
+        onBack={() => setActiveView('dashboard')}
+        onOpenHierarchy={() => setActiveView('hierarchy')}
+        fullPage
+      />
+    )
+  }
+
+  return (
+    <DashboardPanel
+      onOpenHierarchy={() => setActiveView('hierarchy')}
+      onOpenWorkflows={() => setActiveView('workflows')}
+    />
+  )
 }
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -1686,7 +1701,7 @@ function KPIStrip({ quickStats }: { quickStats?: typeof QUICK_STATS }) {
 
 // ─── Dashboard Header ────────────────────────────────────────────────────────
 
-function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh, wsConnected }: { onOpenHierarchy: () => void; onToggleSidebar: () => void; onRefresh?: () => void; wsConnected?: boolean }) {
+function DashboardHeader({ onOpenHierarchy, onOpenWorkflows, onToggleSidebar, onRefresh, wsConnected }: { onOpenHierarchy: () => void; onOpenWorkflows?: () => void; onToggleSidebar: () => void; onRefresh?: () => void; wsConnected?: boolean }) {
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [refreshing, setRefreshing] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -1796,12 +1811,21 @@ function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh, wsConnec
               </div>
             )}
           </div>
+          {onOpenWorkflows && (
+            <button
+              onClick={onOpenWorkflows}
+              className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
+              style={{ background: 'rgba(8,145,178,0.12)', border: '1px solid rgba(8,145,178,0.3)', color: '#0891B2' }}
+            >
+              <Workflow className="w-3 h-3 inline mr-1" />Workflows
+            </button>
+          )}
           <button
             onClick={onOpenHierarchy}
             className="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all duration-200 hover:scale-105"
             style={{ background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.3)', color: '#06B6D4' }}
           >
-            Hierarchy View
+            Hierarchy
           </button>
         </div>
       </div>
@@ -1880,7 +1904,7 @@ function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups:
 
 // ─── Dashboard Panel ──────────────────────────────────────────────────────────
 
-function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
+function DashboardPanel({ onOpenHierarchy, onOpenWorkflows }: { onOpenHierarchy: () => void; onOpenWorkflows?: () => void }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [statsData, setStatsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -2124,6 +2148,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
 
       <DashboardHeader
         onOpenHierarchy={onOpenHierarchy}
+        onOpenWorkflows={onOpenWorkflows}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onRefresh={handleRefresh}
         wsConnected={wsConnected}
