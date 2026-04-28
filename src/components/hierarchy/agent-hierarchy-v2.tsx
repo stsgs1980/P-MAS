@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { io as socketIO, Socket } from 'socket.io-client'
 import {
   ReactFlow,
   Controls,
@@ -92,9 +93,67 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [newAgentStatus, setNewAgentStatus] = useState('active')
   const [newAgentSkills, setNewAgentSkills] = useState('')
 
-  // ─── Simulate status transitions ───────────────────────────────────────
+  // ─── WebSocket connection for real-time updates ────────────────────────
+  const [wsConnected, setWsConnected] = useState(false)
+  const socketRef = useRef<Socket | null>(null)
+
   useEffect(() => {
-    if (agents.length === 0) return
+    const socket = socketIO('/?XTransformPort=3003', {
+      transports: ['websocket', 'polling'],
+      forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      timeout: 10000,
+    })
+    socketRef.current = socket
+
+    socket.on('connect', () => {
+      console.log('[ws] connected')
+      setWsConnected(true)
+    })
+
+    socket.on('disconnect', () => {
+      console.log('[ws] disconnected')
+      setWsConnected(false)
+    })
+
+    socket.on('agents:snapshot', (data: { agents: AgentData[] }) => {
+      if (data.agents && data.agents.length > 0) {
+        setAgents(data.agents)
+      }
+    })
+
+    socket.on('agent:status', (data: { agentId: string; newStatus: string; oldStatus: string; timestamp: string }) => {
+      setAgents(prev => prev.map(a => a.id === data.agentId ? { ...a, status: data.newStatus } : a))
+    })
+
+    socket.on('agent:created', (data: { agent: AgentData }) => {
+      setAgents(prev => {
+        if (prev.some(a => a.id === data.agent.id)) return prev
+        return [...prev, data.agent]
+      })
+      fetchAgents() // refetch to get updated connections
+    })
+
+    socket.on('agent:updated', (data: { agent: AgentData }) => {
+      setAgents(prev => prev.map(a => a.id === data.agent.id ? { ...a, ...data.agent } : a))
+    })
+
+    socket.on('agent:deleted', (data: { agentId: string }) => {
+      setAgents(prev => prev.filter(a => a.id !== data.agentId))
+    })
+
+    return () => {
+      socket.disconnect()
+      socketRef.current = null
+    }
+  }, [])
+
+  // ─── Fallback: simulate status transitions when WebSocket is disconnected ─
+  useEffect(() => {
+    if (wsConnected || agents.length === 0) return
     const statusCycle = ['active', 'idle', 'paused', 'standby'] as const
     const interval = setInterval(() => {
       const count = 1 + Math.floor(Math.random() * 2)
@@ -111,7 +170,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
       })
     }, 15000)
     return () => clearInterval(interval)
-  }, [agents.length])
+  }, [wsConnected, agents.length])
 
   // ─── Connections (from API, with client-side fallback) ─────────────────
   const [apiConnections, setApiConnections] = useState<ConnectionData[]>([])
@@ -210,6 +269,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
         data: {
           edgeType: conn.type,
           strength: conn.strength,
+          flowAnimation: true,
         },
       }))
   }, [connections, visibleEdgeTypes])
@@ -399,16 +459,19 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             style={{
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '3px 8px', borderRadius: 10,
-              background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)',
-              fontSize: 9, fontWeight: 700, color: '#06B6D4',
+              background: wsConnected ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)',
+              border: wsConnected ? '1px solid rgba(34,197,94,0.15)' : '1px solid rgba(239,68,68,0.15)',
+              fontSize: 9, fontWeight: 700,
+              color: wsConnected ? '#22C55E' : '#EF4444',
             }}
           >
             <div style={{
-              width: 5, height: 5, borderRadius: '50%', background: '#06B6D4',
-              boxShadow: '0 0 4px #06B6D4',
+              width: 5, height: 5, borderRadius: '50%',
+              background: wsConnected ? '#22C55E' : '#EF4444',
+              boxShadow: wsConnected ? '0 0 4px #22C55E' : '0 0 4px #EF4444',
               animation: 'pulse 2s ease-in-out infinite',
             }} />
-            LIVE
+            {wsConnected ? 'LIVE' : 'OFFLINE'}
           </div>
           <button
             onClick={() => fetchAgents()}
@@ -762,6 +825,13 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
           agent={selectedAgent}
           allAgents={agents}
           onClose={() => setSelectedAgentId(null)}
+          onAgentUpdated={(updatedAgent) => {
+            setAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a))
+          }}
+          onAgentDeleted={(agentId) => {
+            setAgents(prev => prev.filter(a => a.id !== agentId))
+            setSelectedAgentId(null)
+          }}
         />
       </div>
 

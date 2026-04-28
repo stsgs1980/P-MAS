@@ -779,3 +779,133 @@ Stage Summary:
 - Focus/Fit/Zoom controls all work with ReactFlow API
 - Layers toggle and Layout re-calculate buttons added to toolbar
 - L0-L4 labels now show layer badge, full name, active/total agent count, and separator line
+
+---
+Task ID: 3
+Agent: full-stack-developer
+Task: Implement Connection Flow Animation for P-MAS hierarchy edges
+
+Work Log:
+- Read current agent-edge.tsx (77 lines), types.ts (349 lines), agent-hierarchy-v2.tsx (954 lines)
+- Identified EDGE_CONFIG color definitions and existing BaseEdge rendering logic
+- Modified agent-edge.tsx to add animated flow particles:
+  - Added EDGE_DURATIONS constant: command=3s, sync=5s, twin=4s, delegate=3.5s, supervise=6s, broadcast=2.5s
+  - Added PARTICLES array: 3 particles per edge with staggered offsets (0, 0.33, 0.66) and size multipliers (1, 0.85, 0.7)
+  - Added flowAnimation boolean prop (default true) read from data
+  - Added SVG <defs> with per-edge glow filters (feGaussianBlur stdDeviation=2 for main, stdDeviation=4 for trail)
+  - Added 3 animated particles per edge: trailing glow circle (2.5x radius, opacity 0.15, diffuse blur) + main particle circle (radius scaled by strength, opacity 0.7, glow filter)
+  - Each particle uses <animateMotion path={edgePath}> to follow the exact BaseEdge path
+  - Added subtle opacity pulsation via <animate attributeName="opacity" values="0.5;0.85;0.5">
+  - Particle radius scales with connection strength: baseRadius = 2 + strength * 0.5
+  - Each particle has unique key: `${id}-particle-${i}` to avoid SVG animation conflicts
+- Updated agent-hierarchy-v2.tsx: added `flowAnimation: true` to edge data in flowEdges useMemo
+- Types.ts NOT modified (as instructed)
+- Existing BaseEdge rendering preserved exactly as-is
+- TypeScript compilation: 0 errors in our files
+- Lint: 0 errors in project files (only pre-existing templates/ error)
+- Dev server: compiling and serving successfully (GET / 200)
+
+Stage Summary:
+- Connection flow animation implemented using SVG native <animateMotion> (GPU-accelerated, no React re-renders)
+- 3 glowing particles per edge flow from source to target along the edge path
+- Each particle has a trailing glow (diffuse blur) + main glow (sharper blur)
+- Animation speeds vary by edge type (command fastest at 3s, supervise slowest at 6s)
+- Particle size scales with connection strength for visual differentiation
+- flowAnimation boolean prop allows toggling animation per edge
+- All changes are additive — existing BaseEdge and EdgeLabelRenderer untouched
+
+---
+
+## Task 5: Implement Agent Editing from UI — 2026-03-05
+
+### Changes Made:
+
+#### 1. API: PUT endpoint added to /api/agents/[id]/route.ts
+- Added `PUT` handler alongside existing `PATCH` and `DELETE`
+- PUT performs full replacement of: name, role, roleGroup, status, formula, skills, description
+- Returns updated agent with `include: { children: true, tasks: true }`
+- Verifies agent existence before update (404 if not found)
+
+#### 2. DetailPanel (panels.tsx) — Edit Mode
+- Added edit mode toggle via Pencil icon button in header (next to close button)
+- Edit mode shows a full form with:
+  - Name: text input
+  - Role: text input
+  - Role Group: dropdown (ROLE_ORDER options)
+  - Status: dropdown (active, idle, paused, standby, error, offline)
+  - Formula: dropdown (FORMULA_DESC keys)
+  - Skills: comma-separated text input
+  - Description: textarea
+- Action buttons:
+  - Save (cyan accent): calls PUT /api/agents/[id], calls onAgentUpdated callback
+  - Cancel (gray): reverts to view mode
+  - Delete (red, trash icon): shows confirmation step first
+- Delete confirmation: shows AlertTriangle icon, agent name, warning text, Confirm/Keep buttons
+- Added props: `onAgentUpdated?: (agent: AgentData) => void`, `onAgentDeleted?: (agentId: string) => void`
+- Auto-resets edit state when agent.id changes
+- Visual design: dark theme (#0A0A0A background), #111 inputs, cyan save button, red delete button
+
+#### 3. agent-hierarchy-v2.tsx — Callbacks
+- Passed `onAgentUpdated` callback that updates agent in state array
+- Passed `onAgentDeleted` callback that removes agent from state and clears selection
+
+#### 4. Dashboard Sidebar Edit (page.tsx)
+- Added `onAgentClick` prop to DashboardSidebar
+- Agent items now show Pencil icon on hover
+- Clicking an agent opens an Edit Modal (similar to Add Agent modal)
+- Edit Modal is pre-filled with agent's current data from API
+- Save calls PUT /api/agents/[id], shows toast, refreshes data
+- Delete with confirmation step (calls DELETE /api/agents/[id])
+- Added state: editingAgent, editSaving, editDeleting, showDeleteConfirm, editForm
+- Uses fetchWithRetry for all API calls
+
+### New Imports:
+- panels.tsx: useState, useEffect, Pencil, Trash2, Save, RotateCcw, AlertTriangle, fetchWithRetry
+- page.tsx: Pencil, Trash2, Save, AlertTriangle (added to lucide imports)
+
+### Verification:
+- ESLint: 0 errors in all modified files
+- Dev server: running, GET / 200 OK
+- TypeScript compilation: no errors
+
+---
+Task ID: 4
+Agent: full-stack-developer
+Task: Implement WebSocket Real-Time Updates for P-MAS
+
+Work Log:
+- Created ws-service mini-service at `/home/z/my-project/mini-services/ws-service/`
+  - package.json with socket.io dependency and `bun --hot` dev script
+  - index.ts: Bun + socket.io server on port 3003, reads from shared SQLite DB
+  - On client connect: sends `agents:snapshot` with all agents from DB
+  - Every 10-15 seconds: randomly changes 1-2 agent statuses and broadcasts `agent:status` events
+  - Supports `agent:change-status`, `agent:created`, `agent:updated`, `agent:deleted` events
+  - Uses Bun's native SQLite (`bun:sqlite`) to read/write agent data
+  - Graceful shutdown handlers for SIGTERM/SIGINT
+- Installed `socket.io-client` in main project
+- Modified `agent-hierarchy-v2.tsx`:
+  - Added WebSocket connection with `io('/?XTransformPort=3003')`
+  - On `agents:snapshot`: sets all agents from server
+  - On `agent:status`: updates matching agent status in state
+  - On `agent:created`: adds agent to state and refetches connections
+  - On `agent:updated`: updates matching agent in state
+  - On `agent:deleted`: removes agent from state
+  - Changed LIVE indicator: green "LIVE" when wsConnected, red "OFFLINE" when disconnected
+  - Kept existing `setInterval` as FALLBACK — only active when WebSocket is disconnected
+- Modified `page.tsx` (Dashboard):
+  - Added WebSocket connection in DashboardPanel with `io('/?XTransformPort=3003')`
+  - On any agent change event: refetches `/api/stats` to update dashboard data
+  - Added `wsConnected` prop to DashboardHeader
+  - Changed header badge from hardcoded "ONLINE" (cyan) to dynamic "LIVE" (green) / "OFFLINE" (red)
+  - Uses ref pattern (`fetchStatsRef`) to avoid stale closure in WebSocket handlers
+- Fixed SQLite option: removed `readonly: false` (not supported by Bun's SQLite, caused SQLITE_MISUSE error)
+- Removed unnecessary eslint-disable directives (warnings)
+- Lint: 0 errors in modified files (only pre-existing template error remains)
+
+Stage Summary:
+- WebSocket mini-service running on port 3003 with status simulation
+- Both Dashboard and Hierarchy views show LIVE/OFFLINE indicator based on WS connection
+- Real-time status updates: agents change status every 10-15 seconds via server-side simulation
+- Fallback: client-side setInterval simulation activates only when WebSocket is disconnected
+- All 5 event types supported: agent:status, agent:created, agent:updated, agent:deleted, agents:snapshot
+- Connection URL: `io('/?XTransformPort=3003')` — follows Caddy gateway pattern

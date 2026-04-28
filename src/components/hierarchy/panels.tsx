@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Brain,
   Hexagon,
@@ -9,8 +9,14 @@ import {
   Users,
   Activity,
   List,
+  Pencil,
+  Trash2,
+  Save,
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react'
 import { ROLE_CONFIG, ROLE_ORDER, STATUS_COLORS, FORMULA_DESC, type AgentData, type EdgeType } from './types'
+import { fetchWithRetry } from '@/lib/client-fetch'
 
 // ─── Group Sidebar ══════════════════════════════════════════════════════════════
 
@@ -175,17 +181,151 @@ function StatCard({ value, label, color }: { value: number; label: string; color
   )
 }
 
+// ─── Edit Mode Input Styles ══════════════════════════════════════════════════
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '6px 10px',
+  background: '#111',
+  border: '1px solid rgba(51,51,51,0.4)',
+  color: '#fff',
+  fontSize: 11,
+  borderRadius: 5,
+  outline: 'none',
+}
+
+const selectStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '6px 10px',
+  background: '#111',
+  border: '1px solid rgba(51,51,51,0.4)',
+  color: '#fff',
+  fontSize: 11,
+  borderRadius: 5,
+  outline: 'none',
+  appearance: 'auto' as any,
+}
+
+const labelStyle: React.CSSProperties = {
+  fontSize: 10,
+  color: '#B0B0B0',
+  fontWeight: 600,
+  textTransform: 'uppercase' as const,
+  letterSpacing: 0.5,
+  display: 'block',
+  marginBottom: 3,
+}
+
 // ─── Detail Panel ═══════════════════════════════════════════════════════════════
 
 export function DetailPanel({
   agent,
   allAgents,
   onClose,
+  onAgentUpdated,
+  onAgentDeleted,
 }: {
   agent: AgentData | null
   allAgents: AgentData[]
   onClose: () => void
+  onAgentUpdated?: (agent: AgentData) => void
+  onAgentDeleted?: (agentId: string) => void
 }) {
+  const [editMode, setEditMode] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // Edit form state
+  const [editName, setEditName] = useState('')
+  const [editRole, setEditRole] = useState('')
+  const [editRoleGroup, setEditRoleGroup] = useState('')
+  const [editStatus, setEditStatus] = useState('')
+  const [editFormula, setEditFormula] = useState('')
+  const [editSkills, setEditSkills] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+
+  // Reset edit state when agent changes or entering edit mode
+  useEffect(() => {
+    if (agent) {
+      setEditName(agent.name)
+      setEditRole(agent.role)
+      setEditRoleGroup(agent.roleGroup)
+      setEditStatus(agent.status)
+      setEditFormula(agent.formula)
+      setEditSkills(agent.skills || '')
+      setEditDescription(agent.description || '')
+    }
+    setEditMode(false)
+    setShowDeleteConfirm(false)
+  }, [agent?.id])
+
+  const enterEditMode = () => {
+    if (!agent) return
+    setEditName(agent.name)
+    setEditRole(agent.role)
+    setEditRoleGroup(agent.roleGroup)
+    setEditStatus(agent.status)
+    setEditFormula(agent.formula)
+    setEditSkills(agent.skills || '')
+    setEditDescription(agent.description || '')
+    setEditMode(true)
+    setShowDeleteConfirm(false)
+  }
+
+  const cancelEdit = () => {
+    setEditMode(false)
+    setShowDeleteConfirm(false)
+  }
+
+  const handleSave = async () => {
+    if (!agent) return
+    setSaving(true)
+    try {
+      const res = await fetchWithRetry(`/api/agents/${agent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          role: editRole,
+          roleGroup: editRoleGroup,
+          status: editStatus,
+          formula: editFormula,
+          skills: editSkills,
+          description: editDescription,
+        }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        onAgentUpdated?.(updated)
+        setEditMode(false)
+      }
+    } catch {
+      // Silently fail — could add toast later
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!agent) return
+    setDeleting(true)
+    try {
+      const res = await fetchWithRetry(`/api/agents/${agent.id}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        onAgentDeleted?.(agent.id)
+        setEditMode(false)
+        setShowDeleteConfirm(false)
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (!agent) {
     return (
       <div
@@ -218,6 +358,263 @@ export function DetailPanel({
   const twin = agent.twinId ? allAgents.find(a => a.id === agent.twinId) : null
   const children = allAgents.filter(a => a.parentId === agent.id)
 
+  // ─── Edit Mode ────────────────────────────────────────────────────────────
+  if (editMode) {
+    return (
+      <div
+        style={{
+          width: 280,
+          flexShrink: 0,
+          background: '#0A0A0A',
+          borderLeft: '1px solid rgba(51,51,51,0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+        }}
+        className="terrain-scroll"
+      >
+        {/* Header */}
+        <div style={{ padding: 16, position: 'relative', borderBottom: '1px solid rgba(51,51,51,0.2)' }}>
+          <div
+            style={{
+              height: 2,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              background: `linear-gradient(90deg, transparent, ${config.color}, transparent)`,
+              opacity: 0.6,
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  background: `rgba(${config.colorRgb}, 0.1)`,
+                  border: `1px solid rgba(${config.colorRgb}, 0.2)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Pencil size={12} color={config.color} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: config.color }}>Edit Agent</span>
+            </div>
+            <button
+              onClick={cancelEdit}
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 5,
+                border: '1px solid rgba(51,51,51,0.4)',
+                background: 'rgba(255,255,255,0.03)',
+                color: '#B0B0B0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+
+        {/* Edit Form */}
+        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+          {/* Name */}
+          <div>
+            <label style={labelStyle}>Name</label>
+            <input
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="Agent name"
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Role */}
+          <div>
+            <label style={labelStyle}>Role</label>
+            <input
+              value={editRole}
+              onChange={e => setEditRole(e.target.value)}
+              placeholder="Agent role"
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Role Group */}
+          <div>
+            <label style={labelStyle}>Role Group</label>
+            <select
+              value={editRoleGroup}
+              onChange={e => setEditRoleGroup(e.target.value)}
+              style={selectStyle}
+            >
+              {ROLE_ORDER.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label style={labelStyle}>Status</label>
+            <select
+              value={editStatus}
+              onChange={e => setEditStatus(e.target.value)}
+              style={selectStyle}
+            >
+              {['active', 'idle', 'paused', 'standby', 'error', 'offline'].map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Formula */}
+          <div>
+            <label style={labelStyle}>Cognitive Formula</label>
+            <select
+              value={editFormula}
+              onChange={e => setEditFormula(e.target.value)}
+              style={selectStyle}
+            >
+              {Object.keys(FORMULA_DESC).map(f => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Skills */}
+          <div>
+            <label style={labelStyle}>Skills (comma-separated)</label>
+            <input
+              value={editSkills}
+              onChange={e => setEditSkills(e.target.value)}
+              placeholder="e.g. analysis,reporting"
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label style={labelStyle}>Description</label>
+            <textarea
+              value={editDescription}
+              onChange={e => setEditDescription(e.target.value)}
+              placeholder="Agent description..."
+              rows={3}
+              style={{
+                ...inputStyle,
+                resize: 'vertical' as const,
+                minHeight: 60,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && (
+          <div style={{
+            padding: '10px 16px',
+            background: 'rgba(239,68,68,0.06)',
+            borderTop: '1px solid rgba(239,68,68,0.2)',
+            borderBottom: '1px solid rgba(239,68,68,0.2)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <AlertTriangle size={12} color="#EF4444" />
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#EF4444' }}>
+                Delete &quot;{agent.name}&quot;?
+              </span>
+            </div>
+            <div style={{ fontSize: 9, color: '#B0B0B0', marginBottom: 8 }}>
+              This action cannot be undone. The agent and its tasks will be permanently removed.
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  flex: 1, padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                  background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+                  color: '#EF4444', cursor: deleting ? 'wait' : 'pointer',
+                  opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1, padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                  background: '#1A1A1A', border: '1px solid rgba(51,51,51,0.4)',
+                  color: '#B0B0B0', cursor: 'pointer',
+                }}
+              >
+                Keep
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div style={{
+          padding: '12px 16px',
+          borderTop: '1px solid rgba(51,51,51,0.2)',
+          display: 'flex',
+          gap: 6,
+        }}>
+          <button
+            onClick={handleSave}
+            disabled={saving || !editName.trim()}
+            style={{
+              flex: 1, padding: '6px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+              background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.3)',
+              color: '#06B6D4', cursor: saving ? 'wait' : 'pointer',
+              opacity: !editName.trim() || saving ? 0.5 : 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              transition: 'opacity 0.15s',
+            }}
+          >
+            <Save size={10} />
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={cancelEdit}
+            style={{
+              flex: 1, padding: '6px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+              background: '#1A1A1A', border: '1px solid rgba(51,51,51,0.4)',
+              color: '#B0B0B0', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              transition: 'background 0.15s',
+            }}
+          >
+            <RotateCcw size={10} />
+            Cancel
+          </button>
+          {!showDeleteConfirm && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{
+                padding: '6px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                color: '#EF4444', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 0.15s',
+              }}
+            >
+              <Trash2 size={10} />
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ─── View Mode ────────────────────────────────────────────────────────────
   return (
     <div
       style={{
@@ -265,23 +662,46 @@ export function DetailPanel({
               <div style={{ fontSize: 11, color: config.color, fontWeight: 500 }}>{agent.role}</div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 5,
-              border: '1px solid rgba(51,51,51,0.4)',
-              background: 'rgba(255,255,255,0.03)',
-              color: '#B0B0B0',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <X size={12} />
-          </button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              onClick={enterEditMode}
+              title="Edit agent"
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 5,
+                border: '1px solid rgba(51,51,51,0.4)',
+                background: 'rgba(255,255,255,0.03)',
+                color: '#B0B0B0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'color 0.15s, border-color 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#06B6D4'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.3)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#B0B0B0'; e.currentTarget.style.borderColor = 'rgba(51,51,51,0.4)' }}
+            >
+              <Pencil size={11} />
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 5,
+                border: '1px solid rgba(51,51,51,0.4)',
+                background: 'rgba(255,255,255,0.03)',
+                color: '#B0B0B0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <X size={12} />
+            </button>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
           <span

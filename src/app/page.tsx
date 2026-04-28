@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search, Menu } from 'lucide-react'
+import { io as socketIO, Socket } from 'socket.io-client'
+import { Brain, Target, Shield, Zap, Database, Activity, Network, Sparkles, ArrowRight, ArrowLeftRight, Diamond, Eye, Megaphone, Workflow, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Cpu, HardDrive, Wifi, ArrowUp, Grid3X3, BarChart3, Clock, CheckCircle2, ListChecks, RotateCcw, BookOpen, Download, X, Bell, RefreshCw, Search, Menu, Pencil, Trash2, Save, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { fetchWithRetry } from '@/lib/client-fetch'
 
@@ -1680,7 +1681,7 @@ function KPIStrip({ quickStats }: { quickStats?: typeof QUICK_STATS }) {
 
 // ─── Dashboard Header ────────────────────────────────────────────────────────
 
-function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh }: { onOpenHierarchy: () => void; onToggleSidebar: () => void; onRefresh?: () => void }) {
+function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh, wsConnected }: { onOpenHierarchy: () => void; onToggleSidebar: () => void; onRefresh?: () => void; wsConnected?: boolean }) {
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [refreshing, setRefreshing] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -1726,12 +1727,12 @@ function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh }: { onOp
           </div>
           <div className="flex items-center gap-2">
             <h1 className="text-white font-bold text-sm tracking-wide">P-MAS</h1>
-            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)' }}>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: wsConnected ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: wsConnected ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(239,68,68,0.2)' }}>
               <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#06B6D4' }} />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: '#06B6D4' }} />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: wsConnected ? '#22C55E' : '#EF4444' }} />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: wsConnected ? '#22C55E' : '#EF4444' }} />
               </span>
-              <span className="text-[8px] font-bold tracking-wider" style={{ color: '#06B6D4' }}>ONLINE</span>
+              <span className="text-[8px] font-bold tracking-wider" style={{ color: wsConnected ? '#22C55E' : '#EF4444' }}>{wsConnected ? 'LIVE' : 'OFFLINE'}</span>
             </div>
             <span className="text-slate-600 text-[10px] hidden md:inline">Multi-Agent System</span>
           </div>
@@ -1805,7 +1806,7 @@ function DashboardHeader({ onOpenHierarchy, onToggleSidebar, onRefresh }: { onOp
 
 // ─── Dashboard Sidebar ───────────────────────────────────────────────────────
 
-function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups: roleGroupsProp }: { open: boolean; onClose: () => void; agentListProp?: typeof AGENT_LIST; roleGroupsProp?: typeof ROLE_GROUPS }) {
+function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups: roleGroupsProp, onAgentClick }: { open: boolean; onClose: () => void; agentListProp?: typeof AGENT_LIST; roleGroupsProp?: typeof ROLE_GROUPS; onAgentClick?: (agent: any) => void }) {
   const roleGroupsData = roleGroupsProp || ROLE_GROUPS
   const agentsList = agentListProp || AGENT_LIST
   const agentsByGroup = roleGroupsData.map(group => ({
@@ -1847,7 +1848,8 @@ function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups:
                   return (
                     <div
                       key={agent.name}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-white/[0.03]"
+                      onClick={() => onAgentClick?.(agent)}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors duration-150 hover:bg-white/[0.05] group"
                     >
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
@@ -1856,8 +1858,9 @@ function DashboardSidebar({ open, onClose, agentList: agentListProp, roleGroups:
                           boxShadow: agent.status === 'active' ? `0 0 4px ${dotColor}` : 'none',
                         }}
                       />
-                      <span className="text-[11px] text-[#B0B0B0] flex-1 truncate">{agent.name}</span>
-                      <span className="text-[8px] text-[#64748B]">{agent.role}</span>
+                      <span className="text-[11px] text-[#B0B0B0] flex-1 truncate group-hover:text-white transition-colors">{agent.name}</span>
+                      <span className="text-[8px] text-[#64748B] group-hover:text-[#B0B0B0] transition-colors">{agent.role}</span>
+                      <Pencil size={8} className="opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" />
                     </div>
                   )
                 })}
@@ -1877,6 +1880,14 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
   const [statsData, setStatsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string>('')
+  const [editingAgent, setEditingAgent] = useState<any>(null)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editDeleting, setEditDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', role: '', roleGroup: '', status: '', formula: '', skills: '', description: '' })
+  const [wsConnected, setWsConnected] = useState(false)
+  const socketRef = useRef<Socket | null>(null)
+  const fetchStatsRef = useRef<() => Promise<void>>(async () => {})
 
   // ── Data Fetching ──────────────────────────────────────────────────────────
   const fetchStats = useCallback(async () => {
@@ -1893,11 +1904,63 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
     }
   }, [])
 
+  // Keep ref in sync
+  fetchStatsRef.current = fetchStats
+
   useEffect(() => {
     fetchStats()
     const now = new Date()
     setLastUpdated(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
   }, [fetchStats])
+
+  // ── WebSocket Connection for Real-Time Updates ────────────────────────────
+  useEffect(() => {
+    const socket = socketIO('/?XTransformPort=3003', {
+      transports: ['websocket', 'polling'],
+      forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      timeout: 10000,
+    })
+    socketRef.current = socket
+
+    socket.on('connect', () => {
+      console.log('[ws:dashboard] connected')
+      setWsConnected(true)
+    })
+
+    socket.on('disconnect', () => {
+      console.log('[ws:dashboard] disconnected')
+      setWsConnected(false)
+    })
+
+    socket.on('agent:status', () => {
+      fetchStatsRef.current()
+    })
+
+    socket.on('agent:created', () => {
+      fetchStatsRef.current()
+    })
+
+    socket.on('agent:updated', () => {
+      fetchStatsRef.current()
+    })
+
+    socket.on('agent:deleted', () => {
+      fetchStatsRef.current()
+    })
+
+    socket.on('agents:snapshot', () => {
+      fetchStatsRef.current()
+    })
+
+    return () => {
+      socket.disconnect()
+      socketRef.current = null
+    }
+  }, [])
 
   // ── Computed Values from API Data (with fallbacks) ─────────────────────────
   const quickStats = statsData ? [
@@ -1941,6 +2004,76 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
     const now = new Date()
     setLastUpdated(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
   }, [fetchStats])
+
+  // ── Agent Edit Handler ────────────────────────────────────────────────────
+  const handleAgentClick = useCallback(async (agent: any) => {
+    // Try to find the agent from the API data (which has full info including ID)
+    try {
+      // agentList from statsData includes id field
+      const fullAgent = statsData?.agents?.find((a: any) => a.name === agent.name) || agent
+      if (fullAgent.id) {
+        setEditingAgent(fullAgent)
+        setEditForm({
+          name: fullAgent.name || '',
+          role: fullAgent.role || '',
+          roleGroup: fullAgent.roleGroup || fullAgent.group || '',
+          status: fullAgent.status || 'active',
+          formula: fullAgent.formula || '',
+          skills: fullAgent.skills || '',
+          description: fullAgent.description || '',
+        })
+        setShowDeleteConfirm(false)
+      } else {
+        toast.info('Switch to Hierarchy view to edit agents')
+      }
+    } catch {
+      toast.info('Switch to Hierarchy view to edit agents')
+    }
+  }, [statsData])
+
+  const handleEditSave = useCallback(async () => {
+    if (!editingAgent?.id) return
+    setEditSaving(true)
+    try {
+      const res = await fetchWithRetry(`/api/agents/${editingAgent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      })
+      if (res.ok) {
+        toast.success(`Agent "${editForm.name}" updated`)
+        setEditingAgent(null)
+        handleRefresh()
+      } else {
+        toast.error('Failed to update agent')
+      }
+    } catch {
+      toast.error('Failed to update agent')
+    } finally {
+      setEditSaving(false)
+    }
+  }, [editingAgent, editForm, handleRefresh])
+
+  const handleEditDelete = useCallback(async () => {
+    if (!editingAgent?.id) return
+    setEditDeleting(true)
+    try {
+      const res = await fetchWithRetry(`/api/agents/${editingAgent.id}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        toast.success(`Agent "${editingAgent.name}" deleted`)
+        setEditingAgent(null)
+        handleRefresh()
+      } else {
+        toast.error('Failed to delete agent')
+      }
+    } catch {
+      toast.error('Failed to delete agent')
+    } finally {
+      setEditDeleting(false)
+    }
+  }, [editingAgent, handleRefresh])
 
   // ── Loading State ──────────────────────────────────────────────────────────
   if (loading) {
@@ -1988,6 +2121,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
         onOpenHierarchy={onOpenHierarchy}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onRefresh={handleRefresh}
+        wsConnected={wsConnected}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -1996,6 +2130,7 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           onClose={() => setSidebarOpen(false)}
           agentListProp={agentList}
           roleGroupsProp={roleGroups}
+          onAgentClick={handleAgentClick}
         />
 
         <main className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
@@ -2036,6 +2171,260 @@ function DashboardPanel({ onOpenHierarchy }: { onOpenHierarchy: () => void }) {
           </div>
         </main>
       </div>
+
+      {/* ─── Agent Edit Modal ─────────────────────────────────────────────── */}
+      {editingAgent && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingAgent(null) }}
+        >
+          <div
+            style={{
+              background: '#0A0A0A', border: '1px solid rgba(51,51,51,0.5)',
+              borderRadius: 12, width: 420, maxHeight: '90vh', overflowY: 'auto',
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '16px 20px', borderBottom: '1px solid rgba(51,51,51,0.3)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#06B6D4' }}>Edit Agent</div>
+                <div style={{ fontSize: 10, color: '#64748B', marginTop: 2 }}>Update agent properties</div>
+              </div>
+              <button
+                onClick={() => setEditingAgent(null)}
+                style={{
+                  padding: 4, borderRadius: 4, background: 'rgba(51,51,51,0.2)',
+                  border: '1px solid rgba(51,51,51,0.3)', color: '#888', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Form fields */}
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Name */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Agent Name
+                </label>
+                <input
+                  value={editForm.name}
+                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Role */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Role
+                </label>
+                <input
+                  value={editForm.role}
+                  onChange={e => setEditForm(prev => ({ ...prev, role: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Role Group */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Role Group
+                </label>
+                <select
+                  value={editForm.roleGroup}
+                  onChange={e => setEditForm(prev => ({ ...prev, roleGroup: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {ROLE_GROUPS.map(g => <option key={g.name} value={g.name}>{g.name}</option>)}
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Status
+                </label>
+                <select
+                  value={editForm.status}
+                  onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {['active', 'idle', 'paused', 'standby', 'error', 'offline'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              {/* Formula */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Cognitive Formula
+                </label>
+                <select
+                  value={editForm.formula}
+                  onChange={e => setEditForm(prev => ({ ...prev, formula: e.target.value }))}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                >
+                  {FORMULA_TAXONOMY.flatMap(c => c.formulas).map(f => (
+                    <option key={f.name} value={f.name}>{f.name} — {f.full}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Skills (comma-separated)
+                </label>
+                <input
+                  value={editForm.skills}
+                  onChange={e => setEditForm(prev => ({ ...prev, skills: e.target.value }))}
+                  placeholder="e.g. analysis,reporting,optimization"
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label style={{ fontSize: 10, color: '#B0B0B0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
+                  Description
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={e => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  style={{
+                    width: '100%', padding: '8px 12px', background: '#111',
+                    border: '1px solid rgba(51,51,51,0.4)', color: '#fff', fontSize: 12,
+                    borderRadius: 6, outline: 'none', resize: 'vertical' as const, minHeight: 60,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Delete confirmation */}
+            {showDeleteConfirm && (
+              <div style={{
+                padding: '10px 20px',
+                background: 'rgba(239,68,68,0.06)',
+                borderTop: '1px solid rgba(239,68,68,0.2)',
+                borderBottom: '1px solid rgba(239,68,68,0.2)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <AlertTriangle size={12} color="#EF4444" />
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#EF4444' }}>
+                    Delete &quot;{editingAgent.name}&quot;?
+                  </span>
+                </div>
+                <div style={{ fontSize: 9, color: '#B0B0B0', marginBottom: 8 }}>
+                  This action cannot be undone. The agent and its tasks will be permanently removed.
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    onClick={handleEditDelete}
+                    disabled={editDeleting}
+                    style={{
+                      flex: 1, padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                      background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
+                      color: '#EF4444', cursor: editDeleting ? 'wait' : 'pointer',
+                      opacity: editDeleting ? 0.6 : 1,
+                    }}
+                  >
+                    {editDeleting ? 'Deleting...' : 'Confirm Delete'}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    style={{
+                      flex: 1, padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600,
+                      background: '#1A1A1A', border: '1px solid rgba(51,51,51,0.4)',
+                      color: '#B0B0B0', cursor: 'pointer',
+                    }}
+                  >
+                    Keep
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{
+              padding: '12px 20px', borderTop: '1px solid rgba(51,51,51,0.3)',
+              display: 'flex', justifyContent: 'flex-end', gap: 8,
+            }}>
+              {!showDeleteConfirm && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 6,
+                    background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                    color: '#EF4444', cursor: 'pointer', fontSize: 11,
+                    display: 'flex', alignItems: 'center', gap: 4, marginRight: 'auto',
+                  }}
+                >
+                  <Trash2 size={10} />
+                  Delete
+                </button>
+              )}
+              <button
+                onClick={() => setEditingAgent(null)}
+                style={{
+                  padding: '6px 16px', borderRadius: 6, background: '#1A1A1A',
+                  border: '1px solid rgba(51,51,51,0.4)', color: '#B0B0B0',
+                  cursor: 'pointer', fontSize: 11,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={editSaving || !editForm.name.trim()}
+                style={{
+                  padding: '6px 16px', borderRadius: 6,
+                  background: 'rgba(6,182,212,0.1)',
+                  border: '1px solid rgba(6,182,212,0.3)',
+                  color: '#06B6D4', cursor: editSaving ? 'wait' : 'pointer', fontSize: 11,
+                  opacity: !editForm.name.trim() || editSaving ? 0.5 : 1,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}
+              >
+                <Save size={10} />
+                {editSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

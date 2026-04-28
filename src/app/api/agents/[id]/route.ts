@@ -23,6 +23,41 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    // Verify agent exists
+    const existing = await db.agent.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
+    }
+
+    const agent = await db.agent.update({
+      where: { id },
+      data: {
+        name: body.name,
+        role: body.role,
+        roleGroup: body.roleGroup,
+        status: body.status,
+        formula: body.formula,
+        skills: body.skills,
+        description: body.description,
+      },
+      include: { children: true, tasks: true },
+    })
+
+    return NextResponse.json(agent)
+  } catch (error) {
+    console.error('Failed to update agent:', error)
+    return NextResponse.json({ error: 'Failed to update agent' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
