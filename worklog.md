@@ -1079,3 +1079,169 @@ Stage Summary:
 - 60 files deleted, committed and pushed to GitHub (stsgs1980/P-MAS)
 - Cron job creation blocked by 401 auth error (system limitation, not code issue)
 - Project repo is clean and up to date
+
+---
+Task ID: 21
+Agent: Main Orchestrator
+Task: Записать план развития архитектуры агентной системы
+
+Work Log:
+- Проанализирована текущая архитектура P-MAS
+- Выявлен критический пробел: текущая архитектура — это «орг-схема», а не «агентная система»
+- Записан план развития в 4 фазы
+
+Stage Summary:
+- План развития архитектуры зафиксирован
+
+---
+
+## 🏗️ P-MAS — План Развития Архитектуры Агентной Системы
+
+### Диагноз: текущая архитектура нецелостна
+
+**Проблема:** 26 агентов + 55 связей — это структурные (parentId → child, twinId), а не операционные.
+Нет логики того, **КАК** агенты работают вместе над задачей.
+
+```
+Сейчас:                              Должно быть:
+──────────────────────────────────────────────────────────────
+Структура (org-chart)          →    Операционная архитектура
+parentId → child               →    Workflow / Pipeline
+«Кто чей начальник»            →    «Как задача проходит через агентов»
+Статические связи              →    Динамическая маршрутизация
+Нет контрактов данных          →    Input/Output schema между агентами
+Нет обратных связей            →    Feedback loops (тестировщик → кодер)
+Нет общих контекстов           →    Shared memory / task context
+```
+
+---
+
+### 🔴 ФАЗА 1: Операционная архитектура (КРИТИЧЕСКИЙ ПРИОРИТЕТ)
+
+| # | Задача | Описание | Priority |
+|---|--------|----------|----------|
+| 1.1 | **Workflow Pipeline** | Задача идёт по цепочке: Request → Strateg → Koordinator → Koder → Testirovshchik → Revizor. Каждый шаг = агент + действие + контекст | 🔴 HIGH |
+| 1.2 | **Условная маршрутизация** | Тип задачи определяет путь: coding → Исполнение, analysis → Стратегия, quality check → Контроль. Правила маршрутизации настраиваемые | 🔴 HIGH |
+| 1.3 | **Контракты данных (I/O Schema)** | Выход Agent A = вход Agent B. Schema validation на каждом шаге. Типизированные сообщения между агентами | 🔴 HIGH |
+| 1.4 | **Feedback loops** | Testirovshchik нашёл баг → возвращается к Koder; Revizor забраковал →回到 Koordinator. Циклы с условием выхода | 🔴 HIGH |
+| 1.5 | **Общий контекст задачи (TaskContext)** | Агенты делят task state, промежуточные результаты, историю решений. Контекст растёт по мере прохождения пайплайна | 🟡 MED |
+| 1.6 | **Схема БД для операционки** | Новые модели: Workflow, PipelineStep, AgentMessage, TaskContext. Связи: Workflow → Steps → Messages | 🔴 HIGH |
+
+**Модели Prisma (проект):**
+```prisma
+model Workflow {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  status      String         @default("draft")  // draft | active | paused | completed | failed
+  triggerType String         @default("manual") // manual | event | schedule | webhook
+  triggerConfig Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  steps       PipelineStep[]
+  executions  WorkflowExecution[]
+}
+
+model PipelineStep {
+  id          String    @id @default(cuid())
+  workflowId  String
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  order       Int       // позиция в пайплайне
+  agentId     String?   // конкретный агент (null = любой из группы)
+  roleGroup   String?   // группа агентов (альтернатива agentId)
+  action      String    // process | review | transform | delegate | broadcast
+  inputSchema Json?     // ожидаемая схема входных данных
+  outputSchema Json?    // схема выходных данных
+  condition   Json?     // условие для выполнения шага (if/else/switch)
+  fallbackStepId String? // шаг при ошибке
+  timeout     Int       @default(300) // секунд
+  retryPolicy Json?     // { maxRetries, backoffMs }
+  stepExecutions StepExecution[]
+}
+
+model WorkflowExecution {
+  id          String        @id @default(cuid())
+  workflowId  String
+  workflow    Workflow      @relation(fields: [workflowId], references: [id])
+  status      String        @default("running") // running | completed | failed | cancelled
+  taskContext Json          // общий контекст — растёт по мере прохождения шагов
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+  steps       StepExecution[]
+}
+
+model StepExecution {
+  id              String            @id @default(cuid())
+  executionId     String
+  execution       WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId          String
+  step            PipelineStep      @relation(fields: [stepId], references: [id])
+  agentId         String?           // агент, который выполнял
+  status          String            @default("pending") // pending | running | completed | failed | skipped
+  inputData       Json?             // что получил на вход
+  outputData      Json?             // что вернул
+  errorMessage    String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  messages        AgentMessage[]
+}
+
+model AgentMessage {
+  id              String        @id @default(cuid())
+  stepExecutionId String
+  stepExecution   StepExecution @relation(fields: [stepExecutionId], references: [id], onDelete: Cascade)
+  fromAgentId     String        // отправитель
+  toAgentId       String?       // получатель (null = broadcast)
+  type            String        // request | response | feedback | error | status
+  content         Json          // типизированное тело сообщения
+  timestamp       DateTime      @default(now())
+}
+```
+
+---
+
+### 🟡 ФАЗА 2: Динамические команды и маршрутизация
+
+| # | Задача | Описание | Priority |
+|---|--------|----------|----------|
+| 2.1 | **Динамический состав команд** | Под конкретную задачу собирается нужный набор агентов. Не все 26 всегда активны | 🟡 MED |
+| 2.2 | **Протокол коммуникации** | Агенты обмениваются сообщениями через стандартизированный протокол (не просто «связаны» в графе) | 🟡 MED |
+| 2.3 | **Условное ветвление** | If/Else/Switch в пайплайне: разные ветки для разных типов задач | 🟡 MED |
+| 2.4 | **Параллельное выполнение** | Несколько агентов работают над задачей одновременно (Koder + RAG-Specialist) | 🟡 MED |
+| 2.5 | **Приоритизация задач** | Очередь задач с приоритетами. Агент берёт следующую задачу по приоритету | 🟡 MED |
+
+---
+
+### 🟢 ФАЗА 3: Интеллект и самоорганизация
+
+| # | Задача | Описание | Priority |
+|---|--------|----------|----------|
+| 3.1 | **LLM-оркестратор** | Агент-стратег использует LLM для принятия решений о маршрутизации | 🟢 LOW |
+| 3.2 | **Самоорганизация** | Агенты сами определяют оптимальный пайплайн под задачу | 🟢 LOW |
+| 3.3 | **Обучение на опыте** | Система запоминает успешные пайплайны и предлагает их для похожих задач | 🟢 LOW |
+| 3.4 | **Мониторинг и метрики** | Время прохождения пайплайна, узкие места, процент успешных завершений | 🟡 MED |
+| 3.5 | **Алерты и эскалация** | Авто-эскалация при зависании шага, падении агента, превышении таймаута | 🟡 MED |
+
+---
+
+### 🔵 ФАЗА 4: UI/UX для операционной архитектуры
+
+| # | Задача | Описание | Priority |
+|---|--------|----------|----------|
+| 4.1 | **Визуальный редактор пайплайнов** | Drag & Drop агентов в цепочку. Настройка условий, контрактов, feedback loops | 🔴 HIGH |
+| 4.2 | **Live-визуализация выполнения** | Анимация прохождения задачи по пайплайну. Какой агент сейчас работает, что передаёт | 🟡 MED |
+| 4.3 | **Дашборд операционки** | Статусы workflow'ов, метрики, алерты — поверх текущего Dashboard | 🟡 MED |
+| 4.4 | **Редактор контрактов данных** | UI для настройки input/output schema между шагами пайплайна | 🟡 MED |
+| 4.5 | **История и аудит** | Просмотр прошлых выполнений, replay, сравнение результатов | 🟢 LOW |
+
+---
+
+### Ключевые принципы архитектуры
+
+1. **Workflow = первоклассный объект** — не просто связи в графе, а полноценная сущность с конфигурацией, историей, метриками
+2. **Контракт данных обязателен** — каждый шаг знает что получает и что должен вернуть
+3. **Feedback loop — не баг, а фича** — циклы нормальны, условие выхода = критерий качества
+4. **Контекст задачи накапливается** — каждый шаг добавляет в TaskContext, следующий шаг видит всю историю
+5. **Агент interchangeable** — если агент упал, пайплайн может заменить его другим из той же группы
+6. **Observability first** — каждое сообщение, каждый переход логируется и визуализируется
+
