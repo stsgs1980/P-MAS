@@ -983,3 +983,26 @@ Stage Summary:
 - Expanded: full panel with collapse button in all 3 states (view, edit, empty)
 - All 3 header variants (no agent, view mode, edit mode) have collapse buttons
 - No lint errors
+
+---
+Task ID: 20
+Agent: Main Orchestrator
+Task: Make FIT button a toggle (ON by default, OFF = free zoom/pan)
+
+Work Log:
+- Added `fitMode` state (default: true) to agent-hierarchy-v2.tsx
+- FIT button now toggles between ON and OFF states
+- ON state: cyan background/border, text "FIT ON", ReactFlow fitView=true (auto-fits graph to viewport)
+- OFF state: dark background, gray border, text "FIT OFF", ReactFlow fitView=false (free zoom/pan)
+- Clicking FIT ON→OFF: disables auto-fit, user can freely zoom/pan
+- Clicking FIT OFF→ON: enables auto-fit and immediately calls fitView to re-center the graph
+- Title attribute explains current mode
+- VLM analysis confirmed: FIT ON shows graph fitted to viewport, FIT OFF shows free zoom mode
+- Lint: 0 errors
+
+Stage Summary:
+- FIT button is now a toggle with 2 states
+- Default: ON (fitView enabled, graph auto-fits)
+- OFF: free zoom/pan, graph not constrained
+- Visual distinction: cyan active vs dark inactive button style
+- ON→OFF disables fitView; OFF→ON enables and re-fits

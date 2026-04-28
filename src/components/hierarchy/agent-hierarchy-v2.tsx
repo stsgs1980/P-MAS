@@ -82,6 +82,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
   const [viewMode, setViewMode] = useState<ViewMode>('hierarchy')
   const [showLayers, setShowLayers] = useState(true)
   const [detailPanelOpen, setDetailPanelOpen] = useState(true)
+  const [fitMode, setFitMode] = useState(true)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const reactFlowInstance = useRef<ReturnType<typeof Object> | null>(null)
 
@@ -306,10 +307,14 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
 
   // ─── Fit all nodes to view ───────────────────────────────────────────
   const handleFitView = useCallback(() => {
-    if (reactFlowInstance.current) {
-      const instance = reactFlowInstance.current as any
-      instance.fitView({ padding: 0.2, duration: 500 })
-    }
+    setFitMode(prev => {
+      const next = !prev
+      if (next && reactFlowInstance.current) {
+        const instance = reactFlowInstance.current as any
+        instance.fitView({ padding: 0.2, duration: 500 })
+      }
+      return next
+    })
   }, [])
 
   // ─── Add new agent ───────────────────────────────────────────────────
@@ -665,14 +670,18 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             onClick={handleFitView}
             style={{
               padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
-              background: 'rgba(13,13,13,0.95)', border: '1px solid rgba(51,51,51,0.3)',
-              color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
+              background: fitMode ? 'rgba(6,182,212,0.1)' : 'rgba(13,13,13,0.95)',
+              border: fitMode ? '1px solid rgba(6,182,212,0.3)' : '1px solid rgba(51,51,51,0.3)',
+              color: fitMode ? '#06B6D4' : '#888',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3,
               textTransform: 'uppercase',
+              transition: 'all 0.15s',
             }}
-            title="Fit to screen"
+            title={fitMode ? 'Fit mode ON — graph auto-fits to viewport. Click to disable.' : 'Fit mode OFF — free zoom/pan. Click to enable.'}
           >
             <Maximize2 size={9} />
             Fit
+            <span style={{ fontSize: 7, opacity: 0.7, marginLeft: 1 }}>{fitMode ? 'ON' : 'OFF'}</span>
           </button>
           <button
             onClick={handleFocus}
@@ -718,7 +727,7 @@ export default function AgentHierarchy({ onBack }: { onBack?: () => void }) {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onInit={(instance) => { reactFlowInstance.current = instance }}
-            fitView
+            fitView={fitMode}
             fitViewOptions={{ padding: 0.2 }}
             minZoom={0.2}
             maxZoom={3}
